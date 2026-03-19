@@ -3,3 +3,4 @@ commit	val_metric	memory_gb	diff_lines	status	description	reject_reason
 65ab0bd	80.300122	0.0	20	keep	pool ground truth priors across all 5 seeds	-
 4ac75ec	80.407478	0.0	5	keep	GT-calibrated global transitions	-
 07a40cb	80.621764	0.0	2	keep	PROB_FLOOR 0.001 to 0.0001	-
+f90c0b6	89.014199	0.0	80	keep	coastal/inland split for plains+forests with distance-based GT tables	-
