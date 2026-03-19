@@ -7,8 +7,9 @@
 ```bash
 cd ai-nm-2026
 bash scripts/setup.sh          # install deps
-uvicorn tasks/cv/api:app       # run a task API
-pytest tasks/cv/tests/          # test a task
+source .venv/bin/activate
+cd tasks/cv && python api.py   # run a task API
+pytest tasks/cv/tests/         # test a task
 bash scripts/validate.sh       # pre-submit check
 ```
 
@@ -25,6 +26,7 @@ bash scripts/validate.sh       # pre-submit check
 | Execution plans | `docs/exec-plans/active/` |
 | GCP scripts | `scripts/gcp/` |
 | Validation | `scripts/validate.sh` |
+| Autoresearch protocol | `~/Utvikling/autoresearch-mlx/program.md` |
 
 ## Competition Rules (Summary)
 
@@ -32,6 +34,7 @@ Read `RULES.md` for full rules. Key points:
 - Code must be public, MIT licensed
 - No hardcoded or pre-computed responses
 - AI assistants explicitly allowed
+- **No cloud AI APIs at inference time** (OpenAI, Azure, etc.)
 - Scoring = average of 3 normalized task scores (0-100 each)
 - Deadline: March 22, 2026 at 15:00 CET
 
@@ -65,11 +68,79 @@ train.py   — Training script (autoresearch-compatible)
 api.py     — FastAPI server (imports from above)
 ```
 
-## GCP Workflow
+## GCP Compute
+
+**Project**: `ai-nm26osl-1823` | **Region**: `europe-west4`
+
+### Fleet Management
 
 ```bash
-scripts/gcp/create-vm.sh cv medium   # provision GPU VM
-scripts/gcp/deploy-task.sh cv        # deploy task code
-scripts/gcp/train-task.sh cv         # run training
-scripts/gcp/status.sh                # check all endpoints
+# Spin up full fleet
+scripts/gcp/fleet-up.sh baseline              # 3 VMs (cv=L4, ml=T4, nlp=L4) — ~$1.75/hr
+scripts/gcp/fleet-up.sh baseline --spot       # same, 70% cheaper — ~$0.53/hr
+scripts/gcp/fleet-up.sh overnight --spot      # 7-9 VMs, parallel A100s — ~$5.50/hr
+scripts/gcp/fleet-up.sh max --spot            # 9x A100 — ~$8/hr
+
+# Deploy to all running VMs
+scripts/gcp/fleet-deploy.sh                   # all tasks
+scripts/gcp/fleet-deploy.sh cv                # just cv variants
+
+# Status and teardown
+scripts/gcp/status.sh                         # fleet overview with GPU/cost
+scripts/gcp/teardown.sh                       # tear down everything
+scripts/gcp/teardown.sh cv --all              # all cv variants only
 ```
+
+### Single VM Operations
+
+```bash
+scripts/gcp/create-vm.sh cv heavy --spot              # A100, preemptible
+scripts/gcp/create-vm.sh cv heavy --spot --name=vit   # named variant
+scripts/gcp/deploy-task.sh cv                          # deploy code
+scripts/gcp/deploy-task.sh cv --name=vit               # deploy to named VM
+scripts/gcp/train-task.sh cv                           # run training
+```
+
+### GPU Tiers
+
+| Tier | Machine | GPU | VRAM | Cost/hr | Spot |
+|------|---------|-----|------|---------|------|
+| light | n1-standard-8 | T4 | 16GB | ~$0.35 | ~$0.11 |
+| medium | g2-standard-8 | L4 | 24GB | ~$0.70 | ~$0.21 |
+| heavy | a2-highgpu-1g | A100 | 40GB | ~$2.95 | ~$0.89 |
+
+### Parallel Experiments
+
+Spin up multiple VMs per task with `--name=suffix` for different approaches:
+
+```bash
+scripts/gcp/create-vm.sh cv heavy --spot --name=resnet
+scripts/gcp/create-vm.sh cv heavy --spot --name=vit
+scripts/gcp/create-vm.sh cv heavy --spot --name=effnet
+```
+
+Each runs its own autoresearch branch. Pick the best in the morning.
+
+## Autoresearch (Overnight Optimization)
+
+Uses the [autoresearch-mlx](https://github.com/Walgermo/autoresearch-mlx) protocol (Karpathy's autonomous experiment loop).
+
+**Two modes:**
+- **GCP (PyTorch/CUDA)**: `shared/autoresearch.py` helpers on GPU VMs
+- **Local (Apple Silicon/MLX)**: `~/Utvikling/autoresearch-mlx/` directly
+
+**Protocol** (from `autoresearch-mlx/program.md`):
+1. Edit `train.py` with an experimental idea
+2. Commit: `git add tasks/<task>/train.py && git commit -m "experiment: <desc>"`
+3. Run: `python train.py > run.log 2>&1`
+4. Read: `grep "^val_metric:" run.log`
+5. If improved → keep (amend commit with `results.tsv`)
+6. If worse → discard (`git reset --hard <previous kept commit>`)
+7. Log to `results.tsv`, repeat indefinitely
+
+**Task contract:**
+- `prepare.py` exports: `TIME_BUDGET`, `evaluate()` — **READ-ONLY**
+- `train.py` prints `val_metric: <float>` — **MUTABLE** (the file the agent edits)
+- `task.md` declares: `metric_name`, `metric_direction` (lower/higher)
+
+Spot VMs handle preemption gracefully — autoresearch reverts and retries on restart.
