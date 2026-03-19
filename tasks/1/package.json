@@ -8,6 +8,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "review": "tsx scripts/review.ts",
+    "test": "tsx scripts/replay.ts",
     "replay": "tsx scripts/replay.ts",
     "replay:failed": "tsx scripts/replay.ts --all-failed",
     "restart": "lsof -ti:9053 | xargs kill -9 2>/dev/null; sleep 1; tsx src/api.ts"

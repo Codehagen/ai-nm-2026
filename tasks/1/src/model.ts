@@ -14,6 +14,13 @@ const gateway = createGateway({
 
 const MODEL_ID = process.env.MODEL_ID || "anthropic/claude-sonnet-4-20250514";
 
+/** JSON.stringify and cap at N chars to prevent disk bloat */
+function truncate(data: unknown, maxChars: number): unknown {
+  const s = JSON.stringify(data);
+  if (!s || s.length <= maxChars) return data;
+  return s.slice(0, maxChars) + "…[truncated]";
+}
+
 /** Oslo timezone date (avoids UTC midnight drift) */
 function getOsloDate(): string {
   return new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Oslo" });
@@ -107,6 +114,9 @@ export async function solve(
             path,
             ok: result.ok,
             status: result.ok ? undefined : result.status,
+            requestBody: body,
+            requestParams: params,
+            responseData: truncate(result.ok ? result.data : result, 2000),
           });
           if (!result.ok) apiErrors++;
           return result;
