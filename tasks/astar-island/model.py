@@ -53,18 +53,18 @@ EMPIRICAL_TRANSITIONS = {
 # Distance-based transition for Plains (code 11) — distance to nearest settlement
 # Measured empirically from Round 1 Seed 0 observations
 # Format: max_distance → [P(empty), P(settlement), P(port), P(ruin), P(forest), P(mountain)]
-# Calibrated from Round 1 GROUND TRUTH (not observations)
+# Calibrated from Round 1 GROUND TRUTH — all 5 seeds pooled
 PLAINS_BY_DISTANCE = {
-    1:  [0.675, 0.254, 0.007, 0.015, 0.049, 0.000],  # dist 1
-    2:  [0.699, 0.225, 0.016, 0.015, 0.045, 0.000],  # dist 2
-    3:  [0.707, 0.216, 0.021, 0.015, 0.041, 0.000],  # dist 3
-    4:  [0.751, 0.182, 0.021, 0.012, 0.034, 0.000],  # dist 4
-    5:  [0.873, 0.102, 0.008, 0.007, 0.010, 0.000],  # dist 5
-    6:  [0.907, 0.075, 0.006, 0.005, 0.007, 0.000],  # dist 6
-    7:  [0.942, 0.047, 0.005, 0.002, 0.004, 0.000],  # dist 7
-    8:  [0.966, 0.030, 0.002, 0.001, 0.001, 0.000],  # dist 8
-    9:  [0.990, 0.009, 0.000, 0.000, 0.001, 0.000],  # dist 9
-    99: [0.991, 0.009, 0.000, 0.000, 0.000, 0.000],  # dist 10+
+    1:  [0.696, 0.232, 0.012, 0.016, 0.045, 0.000],  # n=592
+    2:  [0.713, 0.211, 0.014, 0.016, 0.047, 0.000],  # n=965
+    3:  [0.725, 0.192, 0.019, 0.016, 0.048, 0.000],  # n=1008
+    4:  [0.757, 0.167, 0.022, 0.014, 0.040, 0.000],  # n=801
+    5:  [0.875, 0.093, 0.011, 0.008, 0.012, 0.000],  # n=566
+    6:  [0.905, 0.070, 0.010, 0.006, 0.009, 0.000],  # n=347
+    7:  [0.944, 0.043, 0.006, 0.003, 0.004, 0.000],  # n=239
+    8:  [0.965, 0.027, 0.005, 0.001, 0.002, 0.000],  # n=145
+    9:  [0.991, 0.008, 0.000, 0.001, 0.000, 0.000],  # n=38
+    99: [0.992, 0.008, 0.000, 0.000, 0.000, 0.000],  # n=18
 }
 
 
@@ -264,17 +264,17 @@ def fill_unobserved_dynamic(
             adj_forests = _count_adjacent_forests(initial_grid, y, x)
             dist = _distance_to_nearest_settlement(initial_grid, y, x, settlements)
 
-            if code == 1:  # Settlement — calibrated from Round 1 ground truth
+            if code == 1:  # Settlement — pooled from all 5 seeds GT
                 if adj_forests == 0:
-                    tensor[y, x] = [0.470, 0.315, 0.000, 0.035, 0.180, 0.000]
+                    tensor[y, x] = [0.415, 0.356, 0.000, 0.029, 0.199, 0.000]
                 elif adj_forests == 1:
-                    tensor[y, x] = [0.356, 0.435, 0.000, 0.024, 0.186, 0.000]
+                    tensor[y, x] = [0.377, 0.397, 0.014, 0.029, 0.182, 0.000]
                 elif adj_forests == 2:
-                    tensor[y, x] = [0.329, 0.466, 0.000, 0.026, 0.179, 0.000]
+                    tensor[y, x] = [0.365, 0.413, 0.009, 0.030, 0.183, 0.000]
                 else:  # 3+
-                    tensor[y, x] = [0.357, 0.444, 0.000, 0.033, 0.166, 0.000]
+                    tensor[y, x] = [0.354, 0.436, 0.005, 0.034, 0.171, 0.000]
 
-            elif code == 2:  # Port — only 1 sample, use it
+            elif code == 2:  # Port — limited samples, use empirical
                 tensor[y, x] = [0.320, 0.130, 0.310, 0.020, 0.220, 0.000]
 
             elif code == 3:  # Ruin — no ground truth data, keep heuristic
@@ -283,14 +283,11 @@ def fill_unobserved_dynamic(
                 else:
                     tensor[y, x] = [0.10, 0.05, 0.02, 0.25, 0.53, 0.05]
 
-            elif code == 4:  # Forest — calibrated from Round 1 ground truth
+            elif code == 4:  # Forest — pooled from all 5 seeds GT
                 if coastal:
-                    if adj_forests <= 1:
-                        tensor[y, x] = [0.035, 0.070, 0.085, 0.008, 0.802, 0.000]
-                    else:
-                        tensor[y, x] = [0.042, 0.102, 0.078, 0.008, 0.770, 0.000]
+                    tensor[y, x] = [0.042, 0.092, 0.093, 0.009, 0.764, 0.000]
                 else:
-                    tensor[y, x] = [0.056, 0.157, 0.000, 0.010, 0.777, 0.000]
+                    tensor[y, x] = [0.078, 0.178, 0.000, 0.014, 0.730, 0.000]
 
             elif code in {0, 11}:  # Empty/Plains
                 # KEY INSIGHT: Settlements expand AGGRESSIVELY into empty plains
