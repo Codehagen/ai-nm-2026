@@ -16,3 +16,4 @@ fffc9a1	89.768145	0.0	20	keep	boost P(settlement) for forests adjacent to settle
 reverted	89.504375	0.0	15	discard	per-seed scaling by initial settlement count	too aggressive scaling
 reverted	89.773624	0.0	8	discard	adj_forest boost for plains P(settlement)	marginal loss vs baseline
 e80623f	90.605182	0.0	142	keep	add GBT ensemble (blend=0.5) trained on R1 GT features	-
+f96e630	91.906229	0.0	14	keep	add dist2/nearby_settlements/total_settlements to GBT features	-
