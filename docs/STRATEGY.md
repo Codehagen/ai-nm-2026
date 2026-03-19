@@ -21,10 +21,12 @@
 - **Goal**: Competitive baselines on all 3
 
 ### Phase 3: Overnight Optimization (Night 1, ~Hours 8-20)
-- Launch autoresearch agents on GCP VMs
-- Set up program.md for each task
-- Agent iterates: architecture, hyperparams, augmentation
-- Monitor via `scripts/gcp/status.sh`
+- Launch autoresearch loops (protocol: ~/Utvikling/autoresearch-mlx/program.md)
+- GCP VMs for CV/large models (PyTorch/CUDA)
+- Local Mac for NLP/small models (MLX via autoresearch-mlx)
+- Each task needs: prepare.py (fixed), train.py (mutable), task.md (metric)
+- Agent iterates autonomously: edit train.py → run → keep/discard → repeat
+- Monitor GCP via `scripts/gcp/status.sh`
 
 ### Phase 4: Iteration (Hours 20-60)
 - Review overnight results

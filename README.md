@@ -146,13 +146,19 @@ TASK_MODE=train docker compose up
 
 ## Autoresearch (Overnight Optimization)
 
-Each task has a `program.md` that defines the optimization space. The autoresearch loop (`shared/autoresearch.py`) iterates autonomously:
+Uses the [autoresearch-mlx](https://github.com/Walgermo/autoresearch-mlx) protocol — Karpathy's autonomous experiment loop. The sibling repo lives at `~/Utvikling/autoresearch-mlx/`.
 
-1. Run experiment
-2. Evaluate metric
-3. If improved → git commit
-4. If not → git revert
-5. Repeat
+**Two modes:**
+- **Local (Apple Silicon)**: Run autoresearch-mlx directly with MLX. Best for NLP/small models.
+- **GCP (PyTorch/CUDA)**: Use `shared/autoresearch.py` helpers on GPU VMs. Best for CV/large models.
+
+**The loop** (from `autoresearch-mlx/program.md`):
+1. Edit `train.py` with an experimental idea
+2. Commit the change
+3. Run training within fixed time budget
+4. If `val_metric` improved → keep (amend commit with results)
+5. If worse → discard (`git reset --hard`)
+6. Log to `results.tsv`, repeat indefinitely
 
 Set it up before sleep, wake up to optimized models.
 
