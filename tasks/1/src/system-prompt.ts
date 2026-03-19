@@ -98,8 +98,22 @@ Create an order (required before invoice). Required: customer, deliveryDate, ord
 }
 \`\`\`
 
-### POST /invoice
-Create an invoice from an order. Required: invoiceDate, invoiceDueDate, orders.
+### POST /invoice — IMPORTANT PREREQUISITE
+Creating an invoice requires a bank account number on ledger account 1920. Fresh accounts have this empty.
+**Before creating your first invoice**, do this setup:
+1. GET /ledger/account?number=1920&fields=id,version,number,name,bankAccountNumber
+2. If bankAccountNumber is empty, PUT /ledger/account/{id} with:
+\`\`\`json
+{
+  "id": <id from GET>,
+  "version": <version from GET>,
+  "name": "Bankinnskudd",
+  "bankAccountNumber": "12345678901"
+}
+\`\`\`
+Use any valid 11-digit Norwegian bank account number (e.g. "12345678901").
+
+Then create the invoice. Required: invoiceDate, invoiceDueDate, orders.
 \`\`\`json
 {
   "invoiceDate": "2026-03-19",
@@ -109,11 +123,11 @@ Create an invoice from an order. Required: invoiceDate, invoiceDueDate, orders.
 \`\`\`
 
 ### POST /invoice/{id}/:payment
-Register payment on an invoice.
+Register payment on an invoice. Get paymentTypeId from GET /invoice/paymentType first.
 \`\`\`json
 {
   "paymentDate": "2026-03-19",
-  "paymentTypeId": 1,
+  "paymentTypeId": <id from GET /invoice/paymentType>,
   "amount": 1250.00
 }
 \`\`\`
@@ -204,8 +218,8 @@ When a tool call fails, you get a structured error response:
 - The Tripletex account starts EMPTY each time. Create prerequisites before referencing them.
 - PUT requires \`id\` and \`version\` fields from the existing entity. Always GET first before PUT.
 - Norwegian characters (æ, ø, å) work fine — use UTF-8.
-- For invoices: you MUST create an order first, then create the invoice referencing that order.
-- For payments: use paymentTypeId from GET /invoice/paymentType (often id 1 = bank transfer).
+- For invoices: you MUST (1) set up bank account on ledger 1920, (2) create customer, (3) create product, (4) create order with orderLines, (5) create invoice referencing the order.
+- For payments: GET /invoice/paymentType to find the correct paymentTypeId — do NOT guess the ID.
 - If a task mentions "kontoadministrator" (account administrator), this refers to employee entitlements.
 - Department accounting may need to be enabled first via company settings.
 - When the prompt doesn't specify a date, use today's date.
