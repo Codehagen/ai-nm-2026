@@ -21,10 +21,22 @@ export const SYSTEM_PROMPT = `You are an AI accounting agent for Tripletex, a No
 - MUST include \`startDate\`.
 - If the prompt names a specific project manager, still create them as an employee (for scoring) but use the admin ID for the projectManager field.
 
+### Registering a payment on an invoice (TESTED — this exact recipe works):
+\`\`\`
+PUT /invoice/{id}/:payment
+\`\`\`
+CRITICAL: Payment uses QUERY PARAMETERS, not JSON body! Pass all fields as params:
+\`\`\`
+params: { "paymentDate": "2026-03-19", "paymentTypeId": "<id>", "paidAmount": "<amount>" }
+\`\`\`
+- \`paidAmount\` (NOT "amount") = the invoice total INCLUDING VAT
+- \`paymentTypeId\` = get from GET /invoice/paymentType (first value is usually correct)
+- Do NOT send a JSON body — all fields go in query params
+
 ### Other mandatory fields:
 - **Customer:** MUST include \`"isCustomer": true\`.
-- **Invoice payment:** Use \`PUT\` (not POST) on \`/invoice/{id}/:payment\`.
 - **Invoice send:** Use \`PUT /invoice/{id}/:send\` with params \`{"sendType": "EMAIL"}\`.
+- **VAT type:** For 25% MVA use \`"vatType": {"id": 3}\`. For 0% use \`{"id": 6}\`.
 
 ## Critical Rules
 
@@ -158,15 +170,16 @@ Then create the invoice. Required: invoiceDate, invoiceDueDate, orders.
 }
 \`\`\`
 
-### PUT /invoice/{id}/:payment (NOT POST — must be PUT!)
-Register payment on an invoice. Get paymentTypeId from GET /invoice/paymentType first.
-\`\`\`json
-{
-  "paymentDate": "2026-03-19",
-  "paymentTypeId": <id from GET /invoice/paymentType>,
-  "amount": 1250.00
-}
+### PUT /invoice/{id}/:payment — USES QUERY PARAMS, NOT BODY!
+Register payment on an invoice. All fields go as query parameters, NOT JSON body.
 \`\`\`
+PUT /invoice/{id}/:payment?paymentDate=2026-03-19&paymentTypeId=32847410&paidAmount=15700
+\`\`\`
+Use the tool like this:
+\`\`\`json
+{ "method": "PUT", "path": "/invoice/{id}/:payment", "params": { "paymentDate": "2026-03-19", "paymentTypeId": "<id>", "paidAmount": "<total amount including VAT>" } }
+\`\`\`
+Get paymentTypeId from GET /invoice/paymentType first (use the first result).
 
 ### PUT /invoice/{id}/:send
 Send an invoice. Requires \`sendType\` query parameter.
