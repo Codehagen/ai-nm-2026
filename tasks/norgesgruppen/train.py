@@ -67,7 +67,7 @@ def train():
         if not data_yaml.exists():
             print("ERROR: data.yaml not found. Run convert_coco.py first.")
             sys.exit(1)
-        args.data = str(data_yaml)
+        args.data = str(data_yaml.resolve())
 
     print(f"Training config:")
     print(f"  Model: {args.model}")

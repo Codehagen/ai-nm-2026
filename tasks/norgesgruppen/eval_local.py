@@ -131,7 +131,7 @@ def run_model_inference(model_path, images_dir):
 
     for img_path in image_files:
         image_id = int(img_path.stem.split("_")[-1])
-        results = model(str(img_path), device=device, verbose=False, conf=0.01, max_det=300)
+        results = model(str(img_path), device=device, verbose=False, imgsz=1280, conf=0.01, max_det=300)
 
         for r in results:
             if r.boxes is None or len(r.boxes) == 0:

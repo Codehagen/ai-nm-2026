@@ -49,8 +49,10 @@ def main():
             str(img_path),
             device=device,
             verbose=False,
-            conf=0.01,      # low threshold, let mAP evaluation handle it
-            max_det=300,     # dense shelves can have 200+ products
+            imgsz=1280,      # match training resolution
+            conf=0.01,       # low threshold, let mAP evaluation handle it
+            max_det=300,      # dense shelves can have 200+ products
+            augment=True,     # test-time augmentation for free mAP boost
         )
 
         for r in results:
