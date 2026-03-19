@@ -1,85 +1,139 @@
-"""NorgesGruppen Object Detection — Sandbox Inference Script.
+"""NorgesGruppen Object Detection — Multi-scale WBF + TTA Inference.
+
+Runs model at 2 scales (960, 1280+TTA), merges with Weighted Boxes Fusion.
 
 Executed as: python run.py --input /data/images --output /output/predictions.json
-
-SANDBOX RULES:
-- No `import os`, subprocess, socket, ctypes, builtins
-- Use pathlib for all file operations
-- GPU (NVIDIA L4) is always available
-- ultralytics 8.1.0 is pre-installed
-- 300 second timeout
 """
 
 import argparse
 import json
 from pathlib import Path
 
+import numpy as np
 import torch
 
-# PyTorch 2.6 defaults to weights_only=True, but ultralytics 8.1.0
-# calls torch.load without weights_only=False — patch it here
 _torch_load = torch.load
 torch.load = lambda *args, **kwargs: _torch_load(*args, **{**kwargs, "weights_only": False})
 
 from ultralytics import YOLO
+from ensemble_boxes import weighted_boxes_fusion
+from PIL import Image
+
+
+def run_at_scale(model, img_path, device, imgsz, augment=False):
+    """Run inference at a specific scale, return normalized boxes, scores, labels."""
+    results = model(
+        str(img_path),
+        device=device,
+        verbose=False,
+        imgsz=imgsz,
+        conf=0.001,
+        iou=0.7,
+        max_det=500,
+        augment=augment,
+    )
+
+    boxes_norm = []
+    scores = []
+    labels = []
+
+    for r in results:
+        if r.boxes is None or len(r.boxes) == 0:
+            continue
+        img_h, img_w = r.orig_shape
+        for i in range(len(r.boxes)):
+            x1, y1, x2, y2 = r.boxes.xyxy[i].tolist()
+            boxes_norm.append([
+                max(0, x1 / img_w),
+                max(0, y1 / img_h),
+                min(1, x2 / img_w),
+                min(1, y2 / img_h),
+            ])
+            scores.append(float(r.boxes.conf[i].item()))
+            labels.append(int(r.boxes.cls[i].item()))
+
+    return boxes_norm, scores, labels
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", required=True, help="Directory with test images")
-    parser.add_argument("--output", required=True, help="Path for predictions JSON")
+    parser.add_argument("--input", required=True)
+    parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
     input_dir = Path(args.input)
     output_path = Path(args.output)
 
-    # Load model — .pt file must be in same directory as run.py
     model_path = Path(__file__).parent / "best.pt"
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = YOLO(str(model_path))
+    model.half()  # FP16 — 2x faster on L4, negligible quality loss
 
     predictions = []
 
-    # Process each image
     image_files = sorted(
         p for p in input_dir.iterdir()
         if p.suffix.lower() in (".jpg", ".jpeg", ".png")
     )
 
     for img_path in image_files:
-        # Extract image_id from filename: img_00042.jpg → 42
         image_id = int(img_path.stem.split("_")[-1])
+        img = Image.open(img_path)
+        img_w, img_h = img.size
 
-        # Run inference — max_det=300 handles dense shelves
-        results = model(
-            str(img_path),
-            device=device,
-            verbose=False,
-            imgsz=1280,      # match training resolution
-            conf=0.01,       # low threshold, let mAP evaluation handle it
-            max_det=300,      # dense shelves can have 200+ products
-            augment=True,     # test-time augmentation for free mAP boost
+        all_boxes = []
+        all_scores = []
+        all_labels = []
+
+        # Pass 1: 960 no TTA (catches large products, fast)
+        boxes, scores, labels = run_at_scale(model, img_path, device, 960, augment=False)
+        if boxes:
+            all_boxes.append(boxes)
+            all_scores.append(scores)
+            all_labels.append(labels)
+
+        # Pass 2: 1280 no TTA (training scale, clean signal)
+        boxes, scores, labels = run_at_scale(model, img_path, device, 1280, augment=False)
+        if boxes:
+            all_boxes.append(boxes)
+            all_scores.append(scores)
+            all_labels.append(labels)
+
+        # Pass 3: 1280 + TTA (training scale, augmented)
+        boxes, scores, labels = run_at_scale(model, img_path, device, 1280, augment=True)
+        if boxes:
+            all_boxes.append(boxes)
+            all_scores.append(scores)
+            all_labels.append(labels)
+
+        if not all_boxes:
+            continue
+
+        # Weighted Boxes Fusion — 3 models vote
+        fused_boxes, fused_scores, fused_labels = weighted_boxes_fusion(
+            all_boxes, all_scores, all_labels,
+            iou_thr=0.55,
+            skip_box_thr=0.0001,
+            weights=[1, 2, 3],  # 960, 1280, 1280+TTA
         )
 
-        for r in results:
-            if r.boxes is None or len(r.boxes) == 0:
-                continue
-            for i in range(len(r.boxes)):
-                x1, y1, x2, y2 = r.boxes.xyxy[i].tolist()
-                # Convert xyxy → COCO [x, y, width, height]
-                predictions.append({
-                    "image_id": image_id,
-                    "category_id": int(r.boxes.cls[i].item()),
-                    "bbox": [
-                        round(x1, 1),
-                        round(y1, 1),
-                        round(x2 - x1, 1),
-                        round(y2 - y1, 1),
-                    ],
-                    "score": round(float(r.boxes.conf[i].item()), 4),
-                })
+        for box, score, label in zip(fused_boxes, fused_scores, fused_labels):
+            x1 = box[0] * img_w
+            y1 = box[1] * img_h
+            x2 = box[2] * img_w
+            y2 = box[3] * img_h
+            predictions.append({
+                "image_id": image_id,
+                "category_id": int(label),
+                "bbox": [
+                    round(x1, 1),
+                    round(y1, 1),
+                    round(x2 - x1, 1),
+                    round(y2 - y1, 1),
+                ],
+                "score": round(float(score), 4),
+            })
 
-    # Write predictions
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         json.dump(predictions, f)

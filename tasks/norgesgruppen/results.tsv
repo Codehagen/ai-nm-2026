@@ -1,0 +1,2 @@
+timestamp	name	val_metric	model_size_mb	duration_min	status	notes
+2026-03-19 23:18	baseline-yolov8m	0.6894	299.0	0.0	kept	initial submission score
