@@ -102,14 +102,16 @@ def _extract_cell_features(
                 if abs(y - sy) + abs(x - sx) <= 4
             )
 
-            # Distance to nearest ocean and mountain
+            # Distance to nearest ocean and mountain (scan radius 8)
             dist_ocean = 99
             dist_mountain = 99
-            for dy in range(-5, 6):
-                for dx in range(-5, 6):
+            for dy in range(-8, 9):
+                for dx in range(-8, 9):
                     ny, nx = y + dy, x + dx
                     if 0 <= ny < h and 0 <= nx < w:
                         d = abs(dy) + abs(dx)
+                        if d > 8:
+                            continue
                         if initial_grid[ny][nx] == 10 and d < dist_ocean:
                             dist_ocean = d
                         if initial_grid[ny][nx] == 5 and d < dist_mountain:
@@ -124,6 +126,12 @@ def _extract_cell_features(
                 and initial_grid[y + dy][x + dx] == 4
             )
 
+            # Settlements within radius 3
+            settlements_r3 = sum(
+                1 for sx, sy in settl_pos
+                if abs(y - sy) + abs(x - sx) <= 3
+            )
+
             features.append([
                 code, dist, adj_ocean, adj_forest, adj_settl, adj_mountain,
                 int(code == 11), int(code == 4), int(code == 1), int(code == 2),
@@ -131,10 +139,11 @@ def _extract_cell_features(
                 dist2, nearby_settl, len(settl_pos),
                 dist_ocean, dist_mountain, forests_r2,
                 y, x,  # map position (captures fjord/border effects)
+                settlements_r3,
             ])
             coords.append((y, x))
 
-    return np.array(features) if features else np.empty((0, 19)), coords
+    return np.array(features) if features else np.empty((0, 20)), coords
 
 
 def load_gbt_models() -> Optional[list]:
