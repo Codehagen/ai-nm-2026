@@ -90,14 +90,27 @@ def _extract_cell_features(
                 and initial_grid[y + dy][x + dx] == 5
             )
 
+            # Distance to 2nd nearest settlement
+            dists_sorted = sorted(
+                abs(y - sy) + abs(x - sx) for sx, sy in settl_pos
+            )
+            dist2 = dists_sorted[1] if len(dists_sorted) >= 2 else 99
+
+            # Settlements within radius 4
+            nearby_settl = sum(
+                1 for sx, sy in settl_pos
+                if abs(y - sy) + abs(x - sx) <= 4
+            )
+
             features.append([
                 code, dist, adj_ocean, adj_forest, adj_settl, adj_mountain,
                 int(code == 11), int(code == 4), int(code == 1), int(code == 2),
                 int(adj_ocean >= 2),
+                dist2, nearby_settl, len(settl_pos),
             ])
             coords.append((y, x))
 
-    return np.array(features) if features else np.empty((0, 11)), coords
+    return np.array(features) if features else np.empty((0, 14)), coords
 
 
 def load_gbt_models() -> Optional[list]:
