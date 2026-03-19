@@ -44,6 +44,28 @@
 
 Equal time allocation by default. Shift resources to the most improvable task after baselines are set.
 
+## Pre-Competition Readiness (verified 2026-03-19)
+
+### Local Pipeline
+- Setup, tests, validation: ALL PASSING (9/9 tests)
+- No prohibited cloud API imports
+- All 3 APIs boot and respond to health, metadata, and predict
+
+### GCP Infrastructure
+- Project: `ai-nm26osl-1823`, Auth: `devstar18231@gcplab.me`
+- GPU quota confirmed in `europe-west4`:
+  - A100: 64 (prefer this — use `heavy` tier)
+  - L4: 16 (`medium` tier)
+  - T4: 4 (`light` tier)
+- End-to-end deploy tested: create VM -> deploy code -> API live -> teardown
+- Zone fallback: scripts auto-try multiple zones (A100 often stocked out in europe-west4, `us-central1-f` worked)
+- SSH + firewall rules verified working
+
+### Monitoring
+- `bash scripts/gcp/status.sh` — checks all endpoints with zone auto-detection
+- `bash scripts/validate.sh` — full local validation
+- `bash scripts/test-task.sh <task>` — live boot + HTTP test
+
 ## Sponsors
 
 - NorgesGruppen — likely grocery/retail related CV or ML task

@@ -1,17 +1,22 @@
 #!/bin/bash
 
-ZONE="europe-west4-a"
-
 if [ -n "$1" ]; then
-    echo "Deleting VM ainm-$1..."
-    gcloud compute instances delete "ainm-$1" --zone=$ZONE --quiet
-    gcloud compute firewall-rules delete "ainm-$1-port" --quiet 2>/dev/null || true
+    TASKS="$1"
 else
+    TASKS="cv ml nlp"
     echo "Tearing down all VMs..."
-    for TASK in cv ml nlp; do
-        gcloud compute instances delete "ainm-${TASK}" --zone=$ZONE --quiet 2>/dev/null || true
-        gcloud compute firewall-rules delete "ainm-${TASK}-port" --quiet 2>/dev/null || true
-    done
 fi
+
+for TASK in $TASKS; do
+    VM="ainm-${TASK}"
+    ZONE=$(gcloud compute instances list --filter="name=${VM}" --format="value(zone)" 2>/dev/null)
+    if [ -n "$ZONE" ]; then
+        echo "Deleting ${VM} (${ZONE})..."
+        gcloud compute instances delete "${VM}" --zone=$ZONE --quiet
+        gcloud compute firewall-rules delete "${VM}-port" --quiet 2>/dev/null || true
+    else
+        echo "${VM}: not found, skipping"
+    fi
+done
 
 echo "Done."
