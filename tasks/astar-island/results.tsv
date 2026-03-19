@@ -20,3 +20,4 @@ f96e630	91.906229	0.0	14	keep	add dist2/nearby_settlements/total_settlements to 
 e89bdbd	92.153153	0.0	0	keep	increase GBT to 200 trees (LOSO-validated: 91.18)	-
 03a6251	92.677288	0.0	12	keep	add dist_ocean feature to GBT	-
 d9c24c4	93.646245	0.0	18	keep	add dist_mountain/forests_r2/y,x coords to GBT (19 features, LOSO=91.68)	-
+789ec63	94.097019	0.0	1	keep	increase GBT blend weight 0.5 to 0.6 (LOSO=91.73)	-
