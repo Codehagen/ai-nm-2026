@@ -57,6 +57,28 @@ GPU tiers: light (T4 16GB ~$0.35/hr), medium (L4 24GB ~$0.70/hr), heavy (A100 40
 
 Deep Learning VMs have PyTorch+CUDA pre-installed. API runs via systemd-run (survives SSH disconnect).
 
+## Vertex AI Training
+
+Serverless training + HPO — no VM management. Complements raw VMs (which are better for serving + autoresearch).
+
+```bash
+# One-time setup (enable API + create GCS bucket)
+scripts/gcp/vertex-setup.sh
+
+# Submit training job
+scripts/gcp/vertex-train.sh cv heavy           # A100 training job
+scripts/gcp/vertex-train.sh ml light            # T4 training job
+scripts/gcp/vertex-train.sh cv heavy --spot     # Spot pricing
+
+# Hyperparameter tuning
+scripts/gcp/vertex-hpo.sh cv config.yaml        # HPO with config
+scripts/gcp/vertex-hpo.sh cv config.yaml --spot  # Spot pricing
+```
+
+Uses prebuilt PyTorch containers. Models auto-upload to GCS and download to `tasks/<task>/models/`.
+
+For HPO, use `shared/vertex_utils.report_metric("val_metric", score)` in train.py to report metrics to Vizier.
+
 ## Autoresearch
 
 Two modes for overnight autonomous optimization:

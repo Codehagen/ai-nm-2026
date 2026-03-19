@@ -101,6 +101,42 @@ scripts/gcp/deploy-task.sh cv --name=vit               # deploy to named VM
 scripts/gcp/train-task.sh cv                           # run training
 ```
 
+### Vertex AI (Serverless Training + HPO)
+
+Serverless training on Vertex AI — no VM management, prebuilt PyTorch containers.
+Hybrid approach: Vertex AI for large training jobs & HPO, raw VMs for serving & autoresearch.
+
+```bash
+# One-time setup
+scripts/gcp/vertex-setup.sh
+
+# Submit training job (uploads code to GCS, runs on Vertex AI, downloads models)
+scripts/gcp/vertex-train.sh cv heavy               # A100 training
+scripts/gcp/vertex-train.sh ml light               # T4 training
+scripts/gcp/vertex-train.sh cv heavy --spot        # spot pricing
+
+# Hyperparameter tuning (parallel trials via Vertex AI Vizier)
+scripts/gcp/vertex-hpo.sh cv config.yaml           # HPO with config
+scripts/gcp/vertex-hpo.sh cv config.yaml --spot    # spot pricing
+```
+
+HPO config YAML example:
+```yaml
+studySpec:
+  metrics:
+    - metricId: val_metric
+      goal: MAXIMIZE
+  parameters:
+    - parameterId: learning_rate
+      doubleValueSpec: { minValue: 0.0001, maxValue: 0.01 }
+    - parameterId: batch_size
+      discreteValueSpec: { values: [8, 16, 32, 64] }
+maxTrialCount: 20
+parallelTrialCount: 3
+```
+
+In train.py, use `shared.vertex_utils.report_metric("val_metric", score)` to report metrics (no-op locally).
+
 ### GPU Tiers
 
 | Tier | Machine | GPU | VRAM | Cost/hr | Spot |

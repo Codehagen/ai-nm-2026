@@ -24,6 +24,7 @@
 - Launch autoresearch loops (protocol: ~/Utvikling/autoresearch-mlx/program.md)
 - GCP VMs for CV/large models (PyTorch/CUDA)
 - Local Mac for NLP/small models (MLX via autoresearch-mlx)
+- **Vertex AI HPO**: Submit parallel hyperparameter tuning jobs via `scripts/gcp/vertex-hpo.sh` — automated search over learning rate, batch size, etc. with Vizier. Runs unattended, reports best trial.
 - Each task needs: prepare.py (fixed), train.py (mutable), task.md (metric)
 - Agent iterates autonomously: edit train.py → run → keep/discard → repeat
 - Monitor GCP via `scripts/gcp/status.sh`
