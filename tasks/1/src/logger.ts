@@ -14,6 +14,7 @@ mkdirSync(REQUESTS_DIR, { recursive: true });
 
 export interface SolveLog {
   timestamp: string;
+  model?: string;
   prompt: string;
   filesCount: number;
   steps: number;

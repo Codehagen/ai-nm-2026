@@ -6,7 +6,9 @@
     "dev": "tsx watch src/api.ts",
     "start": "tsx src/api.ts",
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "review": "tsx scripts/review.ts",
+    "restart": "lsof -ti:9053 | xargs kill -9 2>/dev/null; sleep 1; tsx src/api.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.58",

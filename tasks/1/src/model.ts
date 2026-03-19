@@ -12,6 +12,8 @@ const gateway = createGateway({
     process.env.AI_GATEWAY_BASE_URL || "https://ai-gateway.vercel.sh/v1/ai",
 });
 
+const MODEL_ID = process.env.MODEL_ID || "anthropic/claude-sonnet-4-20250514";
+
 /** Oslo timezone date (avoids UTC midnight drift) */
 function getOsloDate(): string {
   return new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Oslo" });
@@ -56,7 +58,7 @@ export async function solve(
   const today = getOsloDate();
 
   const result = await generateText({
-    model: gateway("anthropic/claude-sonnet-4-20250514"),
+    model: gateway(MODEL_ID),
     system: SYSTEM_PROMPT + `\n\nToday's date: ${today}`,
     messages: [{ role: "user", content }],
     tools: {
@@ -122,6 +124,7 @@ export async function solve(
 
   logSolve({
     timestamp: new Date().toISOString(),
+    model: MODEL_ID,
     prompt: request.prompt,
     filesCount: request.files.length,
     steps: result.steps.length,
