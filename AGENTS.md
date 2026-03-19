@@ -5,7 +5,7 @@
 ## Quick Start
 
 ```bash
-cd ai-nm-1
+cd ai-nm-2026
 bash scripts/setup.sh          # install deps
 uvicorn tasks/cv/api:app       # run a task API
 pytest tasks/cv/tests/          # test a task

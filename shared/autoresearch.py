@@ -55,7 +55,7 @@ def log_experiment(log_path: str, entry: dict):
     log_file.parent.mkdir(parents=True, exist_ok=True)
 
     logs = []
-    if log_file.exists():
+    if log_file.exists() and log_file.stat().st_size > 0:
         logs = json.loads(log_file.read_text())
     logs.append({**entry, "timestamp": datetime.now().isoformat()})
     log_file.write_text(json.dumps(logs, indent=2))

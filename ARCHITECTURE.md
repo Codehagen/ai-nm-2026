@@ -3,7 +3,7 @@
 ## Monorepo Structure
 
 ```
-ai-nm-1/
+ai-nm-2026/
 ├── tasks/
 │   ├── cv/          # Computer Vision (port 9050)
 │   ├── ml/          # Machine Learning (port 9051)

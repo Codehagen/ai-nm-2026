@@ -3,17 +3,20 @@ name: Validate
 on:
   push:
     paths:
-      - 'ai-nm-1/**'
+      - 'tasks/**'
+      - 'shared/**'
+      - 'scripts/**'
+      - 'requirements.txt'
   pull_request:
     paths:
-      - 'ai-nm-1/**'
+      - 'tasks/**'
+      - 'shared/**'
+      - 'scripts/**'
+      - 'requirements.txt'
 
 jobs:
   validate:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ai-nm-1
 
     steps:
       - uses: actions/checkout@v4

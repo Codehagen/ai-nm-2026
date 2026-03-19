@@ -6,7 +6,7 @@ Read `AGENTS.md` for full project navigation and golden rules.
 
 ```bash
 # Setup
-cd ai-nm-1
+cd ai-nm-2026
 bash scripts/setup.sh
 
 # Run a task API
