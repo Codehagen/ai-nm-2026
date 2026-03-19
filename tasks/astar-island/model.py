@@ -140,8 +140,12 @@ def build_static_prediction(initial_grid: list[list[int]]) -> np.ndarray:
                 else:
                     dist = 99
 
-                coastal = _is_coastal(initial_grid, y, x)
-                table = PLAINS_COASTAL_BY_DISTANCE if coastal else PLAINS_INLAND_BY_DISTANCE
+                # Key insight: cells with only 1 ocean neighbor behave like
+                # inland cells (high P(settl), ~zero P(port)). True port
+                # formation requires 2+ adjacent ocean tiles.
+                adj_ocean = _count_adjacent_ocean(initial_grid, y, x)
+                exposed_coastal = adj_ocean >= 2
+                table = PLAINS_COASTAL_BY_DISTANCE if exposed_coastal else PLAINS_INLAND_BY_DISTANCE
 
                 for max_d in sorted(table.keys()):
                     if dist <= max_d:
@@ -158,8 +162,9 @@ def build_static_prediction(initial_grid: list[list[int]]) -> np.ndarray:
                 else:
                     dist = 99
 
-                coastal = _is_coastal(initial_grid, y, x)
-                table = FOREST_COASTAL_BY_DISTANCE if coastal else FOREST_INLAND_BY_DISTANCE
+                adj_ocean = _count_adjacent_ocean(initial_grid, y, x)
+                exposed_coastal = adj_ocean >= 2
+                table = FOREST_COASTAL_BY_DISTANCE if exposed_coastal else FOREST_INLAND_BY_DISTANCE
 
                 for max_d in sorted(table.keys()):
                     if dist <= max_d:
@@ -247,6 +252,20 @@ def _is_coastal(grid: list[list[int]], y: int, x: int) -> bool:
     return False
 
 
+def _count_adjacent_ocean(grid: list[list[int]], y: int, x: int) -> int:
+    """Count ocean cells adjacent to (y, x)."""
+    h, w = len(grid), len(grid[0])
+    count = 0
+    for dy in [-1, 0, 1]:
+        for dx in [-1, 0, 1]:
+            if dy == 0 and dx == 0:
+                continue
+            ny, nx = y + dy, x + dx
+            if 0 <= ny < h and 0 <= nx < w and grid[ny][nx] == 10:
+                count += 1
+    return count
+
+
 def _count_adjacent_forests(grid: list[list[int]], y: int, x: int) -> int:
     """Count forest cells adjacent to (y, x)."""
     h, w = len(grid), len(grid[0])
@@ -314,7 +333,8 @@ def fill_unobserved_dynamic(
             if code in {10, 5}:
                 continue
 
-            coastal = _is_coastal(initial_grid, y, x)
+            adj_ocean = _count_adjacent_ocean(initial_grid, y, x)
+            exposed_coastal = adj_ocean >= 2
             adj_forests = _count_adjacent_forests(initial_grid, y, x)
             dist = _distance_to_nearest_settlement(initial_grid, y, x, settlements)
 
@@ -337,15 +357,15 @@ def fill_unobserved_dynamic(
                 else:
                     tensor[y, x] = [0.10, 0.05, 0.02, 0.25, 0.53, 0.05]
 
-            elif code == 4:  # Forest — distance + coastal from GT tables
-                table = FOREST_COASTAL_BY_DISTANCE if coastal else FOREST_INLAND_BY_DISTANCE
+            elif code == 4:  # Forest — distance + exposed coastal from GT tables
+                table = FOREST_COASTAL_BY_DISTANCE if exposed_coastal else FOREST_INLAND_BY_DISTANCE
                 for max_d in sorted(table.keys()):
                     if dist <= max_d:
                         tensor[y, x] = table[max_d]
                         break
 
-            elif code in {0, 11}:  # Plains — distance + coastal from GT tables
-                table = PLAINS_COASTAL_BY_DISTANCE if coastal else PLAINS_INLAND_BY_DISTANCE
+            elif code in {0, 11}:  # Plains — distance + exposed coastal from GT tables
+                table = PLAINS_COASTAL_BY_DISTANCE if exposed_coastal else PLAINS_INLAND_BY_DISTANCE
                 for max_d in sorted(table.keys()):
                     if dist <= max_d:
                         tensor[y, x] = table[max_d]
