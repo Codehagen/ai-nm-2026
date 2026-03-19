@@ -67,7 +67,6 @@ def main():
     model_path = Path(__file__).parent / "best.pt"
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = YOLO(str(model_path))
-    model.half()  # FP16 — 2x faster on L4, negligible quality loss
 
     predictions = []
 
