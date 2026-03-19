@@ -41,13 +41,14 @@ from utils import normalize_prediction, grid_to_class_array
 
 # Empirical transition probabilities computed from Round 1 observations
 # (50 queries across 5 seeds, pooled). Format: init_code → [P(class 0..5)]
+# Calibrated from Round 1 GROUND TRUTH (not stochastic observations)
 EMPIRICAL_TRANSITIONS = {
-    1:  [0.3697, 0.4242, 0.0061, 0.0152, 0.1848, 0.0000],  # Settlement
-    2:  [0.7500, 0.0000, 0.2500, 0.0000, 0.0000, 0.0000],  # Port
-    4:  [0.0658, 0.1621, 0.0089, 0.0086, 0.7546, 0.0000],  # Forest
+    1:  [0.3705, 0.4100, 0.0078, 0.0311, 0.1805, 0.0000],  # Settlement (n=201)
+    2:  [0.3643, 0.1200, 0.3186, 0.0214, 0.1757, 0.0000],  # Port (n=7)
+    4:  [0.0722, 0.1645, 0.0147, 0.0129, 0.7357, 0.0000],  # Forest (n=1663)
     5:  [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 1.0000],  # Mountain
     10: [1.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],  # Ocean
-    11: [0.7745, 0.1654, 0.0116, 0.0136, 0.0350, 0.0000],  # Plains (global avg)
+    11: [0.7771, 0.1611, 0.0145, 0.0126, 0.0348, 0.0000],  # Plains (n=4719)
 }
 
 # Distance-based transition for Plains (code 11) — distance to nearest settlement
