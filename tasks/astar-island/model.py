@@ -102,15 +102,26 @@ def _extract_cell_features(
                 if abs(y - sy) + abs(x - sx) <= 4
             )
 
+            # Distance to nearest ocean cell
+            dist_ocean = 99
+            for dy in range(-5, 6):
+                for dx in range(-5, 6):
+                    ny, nx = y + dy, x + dx
+                    if 0 <= ny < h and 0 <= nx < w and initial_grid[ny][nx] == 10:
+                        d = abs(dy) + abs(dx)
+                        if d < dist_ocean:
+                            dist_ocean = d
+
             features.append([
                 code, dist, adj_ocean, adj_forest, adj_settl, adj_mountain,
                 int(code == 11), int(code == 4), int(code == 1), int(code == 2),
                 int(adj_ocean >= 2),
                 dist2, nearby_settl, len(settl_pos),
+                dist_ocean,
             ])
             coords.append((y, x))
 
-    return np.array(features) if features else np.empty((0, 14)), coords
+    return np.array(features) if features else np.empty((0, 15)), coords
 
 
 def load_gbt_models() -> Optional[list]:
