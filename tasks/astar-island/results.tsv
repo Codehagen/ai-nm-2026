@@ -8,3 +8,4 @@ uncommit	89.343843	0.0	15	keep	disable noisy Bayesian obs layer + reduce calibra
 89ac76f	89.512792	0.0	29	keep	exposed coastal split (2+ ocean neighbors for port tables)	-
 4875ee2	89.513903	0.0	7	keep	coastal settlement port priors + fix inland P(port)=0	-
 79905d7	89.732869	0.0	5	keep	apply Layer 3 priors to all cells (not just unobserved)	-
+4d98636	89.740081	0.0	2	keep	tune calibration blend_weight 0.20 to 0.16	-

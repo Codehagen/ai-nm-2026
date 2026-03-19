@@ -482,7 +482,8 @@ def apply_calibration(
             if context in priors:
                 calibrated = np.array(priors[context], dtype=np.float64)
                 # Blend calibration with current prediction (calibration has priority)
-                blend_weight = calibration.get("blend_weight", 0.5)
+                # Tuned: 0.16 is optimal (grid searched 0.05-0.20)
+                blend_weight = 0.16
                 tensor[y, x] = (1 - blend_weight) * tensor[y, x] + blend_weight * calibrated
 
     return tensor
