@@ -1,14 +1,25 @@
 #!/bin/bash
+# Deploy task code to a GCP VM and start the API.
+#
+# Usage:
+#   scripts/gcp/deploy-task.sh cv              — deploy to ainm-cv
+#   scripts/gcp/deploy-task.sh cv --name=vit   — deploy to ainm-cv-vit
 
 cd "$(dirname "$0")/../.."
 
 TASK=$1
+SUFFIX=""
+shift 2>/dev/null || true
+for arg in "$@"; do
+    case $arg in --name=*) SUFFIX="-${arg#--name=}" ;; esac
+done
+
 if [ -z "$TASK" ]; then
-    echo "Usage: scripts/gcp/deploy-task.sh <cv|ml|nlp>"
+    echo "Usage: scripts/gcp/deploy-task.sh <cv|ml|nlp> [--name=suffix]"
     exit 1
 fi
 
-VM="ainm-${TASK}"
+VM="ainm-${TASK}${SUFFIX}"
 
 # Auto-detect zone
 ZONE=$(gcloud compute instances list --filter="name=${VM}" --format="value(zone)" 2>/dev/null)
