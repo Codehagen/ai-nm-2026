@@ -20,6 +20,20 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from pathlib import Path
+
+# Disable wandb to avoid project name validation issues
+os.environ["WANDB_DISABLED"] = "true"
+os.environ["WANDB_MODE"] = "disabled"
+
+# Fix PyTorch 2.6+ weights_only=True default breaking ultralytics 8.1.0
+import torch
+_original_torch_load = torch.load
+def _patched_torch_load(*args, **kwargs):
+    if 'weights_only' not in kwargs:
+        kwargs['weights_only'] = False
+    return _original_torch_load(*args, **kwargs)
+torch.load = _patched_torch_load
+
 from ultralytics import YOLO
 
 
@@ -73,7 +87,7 @@ def train():
         batch=args.batch,
         patience=args.patience,
         device=args.device,
-        project=str(task_dir / args.project),
+        project=args.project,
         name=args.name,
         exist_ok=True,
         seed=args.seed,
@@ -105,7 +119,7 @@ def train():
     map50 = metrics.get("metrics/mAP50(B)", 0.0)
 
     # Copy best.pt to models/
-    best_pt = task_dir / args.project / args.name / "weights" / "best.pt"
+    best_pt = Path(args.project) / args.name / "weights" / "best.pt"
     models_dir = task_dir / "models"
     models_dir.mkdir(exist_ok=True)
     if best_pt.exists():
