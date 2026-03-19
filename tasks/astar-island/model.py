@@ -102,26 +102,39 @@ def _extract_cell_features(
                 if abs(y - sy) + abs(x - sx) <= 4
             )
 
-            # Distance to nearest ocean cell
+            # Distance to nearest ocean and mountain
             dist_ocean = 99
+            dist_mountain = 99
             for dy in range(-5, 6):
                 for dx in range(-5, 6):
                     ny, nx = y + dy, x + dx
-                    if 0 <= ny < h and 0 <= nx < w and initial_grid[ny][nx] == 10:
+                    if 0 <= ny < h and 0 <= nx < w:
                         d = abs(dy) + abs(dx)
-                        if d < dist_ocean:
+                        if initial_grid[ny][nx] == 10 and d < dist_ocean:
                             dist_ocean = d
+                        if initial_grid[ny][nx] == 5 and d < dist_mountain:
+                            dist_mountain = d
+
+            # Count forests in radius 2
+            forests_r2 = sum(
+                1 for dy in range(-2, 3) for dx in range(-2, 3)
+                if not (dy == 0 and dx == 0)
+                and abs(dy) + abs(dx) <= 2
+                and 0 <= y + dy < h and 0 <= x + dx < w
+                and initial_grid[y + dy][x + dx] == 4
+            )
 
             features.append([
                 code, dist, adj_ocean, adj_forest, adj_settl, adj_mountain,
                 int(code == 11), int(code == 4), int(code == 1), int(code == 2),
                 int(adj_ocean >= 2),
                 dist2, nearby_settl, len(settl_pos),
-                dist_ocean,
+                dist_ocean, dist_mountain, forests_r2,
+                y, x,  # map position (captures fjord/border effects)
             ])
             coords.append((y, x))
 
-    return np.array(features) if features else np.empty((0, 15)), coords
+    return np.array(features) if features else np.empty((0, 19)), coords
 
 
 def load_gbt_models() -> Optional[list]:
