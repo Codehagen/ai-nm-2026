@@ -2,6 +2,35 @@
 
 Read `AGENTS.md` for full project navigation and golden rules.
 
+## gstack
+
+Use the /browse skill from gstack for all web browsing. Never use mcp__claude-in-chrome__* tools.
+
+Available skills:
+- /office-hours — YC-style brainstorming and idea validation
+- /plan-ceo-review — CEO-level plan review
+- /plan-eng-review — Engineering plan review
+- /plan-design-review — Design review
+- /design-consultation — Design consultation
+- /review — Code review
+- /ship — Ship/deploy workflow
+- /browse — Headless browser for web browsing, QA testing, and site dogfooding
+- /qa — QA testing
+- /qa-only — Report-only QA testing
+- /design-review — Visual design QA review
+- /setup-browser-cookies — Set up browser cookies for authenticated browsing
+- /retro — Retrospective
+- /investigate — Systematic debugging with root cause analysis
+- /document-release — Post-ship documentation update
+- /codex — OpenAI Codex second opinion (review, challenge, consult)
+- /careful — Safety guardrails for destructive commands
+- /freeze — Restrict edits to a specific directory
+- /guard — Full safety mode (careful + freeze)
+- /unfreeze — Remove edit restrictions
+- /gstack-upgrade — Upgrade gstack to latest version
+
+If gstack skills aren't working, run `cd .claude/skills/gstack && ./setup` to build the binary and register skills.
+
 ## Local Dev
 
 ```bash
