@@ -47,7 +47,18 @@ EMPIRICAL_TRANSITIONS = {
     4:  [0.0658, 0.1621, 0.0089, 0.0086, 0.7546, 0.0000],  # Forest
     5:  [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 1.0000],  # Mountain
     10: [1.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],  # Ocean
-    11: [0.7745, 0.1654, 0.0116, 0.0136, 0.0350, 0.0000],  # Plains
+    11: [0.7745, 0.1654, 0.0116, 0.0136, 0.0350, 0.0000],  # Plains (global avg)
+}
+
+# Distance-based transition for Plains (code 11) — distance to nearest settlement
+# Measured empirically from Round 1 Seed 0 observations
+# Format: max_distance → [P(empty), P(settlement), P(port), P(ruin), P(forest), P(mountain)]
+PLAINS_BY_DISTANCE = {
+    2:  [0.700, 0.215, 0.006, 0.009, 0.070, 0.000],  # dist 1-2
+    4:  [0.730, 0.184, 0.024, 0.006, 0.056, 0.000],  # dist 3-4
+    6:  [0.868, 0.100, 0.000, 0.010, 0.022, 0.000],  # dist 5-6
+    8:  [0.920, 0.065, 0.005, 0.000, 0.005, 0.000],  # dist 7-8
+    99: [1.000, 0.000, 0.000, 0.000, 0.000, 0.000],  # dist 9+
 }
 
 
@@ -56,30 +67,48 @@ EMPIRICAL_TRANSITIONS = {
 # ──────────────────────────────────────────────────────────────
 
 def build_static_prediction(initial_grid: list[list[int]]) -> np.ndarray:
-    """Build prediction tensor for cells that never change.
+    """Build prediction tensor using empirical transition probabilities.
 
-    Ocean/Plains/Empty → [1, 0, 0, 0, 0, 0]  (class 0)
-    Mountain          → [0, 0, 0, 0, 0, 1]  (class 5)
-    Forest (interior) → high P(forest), small P(others)
-    Settlement/Port   → uniform prior (will be refined later)
+    For most terrain types, uses global empirical transitions.
+    For Plains (code 11), uses distance-based priors since settlement
+    colonization decays sharply with distance.
     """
     h = len(initial_grid)
     w = len(initial_grid[0]) if h > 0 else 0
     tensor = np.full((h, w, NUM_CLASSES), 1.0 / NUM_CLASSES)
 
+    # Pre-compute settlement positions for distance calculation
+    settlement_positions = []
+    for y in range(h):
+        for x in range(w):
+            if initial_grid[y][x] in {1, 2}:
+                settlement_positions.append((y, x))
+
     for y in range(h):
         for x in range(w):
             code = initial_grid[y][x]
 
-            if code in EMPIRICAL_TRANSITIONS:
-                # Use empirical transition probabilities from Round 1 data
+            if code == 11:
+                # Plains — use distance-based transition probabilities
+                if settlement_positions:
+                    dist = min(
+                        abs(y - sy) + abs(x - sx)
+                        for sy, sx in settlement_positions
+                    )
+                else:
+                    dist = 99
+
+                # Find the right distance bucket
+                for max_d in sorted(PLAINS_BY_DISTANCE.keys()):
+                    if dist <= max_d:
+                        tensor[y, x] = PLAINS_BY_DISTANCE[max_d]
+                        break
+
+            elif code in EMPIRICAL_TRANSITIONS:
                 tensor[y, x] = EMPIRICAL_TRANSITIONS[code]
             elif code == 0:
-                # Generic empty — same as ocean
                 tensor[y, x] = [1.0, 0, 0, 0, 0, 0]
             elif code == 3:
-                # Ruin — not enough data yet, use informed estimate
-                # Ruins near settlements get reclaimed, far ones get forested
                 tensor[y, x] = [0.15, 0.15, 0.05, 0.25, 0.35, 0.05]
 
     return tensor
