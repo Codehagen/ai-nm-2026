@@ -30,15 +30,19 @@ app.post("/solve", zValidator("json", SolveRequestSchema), async (c) => {
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), SOLVE_TIMEOUT_MS);
 
+  const startMs = Date.now();
   try {
     const response = await solve(request, ac.signal);
+    console.log(`[solve] Completed in ${((Date.now() - startMs) / 1000).toFixed(1)}s`);
     return c.json(response);
   } catch (e: unknown) {
+    const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);
     if (e instanceof Error && e.name === "AbortError") {
-      console.warn("[timeout] 4.5min hit — returning completed with partial work");
+      console.error(`[solve] TIMEOUT after ${elapsed}s — returning completed with partial work`);
       return c.json({ status: "completed" as const });
     }
-    console.error("[solve] Unhandled error:", e);
+    const errMsg = e instanceof Error ? e.message : String(e);
+    console.error(`[solve] FAILED after ${elapsed}s: ${errMsg}`);
     return c.json({ status: "completed" as const });
   } finally {
     clearTimeout(timer);
