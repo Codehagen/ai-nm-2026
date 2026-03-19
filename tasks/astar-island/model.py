@@ -39,6 +39,18 @@ from dtos import (
 from utils import normalize_prediction, grid_to_class_array
 
 
+# Empirical transition probabilities computed from Round 1 observations
+# (50 queries across 5 seeds, pooled). Format: init_code → [P(class 0..5)]
+EMPIRICAL_TRANSITIONS = {
+    1:  [0.3697, 0.4242, 0.0061, 0.0152, 0.1848, 0.0000],  # Settlement
+    2:  [0.7500, 0.0000, 0.2500, 0.0000, 0.0000, 0.0000],  # Port
+    4:  [0.0658, 0.1621, 0.0089, 0.0086, 0.7546, 0.0000],  # Forest
+    5:  [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 1.0000],  # Mountain
+    10: [1.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],  # Ocean
+    11: [0.7745, 0.1654, 0.0116, 0.0136, 0.0350, 0.0000],  # Plains
+}
+
+
 # ──────────────────────────────────────────────────────────────
 # Layer 1: Static prediction
 # ──────────────────────────────────────────────────────────────
@@ -58,27 +70,17 @@ def build_static_prediction(initial_grid: list[list[int]]) -> np.ndarray:
     for y in range(h):
         for x in range(w):
             code = initial_grid[y][x]
-            cls = TERRAIN_TO_CLASS.get(code, 0)
 
-            if code in {0, 10, 11}:
-                # Ocean, Plains, Empty — always class 0
+            if code in EMPIRICAL_TRANSITIONS:
+                # Use empirical transition probabilities from Round 1 data
+                tensor[y, x] = EMPIRICAL_TRANSITIONS[code]
+            elif code == 0:
+                # Generic empty — same as ocean
                 tensor[y, x] = [1.0, 0, 0, 0, 0, 0]
-            elif code == 5:
-                # Mountain — never changes
-                tensor[y, x] = [0, 0, 0, 0, 0, 1.0]
-            elif code == 4:
-                # Forest — mostly stays (~21% init → ~21% observed), slight decline
-                tensor[y, x] = [0.05, 0.05, 0.02, 0.03, 0.80, 0.05]
-            elif code == 1:
-                # Settlement — very high survival rate (100% observed alive)
-                # Settlements expand aggressively: 2-4% → 15-17% of map
-                tensor[y, x] = [0.05, 0.55, 0.15, 0.15, 0.05, 0.05]
-            elif code == 2:
-                # Port — similar high survival, ports are settlements that happen to be coastal
-                tensor[y, x] = [0.05, 0.15, 0.55, 0.15, 0.05, 0.05]
             elif code == 3:
-                # Ruin — rare in observations (~1.2%), likely reclaimed or forested
-                tensor[y, x] = [0.10, 0.15, 0.05, 0.30, 0.35, 0.05]
+                # Ruin — not enough data yet, use informed estimate
+                # Ruins near settlements get reclaimed, far ones get forested
+                tensor[y, x] = [0.15, 0.15, 0.05, 0.25, 0.35, 0.05]
 
     return tensor
 
