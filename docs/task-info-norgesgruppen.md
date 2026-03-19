@@ -23,9 +23,9 @@ Detect grocery products on store shelves. Upload your model code as a `.zip` fil
 Two files available from the **Submit** page (login required):
 
 **COCO Dataset** (`NM_NGD_coco_dataset.zip`, ~864 MB)
-- 254 shelf images from Norwegian grocery stores
-- ~22,300 COCO-format bounding box annotations
-- 357 product categories (category_id 0-356)
+- 248 shelf images from Norwegian grocery stores
+- ~22,700 COCO-format bounding box annotations
+- 356 product categories (category_id 0-355) + unknown_product at 356
 - Images from 4 store sections: Egg, Frokost, Knekkebrod, Varmedrikker
 
 **Product Reference Images** (`NM_NGD_product_images.zip`, ~60 MB)
@@ -63,7 +63,7 @@ COCO annotations file (`annotations.json`):
 }
 ```
 
-Key: `bbox` is `[x, y, width, height]` in pixels (COCO format).
+Key fields: `bbox` is `[x, y, width, height]` in pixels (COCO format). `product_code` is the barcode. `corrected` indicates manually verified annotations.
 
 ---
 
@@ -116,7 +116,7 @@ JSON array to the `--output` path:
 | Field | Type | Description |
 |---|---|---|
 | `image_id` | int | Numeric ID from filename (`img_00042.jpg` → `42`) |
-| `category_id` | int | Product category ID (0-356) |
+| `category_id` | int | Product category ID (0-355). See categories list in annotations.json |
 | `bbox` | [x, y, w, h] | Bounding box in COCO format |
 | `score` | float | Confidence score (0-1) |
 
@@ -152,6 +152,19 @@ YOLOv9, YOLOv10, YOLO11, RF-DETR, Detectron2, MMDetection, HuggingFace Transform
 
 Options: Export to ONNX, or include model code in .py files + .pt state_dict weights.
 
+HuggingFace `.bin` files: The `.bin` extension is not allowed, but the format is identical to `.pt` (PyTorch pickle). Rename `.bin` → `.pt`, or convert with `safetensors.torch.save_file(state_dict, "model.safetensors")`.
+
+Models larger than 420 MB: Quantize to FP16 or INT8 to fit within the 420 MB weight limit. FP16 is the recommended precision for L4 GPU inference — it's both smaller and faster.
+
+### Recommended Weight Formats
+
+| Approach | Format | When to use |
+|---|---|---|
+| ONNX export | `.onnx` | Universal — any framework, 2-3x faster on CPU |
+| ultralytics .pt (pinned 8.1.0) | `.pt` | Simple YOLOv8/RT-DETR workflows |
+| state_dict + model class | `.pt` | Custom architectures with standard PyTorch ops |
+| safetensors | `.safetensors` | Safe loading, no pickle, fast |
+
 ### Version Compatibility Risks
 
 | Risk | Fix |
@@ -163,16 +176,46 @@ Options: Export to ONNX, or include model code in .py files + .pt state_dict wei
 
 ## Security Restrictions
 
-Blocked: `import os`, `import subprocess`, `import socket`, `import ctypes`, `import builtins`, `eval()`, `exec()`, `compile()`, `__import__()`. Use `pathlib` instead of `os`.
+The following imports are blocked by the security scanner:
+
+- `os`, `sys`, `subprocess`, `socket`, `ctypes`, `builtins`, `importlib`
+- `pickle`, `marshal`, `shelve`, `shutil`
+- `yaml` (use `json` for config files instead)
+- `requests`, `urllib`, `http.client`
+- `multiprocessing`, `threading`, `signal`, `gc`
+- `code`, `codeop`, `pty`
+
+The following calls are blocked:
+
+- `eval()`, `exec()`, `compile()`, `__import__()`, `getattr()` with dangerous names
+
+Also blocked: ELF/Mach-O/PE binaries, symlinks, path traversal.
+
+Use `pathlib` instead of `os` for file operations. Use `json` instead of `yaml` for config files.
 
 ## Creating Your Zip
 
+`run.py` must be at the **root** — not inside a subfolder. This is the most common submission error.
+
+Linux / macOS:
 ```bash
 cd my_submission/
 zip -r ../submission.zip . -x ".*" "__MACOSX/*"
 ```
 
-`run.py` must be at the **root** — not inside a subfolder.
+Windows (PowerShell):
+```powershell
+cd my_submission
+Compress-Archive -Path .\* -DestinationPath ..\submission.zip
+```
+
+Do **not** right-click a folder and use "Compress" (macOS) or "Send to → Compressed folder" (Windows) — both nest files inside a subfolder.
+
+Verify your zip:
+```bash
+unzip -l submission.zip | head -10
+```
+You should see `run.py` directly — not `my_submission/run.py`.
 
 ---
 
@@ -192,9 +235,10 @@ Both use mAP@0.5.
 
 ### Classification mAP (30%)
 - True positive if IoU >= 0.5 **AND** correct `category_id`
+- 356 product categories (IDs 0-355) from the training data annotations.json
 
 ### Detection-Only Submissions
-Set `category_id: 0` for all predictions → score up to **0.70** (70%).
+Set `category_id: 0` for all predictions → score up to **0.70** (70%). Adding correct product identification unlocks the remaining 30%.
 
 Score range: 0.0 (worst) to 1.0 (perfect).
 
@@ -204,19 +248,65 @@ Score range: 0.0 (worst) to 1.0 (perfect).
 |---|---|
 | Submissions in-flight | 2 per team |
 | Submissions per day | 3 per team |
-| Infrastructure failure freebies | 2 per day |
+| Infrastructure failure freebies | 2 per day (don't count against your 3) |
 
-Limits reset at midnight UTC.
+Limits reset at midnight UTC. If you hit an infrastructure error (our fault), it doesn't count against your daily limit — up to 2 per day. After that, infrastructure failures consume a regular submission slot.
 
 ## Leaderboard
 
 Public leaderboard = public test set. Final ranking = private test set (never revealed).
 
+### Select for Final Evaluation
+
+By default, your best-scoring submission is used for the final private evaluation. You can override this by clicking **Select for final** on any completed submission in your submission history. This lets you choose a submission you trust, even if it's not your highest public score. You can change your selection at any time before the competition ends.
+
 ---
 
 # Examples
 
-## YOLOv8 Example (Fine-tuned)
+## Random Baseline
+
+Minimal `run.py` that generates random predictions (use to verify your setup):
+
+```python
+import argparse
+import json
+import random
+from pathlib import Path
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", required=True)
+    parser.add_argument("--output", required=True)
+    args = parser.parse_args()
+
+    predictions = []
+    for img in sorted(Path(args.input).iterdir()):
+        if img.suffix.lower() not in (".jpg", ".jpeg", ".png"):
+            continue
+        image_id = int(img.stem.split("_")[-1])
+        for _ in range(random.randint(5, 20)):
+            predictions.append({
+                "image_id": image_id,
+                "category_id": random.randint(0, 356),
+                "bbox": [
+                    round(random.uniform(0, 1500), 1),
+                    round(random.uniform(0, 800), 1),
+                    round(random.uniform(20, 200), 1),
+                    round(random.uniform(20, 200), 1),
+                ],
+                "score": round(random.uniform(0.01, 1.0), 3),
+            })
+
+    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+    with open(args.output, "w") as f:
+        json.dump(predictions, f)
+
+if __name__ == "__main__":
+    main()
+```
+
+## YOLOv8 Example
 
 ```python
 import argparse
@@ -262,17 +352,60 @@ if __name__ == "__main__":
 
 ## ONNX Inference Example
 
-Export:
+ONNX works with any model framework. Use `CUDAExecutionProvider` for GPU acceleration.
+
+Export (on your training machine):
 ```python
+# From ultralytics:
 from ultralytics import YOLO
 model = YOLO("best.pt")
 model.export(format="onnx", imgsz=640, opset=17)
+
+# From any PyTorch model:
+import torch
+model = ...  # your trained model
+dummy = torch.randn(1, 3, 640, 640)
+torch.onnx.export(model, dummy, "model.onnx", opset_version=17)
 ```
 
-Inference:
+Inference (in your `run.py`):
 ```python
+import argparse
+import json
+import numpy as np
+from pathlib import Path
+from PIL import Image
 import onnxruntime as ort
-session = ort.InferenceSession("model.onnx", providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", required=True)
+    parser.add_argument("--output", required=True)
+    args = parser.parse_args()
+
+    session = ort.InferenceSession("model.onnx", providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
+    input_name = session.get_inputs()[0].name
+    predictions = []
+
+    for img_path in sorted(Path(args.input).iterdir()):
+        if img_path.suffix.lower() not in (".jpg", ".jpeg", ".png"):
+            continue
+        image_id = int(img_path.stem.split("_")[-1])
+
+        img = Image.open(img_path).convert("RGB").resize((640, 640))
+        arr = np.array(img).astype(np.float32) / 255.0
+        arr = np.transpose(arr, (2, 0, 1))[np.newaxis, ...]
+
+        outputs = session.run(None, {input_name: arr})
+        # Process outputs based on your model's output format
+        # ...
+
+    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+    with open(args.output, "w") as f:
+        json.dump(predictions, f)
+
+if __name__ == "__main__":
+    main()
 ```
 
 ## Common Errors
@@ -286,7 +419,9 @@ session = ort.InferenceSession("model.onnx", providers=["CUDAExecutionProvider",
 | `Timed out after 300s` | Use GPU (`model.to("cuda")`), or use smaller model |
 | `Exit code 137` | OOM — reduce batch size or use FP16 |
 | `Exit code 139` | Version mismatch — re-export or use ONNX |
-| `ModuleNotFoundError` | Package not in sandbox — export to ONNX |
+| `No predictions.json in output` | Make sure `run.py` writes to the `--output` path |
+| `ModuleNotFoundError` | Package not in sandbox — export to ONNX or include model code in .py files |
+| `KeyError / RuntimeError on model load` | Version mismatch — pin exact sandbox versions or export to ONNX |
 
 ## Tips
 
@@ -296,3 +431,6 @@ session = ort.InferenceSession("model.onnx", providers=["CUDAExecutionProvider",
 - Process images one at a time to stay within memory
 - Use `torch.no_grad()` during inference
 - Pin `ultralytics==8.1.0` for training
+- Start with the random baseline to verify your setup works
+- Test your code locally before uploading
+- You don't need all sandbox packages for training — only match what you use

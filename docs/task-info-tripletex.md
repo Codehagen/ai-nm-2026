@@ -4,8 +4,8 @@ Build an AI agent that completes accounting tasks in Tripletex. You receive a ta
 
 - **Task type**: AI agent (HTTPS endpoint)
 - **Weight**: 25% of total score
-- **Submissions**: Unlimited per day, 10 concurrent
 - **Timeout**: 5 minutes per submission
+- **Rate limits**: Verified teams: 3 concurrent, 5 per task/day; Unverified: 1 concurrent, 2 per task/day
 
 ## How It Works
 
@@ -28,8 +28,17 @@ Each submission gets a brand new Tripletex account — you always start from scr
 | Languages | Norwegian, English, Spanish, Portuguese, Nynorsk, German, French |
 | Timeout | 5 minutes per submission |
 | API | Tripletex v2 REST API via authenticated proxy |
+| Scoring | Field-by-field checks + efficiency bonus, best score per task kept |
 | Score range | 0.0 (failed) — up to 6.0 (perfect Tier 3 + best efficiency) |
 | Files | Some tasks include PDF or image attachments |
+
+## Quick Start
+
+1. Build a `/solve` endpoint that accepts POST requests with a task prompt and Tripletex credentials
+2. Use an LLM to interpret the prompt and decide which API calls to make
+3. Call the Tripletex API using the provided proxy URL and session token
+4. Return `{"status": "completed"}` when done
+5. Submit your endpoint URL at `https://app.ainm.no/submit/tripletex`
 
 ## Task Categories
 
@@ -158,7 +167,7 @@ Raw score normalized: `correctness = points_earned / max_points`
 |------|-----------|---------------|
 | Tier 1 | ×1 | Create employee, create customer |
 | Tier 2 | ×2 | Create invoice, register payment |
-| Tier 3 | ×3 | Complex multi-step workflows |
+| Tier 3 | ×3 | Bank reconciliation from CSV, error correction in ledger, year-end closing |
 
 ## Efficiency Bonus
 
@@ -186,14 +195,30 @@ Efficiency benchmarks recalculated every 12 hours.
 
 ## Task Assignment
 
-Each submission gets one task, weighted toward tasks you've attempted less. 56 variants per task (7 languages × 8 data sets).
+Each submission gets one task, weighted toward tasks you've attempted less. Tasks are grouped into three tiers:
+
+- **Tier 1** — foundational tasks (e.g., create employee, create customer, create invoice)
+- **Tier 2** — multi-step workflows (e.g., invoice with payment, credit notes, project billing)
+- **Tier 3** — complex scenarios (e.g., bank reconciliation from CSV, error correction in ledger, year-end closing)
+
+Each task has 56 unique variants (7 languages × 8 data sets), so you'll rarely see the same prompt twice.
+
+## Tier Release Schedule
+
+Tasks are released in tiers throughout the competition:
+
+- **Tier 1** — available from competition start
+- **Tier 2** — opens early Friday. Check the competition page for updates.
+- **Tier 3** — opens early Saturday. Check the competition page for updates.
+
+This gives you time to build a solid agent on simpler tasks before tackling the harder ones.
 
 ## Rate Limits
 
-| Limit | Value |
-|-------|-------|
-| Concurrent submissions | 10 |
-| Per day | Unlimited |
+| Limit | Verified teams | Unverified teams |
+|-------|---------------|-----------------|
+| Concurrent submissions | 3 | 1 |
+| Per task per day | 5 | 2 |
 
 ---
 
@@ -212,9 +237,11 @@ You get: UI URL, API base URL, session token.
 ## Web UI Login
 
 1. Go to `https://kkpqfuj-amager.tripletex.dev`
-2. Enter the email from sandbox card
-3. Click "Forgot password" to set up Visma Connect (first time)
-4. Same credentials work for all test accounts
+2. Enter the email shown on your sandbox card
+3. Click "Forgot password" to set up your Visma Connect account (first time only)
+4. Set a password and log in
+
+Once you've set up Visma Connect, the same credentials work for all Tripletex test accounts — including the ones created during competition submissions.
 
 ## API Usage
 
@@ -230,14 +257,28 @@ response = requests.get(
 )
 ```
 
+## What You Can Do
+
+The sandbox is a full Tripletex test environment. Use it to:
+
+- **Explore the API** — try creating employees, customers, invoices, and more
+- **See the UI** — understand what the accounting data looks like in the interface
+- **Test your agent** — point your `/solve` endpoint at the sandbox to debug
+- **Learn the data model** — see how resources relate to each other
+
 ## Sandbox vs Competition
 
 | | Sandbox | Competition |
 |---|---|---|
-| Account | Persistent | Fresh per submission |
-| API access | Direct | Via proxy |
-| Data | Accumulates | Starts empty |
-| Scoring | None | Automated |
+| Account | Persistent, yours to keep | Fresh account per submission |
+| API access | Direct to Tripletex | Via authenticated proxy |
+| Data | Accumulates over time | Starts empty each time |
+| Scoring | None | Automated field-by-field |
+
+**Tips:**
+- Create test data manually in the UI, then query via API to understand the response format
+- The sandbox token expires **March 31, 2026**
+- Each team gets one sandbox — all team members share it
 
 ---
 
@@ -275,8 +316,79 @@ async def solve(request: Request):
     return JSONResponse({"status": "completed"})
 ```
 
-Run: `uvicorn main:app --host 0.0.0.0 --port 8000`
-Expose: `npx cloudflared tunnel --url http://localhost:8000`
+Run with:
+```bash
+pip install fastapi uvicorn requests
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+Expose locally via HTTPS for testing:
+```bash
+npx cloudflared tunnel --url http://localhost:8000
+```
+
+## Tripletex API Examples
+
+List employees:
+```python
+resp = requests.get(
+    f"{base_url}/employee",
+    auth=auth,
+    params={"fields": "id,firstName,lastName,email"}
+)
+employees = resp.json()["values"]
+```
+
+Create a customer:
+```python
+resp = requests.post(
+    f"{base_url}/customer",
+    auth=auth,
+    json={
+        "name": "Acme AS",
+        "email": "post@acme.no",
+        "isCustomer": True
+    }
+)
+customer_id = resp.json()["value"]["id"]
+```
+
+Create an invoice:
+```python
+today = "2026-03-03"
+resp = requests.post(
+    f"{base_url}/invoice",
+    auth=auth,
+    json={
+        "invoiceDate": today,
+        "invoiceDueDate": today,
+        "customer": {"id": customer_id},
+        "orders": [{"id": order_id}]
+    }
+)
+```
+
+Search for a specific entity:
+```python
+resp = requests.get(
+    f"{base_url}/customer",
+    auth=auth,
+    params={
+        "name": "Acme",
+        "fields": "id,name,email",
+        "count": 10
+    }
+)
+matches = resp.json()["values"]
+```
+
+## Building an Effective Agent
+
+1. **Parse the prompt** — Use an LLM to extract the task type, entity names, field values, and relationships from the prompt
+2. **Handle files** — Some tasks include PDFs with invoices, contracts, or expense reports. Decode from base64 and extract relevant data
+3. **Map to API calls** — Determine which Tripletex endpoints to call and in what order. Some tasks require creating prerequisites first
+4. **Verify your work** — After creating entities, query back to confirm they exist with correct values
+5. **Handle errors** — Tripletex returns detailed error messages. Parse them to retry with corrections
 
 ## Common Task Patterns
 
@@ -288,14 +400,31 @@ Expose: `npx cloudflared tunnel --url http://localhost:8000`
 | Delete/reverse | "Delete travel expense" | GET /travelExpense → DELETE /travelExpense/{id} |
 | Multi-step setup | "Register payment" | POST /customer → POST /invoice → POST /payment |
 
+## Common Errors
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| 401 Unauthorized | Wrong auth format | Use Basic Auth with username `0` and session token as password |
+| 404 Not Found | Wrong endpoint path | Check the Tripletex v2 API docs for correct paths |
+| 422 Validation Error | Missing required fields | Read error message — it specifies which fields are required |
+| Empty values array | No results found | Check search parameters, try broader search |
+| Timeout (5 min) | Agent too slow | Optimize API calls, reduce unnecessary requests |
+
 ## Tips
 
-- Sandbox starts empty — create prerequisites before invoices
-- Use `?fields=*` to see all available fields
+- Sandbox starts empty — you may need to create prerequisites (customer, product) before creating invoices
+- Use `?fields=*` to see all available fields on an entity
 - Some tasks require enabling modules first (e.g., department accounting)
-- Norwegian characters (æ, ø, å) work fine — send as UTF-8
-- All API calls through proxy are logged — use for debugging
-- Prompts come in 7 languages — agent must handle all
-- **Plan before calling** — parse prompt fully, avoid trial-and-error
-- Every 4xx error reduces efficiency bonus
-- Minimize GET calls — if you created something, you know its ID
+- Norwegian characters (æ, ø, å) work fine in API requests — send as UTF-8
+- All API calls through the proxy are logged — use them for debugging in the submissions view
+- Prompts come in 7 languages (nb, en, es, pt, nn, de, fr) — your agent should handle all of them
+
+## Optimizing for Efficiency
+
+Your score can go above 1.0 if you achieve perfect correctness with minimal API calls and zero errors. Higher tiers have higher score ceilings (up to 6.0 for Tier 3). Tips:
+
+- **Plan before calling** — Parse the prompt fully before making API calls. Understand what needs to be created/modified before starting
+- **Avoid trial-and-error** — Every 4xx error (400, 404, 422) reduces your efficiency bonus. Validate inputs before sending
+- **Minimize GET calls** — Don't fetch entities you don't need. If you created something, you already know its ID from the response
+- **Batch where possible** — Some Tripletex endpoints accept lists. Use them instead of multiple individual calls
+- **Read error messages** — If a call fails, the Tripletex error message tells you exactly what's wrong. Fix it in one retry, not several
