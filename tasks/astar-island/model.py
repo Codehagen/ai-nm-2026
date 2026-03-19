@@ -364,8 +364,27 @@ def fill_unobserved_dynamic(
                 table = FOREST_COASTAL_BY_DISTANCE if exposed_coastal else FOREST_INLAND_BY_DISTANCE
                 for max_d in sorted(table.keys()):
                     if dist <= max_d:
-                        tensor[y, x] = table[max_d]
+                        base = np.array(table[max_d], dtype=np.float64)
                         break
+                else:
+                    base = np.array(table[99], dtype=np.float64)
+
+                # Boost P(settlement) for forests adjacent to settlement cells
+                if not exposed_coastal and dist <= 4:
+                    adj_settl = sum(
+                        1 for dy in [-1, 0, 1] for dx in [-1, 0, 1]
+                        if not (dy == 0 and dx == 0)
+                        and 0 <= y + dy < h and 0 <= x + dx < w
+                        and initial_grid[y + dy][x + dx] in {1, 2}
+                    )
+                    if adj_settl >= 1:
+                        # GT shows: adj_settl=1 → P(settl)=0.237 vs 0.201 baseline
+                        boost = 0.03 * min(adj_settl, 2)
+                        base[1] += boost      # P(settlement)
+                        base[4] -= boost      # take from P(forest)
+                        base[4] = max(0.01, base[4])
+
+                tensor[y, x] = base
 
             elif code in {0, 11}:  # Plains — distance + exposed coastal from GT tables
                 table = PLAINS_COASTAL_BY_DISTANCE if exposed_coastal else PLAINS_INLAND_BY_DISTANCE
