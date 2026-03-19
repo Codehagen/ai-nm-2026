@@ -1,14 +1,20 @@
 import { generateText, tool, stepCountIs } from "ai";
 import { createGateway } from "@ai-sdk/gateway";
 import { z } from "zod";
-
-const gateway = createGateway({
-  apiKey: process.env.AI_GATEWAY_API_KEY,
-  baseURL: process.env.AI_GATEWAY_BASE_URL || "https://ai-gateway.vercel.sh/v1/ai",
-});
 import type { SolveRequest, SolveResponse } from "./dtos.js";
 import { TripletexClient } from "./tripletex.js";
 import { SYSTEM_PROMPT } from "./system-prompt.js";
+
+const gateway = createGateway({
+  apiKey: process.env.AI_GATEWAY_API_KEY,
+  baseURL:
+    process.env.AI_GATEWAY_BASE_URL || "https://ai-gateway.vercel.sh/v1/ai",
+});
+
+/** Oslo timezone date (avoids UTC midnight drift) */
+function getOsloDate(): string {
+  return new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Oslo" });
+}
 
 /**
  * Main agent entrypoint. Uses Claude to interpret the prompt and
@@ -18,7 +24,12 @@ export async function solve(
   request: SolveRequest,
   signal?: AbortSignal
 ): Promise<SolveResponse> {
-  const client = new TripletexClient(request.tripletex_credentials);
+  // Pass signal to client so fetch calls respect the timeout
+  const client = new TripletexClient(request.tripletex_credentials, signal);
+
+  // Track API calls for observability
+  let apiCalls = 0;
+  let apiErrors = 0;
 
   // Build user message content parts
   const content: Array<
@@ -44,7 +55,7 @@ export async function solve(
     }
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = getOsloDate();
 
   const result = await generateText({
     model: gateway("anthropic/claude-sonnet-4-20250514"),
@@ -53,14 +64,16 @@ export async function solve(
     tools: {
       tripletex_request: tool({
         description:
-          "Call the Tripletex v2 REST API. Returns {ok: true, data: ...} on success or {ok: false, status: number, error: string} on failure.",
+          "Call the Tripletex v2 REST API. Returns {ok: true, data: ...} on success or {ok: false, status, message, validationMessages} on failure. Read validationMessages to understand exactly which fields are wrong.",
         inputSchema: z.object({
           method: z
             .enum(["GET", "POST", "PUT", "DELETE"])
             .describe("HTTP method"),
           path: z
             .string()
-            .describe("API path, e.g. /employee, /customer, /invoice/{id}/:payment"),
+            .describe(
+              "API path, e.g. /employee, /customer, /invoice/{id}/:payment"
+            ),
           body: z
             .any()
             .optional()
@@ -68,29 +81,45 @@ export async function solve(
           params: z
             .record(z.string())
             .optional()
-            .describe("Query parameters, e.g. {fields: 'id,name', count: '100'}"),
+            .describe(
+              "Query parameters, e.g. {fields: 'id,name', count: '100'}"
+            ),
         }),
         execute: async ({ method, body, path, params }) => {
+          apiCalls++;
+          let result;
           switch (method) {
             case "GET":
-              return client.get(path, params);
+              result = await client.get(path, params);
+              break;
             case "POST":
-              return client.post(path, body, params);
+              result = await client.post(path, body, params);
+              break;
             case "PUT":
-              return client.put(path, body, params);
+              result = await client.put(path, body, params);
+              break;
             case "DELETE":
-              return client.delete(path);
+              result = await client.delete(path);
+              break;
           }
+          if (!result.ok) apiErrors++;
+          return result;
         },
       }),
     },
-    stopWhen: stepCountIs(25),
+    stopWhen: stepCountIs(30),
     abortSignal: signal,
   });
 
+  const toolCalls = result.steps.reduce(
+    (n, s) => n + s.toolCalls.length,
+    0
+  );
   console.log(
     `[agent] Done. Steps: ${result.steps.length}, ` +
-      `Tool calls: ${result.steps.reduce((n, s) => n + s.toolCalls.length, 0)}`
+      `Tool calls: ${toolCalls}, ` +
+      `API calls: ${apiCalls}, ` +
+      `API errors: ${apiErrors}`
   );
 
   return { status: "completed" };

@@ -172,16 +172,32 @@ Always use the \`fields\` param to limit response size.
 
 ## Error Handling
 
-If a call returns an error:
-1. Read the \`message\` and \`validationMessages\` fields carefully
-2. \`validationMessages\` tells you exactly which field is wrong and why
-3. Fix the issue and retry ONCE — do not trial-and-error
-4. Common error codes:
-   - 400 (Bad Request) — malformed request or illegal filter
-   - 401 (Unauthorized) — auth issue (should not happen)
-   - 404 (Not Found) — wrong path or entity doesn't exist
-   - 422 (Validation Error) — missing required fields or invalid values
-   - 409 (Conflict) — version mismatch on PUT (re-GET and retry)
+When a tool call fails, you get a structured error response:
+\`\`\`json
+{
+  "ok": false,
+  "status": 422,
+  "message": "Value Validation Exception",
+  "validationMessages": [
+    { "field": "name", "message": "is required" },
+    { "field": "invoiceDate", "message": "must be a valid date" }
+  ]
+}
+\`\`\`
+
+**How to handle errors:**
+1. Read \`validationMessages\` — it tells you EXACTLY which fields are wrong and why
+2. Fix ALL the issues listed, then retry ONCE
+3. Do NOT guess — the error tells you what to fix
+4. If no \`validationMessages\`, read the \`message\` field for guidance
+
+**Common error codes:**
+- 400 (Bad Request) — malformed request or illegal filter
+- 401 (Unauthorized) — auth issue (should not happen)
+- 404 (Not Found) — wrong path or entity doesn't exist
+- 409 (Conflict) — version mismatch on PUT (re-GET to get current version, then retry)
+- 422 (Validation Error) — missing required fields or invalid values (check validationMessages)
+- 429 (Rate Limited) — wait briefly and retry
 
 ## Important Notes
 
