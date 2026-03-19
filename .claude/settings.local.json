@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp -Rf ~/.claude/skills/gstack /Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack)",
+      "Bash(rm -rf /Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/.git)",
+      "Bash(mkdir -p /Users/walgermo/Utvikling/ai-nm-2026/.claude/skills)",
+      "Bash(./setup)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
+    ]
+  }
+}
