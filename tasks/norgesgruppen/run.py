@@ -15,6 +15,12 @@ import json
 from pathlib import Path
 
 import torch
+
+# PyTorch 2.6 defaults to weights_only=True, but ultralytics 8.1.0
+# calls torch.load without weights_only=False — patch it here
+_torch_load = torch.load
+torch.load = lambda *args, **kwargs: _torch_load(*args, **{**kwargs, "weights_only": False})
+
 from ultralytics import YOLO
 
 

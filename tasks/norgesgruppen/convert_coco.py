@@ -132,7 +132,7 @@ def main():
     # Generate data.yaml
     category_names = [categories[i]["name"] for i in range(nc)]
     data_yaml = {
-        "path": ".",
+        "path": str(output_dir.resolve()),
         "train": "images/train",
         "val": "images/val",
         "nc": nc,
