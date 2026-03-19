@@ -9,7 +9,7 @@ export const FileAttachmentSchema = z.object({
 });
 
 export const TripletexCredentialsSchema = z.object({
-  base_url: z.string().url(),
+  base_url: z.string().min(1),
   session_token: z.string(),
 });
 
