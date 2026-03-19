@@ -3,6 +3,7 @@ import { serve } from "@hono/node-server";
 import { zValidator } from "@hono/zod-validator";
 import { SolveRequestSchema } from "./dtos.js";
 import { solve } from "./model.js";
+import { logSolve, logRequest } from "./logger.js";
 
 if (!process.env.AI_GATEWAY_API_KEY) {
   console.error("FATAL: AI_GATEWAY_API_KEY environment variable is not set");
@@ -30,23 +31,52 @@ app.post("/solve", zValidator("json", SolveRequestSchema), async (c) => {
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), SOLVE_TIMEOUT_MS);
 
+  // Log raw request for analysis
+  logRequest(request);
+
   const startMs = Date.now();
   try {
     const response = await solve(request, ac.signal);
-    console.log(`[solve] Completed in ${((Date.now() - startMs) / 1000).toFixed(1)}s`);
     return c.json(response);
   } catch (e: unknown) {
-    const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);
+    const elapsedMs = Date.now() - startMs;
     if (e instanceof Error && e.name === "AbortError") {
-      console.error(`[solve] TIMEOUT after ${elapsed}s — returning completed with partial work`);
+      logSolve({
+        timestamp: new Date().toISOString(),
+        prompt: request.prompt,
+        filesCount: request.files.length,
+        steps: 0,
+        toolCalls: 0,
+        apiCalls: 0,
+        apiErrors: 0,
+        elapsedMs,
+        status: "timeout",
+      });
       return c.json({ status: "completed" as const });
     }
     const errMsg = e instanceof Error ? e.message : String(e);
-    console.error(`[solve] FAILED after ${elapsed}s: ${errMsg}`);
+    logSolve({
+      timestamp: new Date().toISOString(),
+      prompt: request.prompt,
+      filesCount: request.files.length,
+      steps: 0,
+      toolCalls: 0,
+      apiCalls: 0,
+      apiErrors: 0,
+      elapsedMs,
+      status: "error",
+      error: errMsg,
+    });
     return c.json({ status: "completed" as const });
   } finally {
     clearTimeout(timer);
   }
+});
+
+// Log any unhandled errors (Zod validation failures, etc.)
+app.onError((err, c) => {
+  console.error(`[error] ${c.req.method} ${c.req.path}: ${err.message}`);
+  return c.json({ error: err.message }, 400);
 });
 
 console.log(`Tripletex agent running on port ${PORT}`);

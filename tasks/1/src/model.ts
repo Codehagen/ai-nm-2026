@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { SolveRequest, SolveResponse } from "./dtos.js";
 import { TripletexClient } from "./tripletex.js";
 import { SYSTEM_PROMPT } from "./system-prompt.js";
+import { logSolve, type SolveLog } from "./logger.js";
 
 const gateway = createGateway({
   apiKey: process.env.AI_GATEWAY_API_KEY,
@@ -24,12 +25,13 @@ export async function solve(
   request: SolveRequest,
   signal?: AbortSignal
 ): Promise<SolveResponse> {
-  // Pass signal to client so fetch calls respect the timeout
+  const startMs = Date.now();
   const client = new TripletexClient(request.tripletex_credentials, signal);
 
   // Track API calls for observability
   let apiCalls = 0;
   let apiErrors = 0;
+  const toolCallDetails: SolveLog["toolCallDetails"] = [];
 
   // Build user message content parts
   const content: Array<
@@ -38,13 +40,9 @@ export async function solve(
     | { type: "file"; data: string; mediaType: string; filename?: string }
   > = [{ type: "text", text: request.prompt }];
 
-  // Add file attachments as content parts
   for (const f of request.files) {
     if (f.mime_type.startsWith("image/")) {
-      content.push({
-        type: "image",
-        image: f.content_base64,
-      });
+      content.push({ type: "image", image: f.content_base64 });
     } else {
       content.push({
         type: "file",
@@ -102,6 +100,12 @@ export async function solve(
               result = await client.delete(path);
               break;
           }
+          toolCallDetails!.push({
+            method,
+            path,
+            ok: result.ok,
+            status: result.ok ? undefined : result.status,
+          });
           if (!result.ok) apiErrors++;
           return result;
         },
@@ -115,12 +119,19 @@ export async function solve(
     (n, s) => n + s.toolCalls.length,
     0
   );
-  console.log(
-    `[agent] Done. Steps: ${result.steps.length}, ` +
-      `Tool calls: ${toolCalls}, ` +
-      `API calls: ${apiCalls}, ` +
-      `API errors: ${apiErrors}`
-  );
+
+  logSolve({
+    timestamp: new Date().toISOString(),
+    prompt: request.prompt,
+    filesCount: request.files.length,
+    steps: result.steps.length,
+    toolCalls,
+    apiCalls,
+    apiErrors,
+    elapsedMs: Date.now() - startMs,
+    status: "completed",
+    toolCallDetails,
+  });
 
   return { status: "completed" };
 }
