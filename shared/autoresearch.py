@@ -26,7 +26,7 @@ Task contract (from autoresearch-mlx):
     task.md declares: metric_name, metric_direction (lower/higher)
 """
 
-import json
+import math
 import subprocess
 import time
 from datetime import datetime
@@ -80,12 +80,12 @@ def run_experiment(command: str, task_dir: str, timeout_minutes: float = 15.0) -
                 "output_tail": tail,
             }
 
-        if val_metric is None:
+        if val_metric is None or not math.isfinite(val_metric):
             return {
                 "val_metric": 0.0,
                 "duration_s": duration,
                 "success": False,
-                "error": "no val_metric found in output",
+                "error": "no valid val_metric found in output (got: {})".format(val_metric),
                 "output_tail": result.stdout[-500:],
             }
 

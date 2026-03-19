@@ -47,8 +47,8 @@ def f1_score(pred: np.ndarray, target: np.ndarray) -> float:
 
 # --- Timing ---
 
-def timeout_guard(max_seconds: float):
-    """Decorator to enforce timeout on inference functions."""
+def log_if_slow(max_seconds: float):
+    """Decorator to warn if a function exceeds a time limit (does NOT kill it)."""
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):

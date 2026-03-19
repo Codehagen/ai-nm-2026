@@ -18,7 +18,7 @@ PORT = 9050
 
 @app.get("/")
 def health():
-    return "Endpoint is running!"
+    return {"status": "ok", "service": "cv-task"}
 
 
 @app.get("/api")

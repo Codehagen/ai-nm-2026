@@ -10,7 +10,7 @@ ERRORS=0
 # Check for prohibited imports in inference path
 echo ""
 echo "--- Checking for prohibited cloud API imports ---"
-PROHIBITED="import openai|from openai|import anthropic|from anthropic|import boto3|from boto3|import azure|from azure"
+PROHIBITED="import openai|from openai|import anthropic|from anthropic|import boto3|from boto3|import azure|from azure|import cohere|from cohere|from google\.cloud import aiplatform"
 for task in cv ml nlp; do
     for file in tasks/${task}/api.py tasks/${task}/model.py tasks/${task}/dtos.py; do
         if [ -f "$file" ]; then

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 # Tear down VMs. Handles both single-task and fleet teardown.
 #
 # Usage:

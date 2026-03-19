@@ -19,14 +19,17 @@ dependencies = [
     "optuna>=3.6",
     "wandb>=0.17",
     "numpy>=1.26",
+    "scipy>=1.13",
     "pandas>=2.2",
     "httpx>=0.27",
     "pytest>=8.0",
+    "cloudml-hypertune>=0.1",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tasks"]
 python_files = ["test_*.py"]
+addopts = "--import-mode=importlib"
 
 [build-system]
 requires = ["hatchling"]

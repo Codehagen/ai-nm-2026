@@ -34,7 +34,7 @@ jobs:
           FAIL=0
           for task in cv ml nlp; do
             for file in tasks/${task}/api.py tasks/${task}/model.py; do
-              if [ -f "$file" ] && grep -qE "import openai|from openai|import anthropic|from anthropic|import boto3" "$file"; then
+              if [ -f "$file" ] && grep -qE "import openai|from openai|import anthropic|from anthropic|import boto3|from boto3|import azure|from azure|import cohere|from cohere|from google\.cloud import aiplatform" "$file"; then
                 echo "FAIL: Prohibited import in $file"
                 FAIL=1
               fi
@@ -47,6 +47,6 @@ jobs:
           for task in cv ml nlp; do
             if [ -d "tasks/${task}/tests" ]; then
               echo "Testing ${task}..."
-              python -m pytest "tasks/${task}/tests/" -q --tb=short || true
+              python -m pytest "tasks/${task}/tests/" -q --tb=short
             fi
           done

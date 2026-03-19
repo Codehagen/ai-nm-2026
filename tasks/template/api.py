@@ -18,7 +18,7 @@ PORT = 9050  # Change per task: cv=9050, ml=9051, nlp=9052
 
 @app.get("/")
 def health():
-    return "Endpoint is running!"
+    return {"status": "ok", "service": "task-name"}
 
 
 @app.get("/api")
