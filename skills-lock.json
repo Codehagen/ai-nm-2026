@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "openapi-to-typescript": {
+      "source": "softaworks/agent-toolkit",
+      "sourceType": "github",
+      "computedHash": "525b39ee84d8fbc835d1dea710fb36b40fd4834441a4d18d75a8dafe985eeacd"
+    }
+  }
+}
