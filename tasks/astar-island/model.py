@@ -512,8 +512,9 @@ def build_prediction(
     # Layer 1: Static prediction
     tensor = build_static_prediction(initial_grid)
 
-    # Layer 2: Update with direct observations
-    tensor = update_with_observations(tensor, observations, seed_index)
+    # Layer 2: Observation-based frequency update (disabled — adds noise with
+    # only ~10 observations per seed; GT-calibrated priors outperform raw frequencies)
+    # tensor = update_with_observations(tensor, observations, seed_index)
 
     # Layer 3: Fill unobserved dynamic cells
     tensor = fill_unobserved_dynamic(
