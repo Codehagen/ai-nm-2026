@@ -139,7 +139,7 @@ def build_all_predictions(
     round_info,
     all_observations: list[dict],
     calibration: dict | None,
-    use_ensemble: bool = True,
+    use_ensemble: bool = False,
 ) -> list[np.ndarray]:
     """Build prediction tensors for all seeds."""
     num_seeds = round_info.seeds_count
@@ -155,46 +155,20 @@ def build_all_predictions(
             for s in round_info.initial_states[seed_idx].settlements
         ]
 
-        if use_ensemble:
-            # Strategy 1: Full model with cross-seed transfer
-            pred_full = build_prediction(
-                initial_grid=initial_grid,
-                settlements=settlements,
-                observations=all_observations,
-                seed_index=seed_idx,
-                all_initial_grids=all_initial_grids,
-                all_observations=all_observations,
-                calibration=calibration,
-            )
+        # Use same-seed observations only (cross-seed hurts score)
+        same_seed_obs = [
+            o for o in all_observations if o["seed_index"] == seed_idx
+        ]
 
-            # Strategy 2: Conservative (no cross-seed, higher floor)
-            pred_conservative = build_prediction(
-                initial_grid=initial_grid,
-                settlements=settlements,
-                observations=all_observations,
-                seed_index=seed_idx,
-                all_initial_grids=all_initial_grids,
-                all_observations=[
-                    o for o in all_observations if o["seed_index"] == seed_idx
-                ],
-                calibration=None,
-            )
-
-            # Ensemble: weighted average
-            prediction = ensemble_predictions(
-                [pred_full, pred_conservative],
-                weights=[0.7, 0.3],
-            )
-        else:
-            prediction = build_prediction(
-                initial_grid=initial_grid,
-                settlements=settlements,
-                observations=all_observations,
-                seed_index=seed_idx,
-                all_initial_grids=all_initial_grids,
-                all_observations=all_observations,
-                calibration=calibration,
-            )
+        prediction = build_prediction(
+            initial_grid=initial_grid,
+            settlements=settlements,
+            observations=same_seed_obs,
+            seed_index=seed_idx,
+            all_initial_grids=all_initial_grids,
+            all_observations=same_seed_obs,
+            calibration=calibration,
+        )
 
         # Final safety normalization
         prediction = normalize_prediction(prediction)
