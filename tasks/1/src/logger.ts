@@ -29,6 +29,9 @@ export interface SolveLog {
     path: string;
     ok: boolean;
     status?: number;
+    requestBody?: unknown;
+    requestParams?: Record<string, string>;
+    responseData?: unknown;
   }>;
 }
 
