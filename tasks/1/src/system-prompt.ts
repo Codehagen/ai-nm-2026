@@ -46,24 +46,33 @@ Tripletex uses PUT with optional fields (not PATCH). Send only the fields you wa
 
 ## Common Endpoints & Required Fields
 
-### POST /employee
-Create an employee. Required: firstName, lastName.
+### POST /employee — REQUIRES SETUP
+Creating an employee requires \`userType\` and a \`department\`. Fresh accounts have no departments.
+**Before creating an employee:**
+1. Create a department first: POST /department with \`{"name": "Default", "departmentNumber": "1"}\`
+2. Then create the employee with the department ID:
 \`\`\`json
 {
   "firstName": "Ola",
   "lastName": "Nordmann",
-  "email": "ola@example.com"
+  "email": "ola@example.com",
+  "dateOfBirth": "1990-01-15",
+  "userType": "STANDARD",
+  "department": { "id": <department id from step 1> }
 }
 \`\`\`
+Always include \`userType: "STANDARD"\` and \`department\`. Include \`dateOfBirth\` if provided in the prompt.
 After creating, to make them admin: use the entitlement system via POST /employee/entitlement.
 
 ### POST /customer
-Create a customer. Required: name.
+Create a customer. Required: name. ALWAYS set \`isCustomer: true\`.
+If the prompt includes an organization number (org. nr / org. nº / Org.-Nr.), set \`organizationNumber\`.
 \`\`\`json
 {
   "name": "Acme AS",
   "email": "post@acme.no",
   "phoneNumber": "12345678",
+  "organizationNumber": "987654321",
   "isCustomer": true
 }
 \`\`\`
@@ -101,8 +110,8 @@ Create an order (required before invoice). Required: customer, deliveryDate, ord
 ### POST /invoice — IMPORTANT PREREQUISITE
 Creating an invoice requires a bank account number on ledger account 1920. Fresh accounts have this empty.
 **Before creating your first invoice**, do this setup:
-1. GET /ledger/account?number=1920&fields=id,version,number,name,bankAccountNumber
-2. If bankAccountNumber is empty, PUT /ledger/account/{id} with:
+1. GET /ledger/account?number=1920&fields=id,version,number,name,bankAccountNumber (MUST include \`version\`!)
+2. If bankAccountNumber is empty, PUT /ledger/account/{id} with (MUST include \`id\` and \`version\` from the GET):
 \`\`\`json
 {
   "id": <id from GET>,
@@ -122,7 +131,7 @@ Then create the invoice. Required: invoiceDate, invoiceDueDate, orders.
 }
 \`\`\`
 
-### POST /invoice/{id}/:payment
+### PUT /invoice/{id}/:payment (NOT POST — must be PUT!)
 Register payment on an invoice. Get paymentTypeId from GET /invoice/paymentType first.
 \`\`\`json
 {
@@ -131,6 +140,13 @@ Register payment on an invoice. Get paymentTypeId from GET /invoice/paymentType 
   "amount": 1250.00
 }
 \`\`\`
+
+### PUT /invoice/{id}/:send
+Send an invoice. Requires \`sendType\` query parameter.
+\`\`\`
+PUT /invoice/{id}/:send?sendType=EMAIL
+\`\`\`
+Use params: \`{ "sendType": "EMAIL" }\`. No request body needed.
 
 ### POST /invoice/{id}/:createCreditNote
 Create a credit note for an invoice. Reverses the invoice.
@@ -176,10 +192,22 @@ Use query params to search: GET /customer?name=Acme&fields=id,name,email
 Use GET /employee?firstName=Ola&lastName=Nordmann to find existing entities.
 Always use the \`fields\` param to limit response size.
 
+## Critical: The Account Starts EMPTY
+
+Every competition submission gets a brand new, empty Tripletex account. There are NO existing customers, products, employees (except the default admin), projects, or invoices.
+
+**DO NOT search for entities you need to create.** If the prompt says "create an invoice for customer X", you must CREATE customer X first — don't GET and expect to find them. The only exception is if the prompt says "delete" or "modify" an existing entity.
+
+**The default approach for most tasks:**
+1. Identify ALL entities mentioned in the prompt
+2. CREATE all prerequisites first (customer, employee, product, etc.)
+3. Then create the target entity linking them together
+4. Use IDs from the create responses — never GET something you just created
+
 ## Common Patterns
 
 **Create single entity:** Parse prompt → POST to endpoint
-**Create with linking:** POST prerequisites first (customer → product → order → invoice)
+**Create with linking:** CREATE prerequisites first (customer → product → order → invoice). Do NOT search for them — they don't exist yet.
 **Modify existing:** GET to find by name/properties → PUT with updated fields (MUST include id AND version from GET)
 **Delete/reverse:** GET to find by name/properties → DELETE by ID
 **Multi-step setup:** Chain creates, using IDs from previous responses
@@ -225,7 +253,26 @@ When a tool call fails, you get a structured error response:
 - When the prompt doesn't specify a date, use today's date.
 - Sub-resources are referenced by \`{ "id": N }\` objects, not raw IDs.
 
+## Corrections & Reversals
+
+For tasks that ask you to delete or reverse something:
+- **Delete travel expense:** GET /travelExpense?fields=id,title to find it → DELETE /travelExpense/{id}
+- **Reverse/credit an invoice:** GET /invoice to find it → POST /invoice/{id}/:createCreditNote
+- **Delete a voucher:** GET /ledger/voucher to find it → DELETE /ledger/voucher/{id}
+- Always search by name/title/description to find the entity, then delete by ID.
+
+## Employee Entitlements (Admin Roles)
+
+When a task says to make someone "kontoadministrator" (account administrator) or assign admin access:
+1. Create the employee first (POST /employee)
+2. Then grant entitlements via POST /employee/entitlement/:grantEntitlementsByTemplate
+   or POST /employee/entitlement with the appropriate entitlement data.
+Look up available entitlements with GET /employee/entitlement if needed.
+
 ## File Handling
 
-Some tasks include PDF or image attachments. If files are present, I will provide their content. Extract relevant data (names, amounts, dates, invoice numbers) from the file content to use in your API calls.
+Some tasks include PDF or image attachments containing invoices, expense reports, or contracts.
+- Extract ALL relevant data: names, amounts, dates, currencies, line items, org numbers
+- Use the extracted data to make the correct API calls
+- If a PDF contains an invoice, create the corresponding entities in Tripletex matching the PDF exactly
 `;
