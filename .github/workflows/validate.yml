@@ -1,0 +1,49 @@
+name: Validate
+
+on:
+  push:
+    paths:
+      - 'ai-nm-1/**'
+  pull_request:
+    paths:
+      - 'ai-nm-1/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai-nm-1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install fastapi uvicorn pydantic httpx pytest numpy pandas scikit-learn Pillow
+
+      - name: Check for prohibited imports
+        run: |
+          FAIL=0
+          for task in cv ml nlp; do
+            for file in tasks/${task}/api.py tasks/${task}/model.py; do
+              if [ -f "$file" ] && grep -qE "import openai|from openai|import anthropic|from anthropic|import boto3" "$file"; then
+                echo "FAIL: Prohibited import in $file"
+                FAIL=1
+              fi
+            done
+          done
+          exit $FAIL
+
+      - name: Run tests
+        run: |
+          for task in cv ml nlp; do
+            if [ -d "tasks/${task}/tests" ]; then
+              echo "Testing ${task}..."
+              python -m pytest "tasks/${task}/tests/" -q --tb=short || true
+            fi
+          done

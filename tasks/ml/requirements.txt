@@ -1,0 +1,3 @@
+# ML-specific dependencies
+autogluon.tabular>=1.1
+category_encoders>=2.6

@@ -1,0 +1,19 @@
+services:
+  task:
+    build:
+      context: ../../
+      dockerfile: tasks/template/Dockerfile
+    ports:
+      - "9050:9050"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - TASK_MODE=inference

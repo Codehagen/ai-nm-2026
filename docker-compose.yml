@@ -1,0 +1,51 @@
+services:
+  cv:
+    build:
+      context: .
+      dockerfile: tasks/cv/Dockerfile
+    ports:
+      - "9050:9050"
+    volumes:
+      - ./tasks/cv/data:/app/data
+      - ./tasks/cv/models:/app/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  ml:
+    build:
+      context: .
+      dockerfile: tasks/ml/Dockerfile
+    ports:
+      - "9051:9051"
+    volumes:
+      - ./tasks/ml/data:/app/data
+      - ./tasks/ml/models:/app/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  nlp:
+    build:
+      context: .
+      dockerfile: tasks/nlp/Dockerfile
+    ports:
+      - "9052:9052"
+    volumes:
+      - ./tasks/nlp/data:/app/data
+      - ./tasks/nlp/models:/app/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
