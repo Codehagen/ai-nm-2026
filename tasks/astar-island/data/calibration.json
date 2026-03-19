@@ -3,7 +3,7 @@
   "num_seeds": 5,
   "total_dynamic_cells": 1931,
   "avg_score": 8.173,
-  "blend_weight": 0.2,
+  "blend_weight": 0.16,
   "context_priors": {
     "4_coastal1_forests1": [
       0.03343749999999998,
