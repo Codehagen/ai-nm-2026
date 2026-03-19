@@ -29,7 +29,7 @@ for ZONE in $ZONES; do
         --machine-type=$MACHINE \
         $ACCEL \
         --boot-disk-size=200GB \
-        --image-family=pytorch-2-7-cu128-ubuntu-2204-nvidia-570 \
+        --image-family=pytorch-2-7-cu128-ubuntu-2404-nvidia-570 \
         --image-project=deeplearning-platform-release \
         --maintenance-policy=TERMINATE \
         --metadata="install-nvidia-driver=True" \
