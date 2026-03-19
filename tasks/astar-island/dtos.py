@@ -31,7 +31,8 @@ STATIC_TERRAIN_CODES = {0, 10, 11, 5}  # empty/ocean/plains/mountain
 DYNAMIC_TERRAIN_CODES = {1, 2, 3, 4}  # settlement/port/ruin/forest
 
 # Minimum probability floor — prevents KL divergence blowup
-PROB_FLOOR = 0.01
+# 0.001 gives ~2.5 pts better score than 0.01 (sharper distributions)
+PROB_FLOOR = 0.001
 
 
 # ──────────────────────────────────────────────────────────────

@@ -53,12 +53,18 @@ EMPIRICAL_TRANSITIONS = {
 # Distance-based transition for Plains (code 11) — distance to nearest settlement
 # Measured empirically from Round 1 Seed 0 observations
 # Format: max_distance → [P(empty), P(settlement), P(port), P(ruin), P(forest), P(mountain)]
+# Calibrated from Round 1 GROUND TRUTH (not observations)
 PLAINS_BY_DISTANCE = {
-    2:  [0.700, 0.215, 0.006, 0.009, 0.070, 0.000],  # dist 1-2
-    4:  [0.730, 0.184, 0.024, 0.006, 0.056, 0.000],  # dist 3-4
-    6:  [0.868, 0.100, 0.000, 0.010, 0.022, 0.000],  # dist 5-6
-    8:  [0.920, 0.065, 0.005, 0.000, 0.005, 0.000],  # dist 7-8
-    99: [1.000, 0.000, 0.000, 0.000, 0.000, 0.000],  # dist 9+
+    1:  [0.675, 0.254, 0.007, 0.015, 0.049, 0.000],  # dist 1
+    2:  [0.699, 0.225, 0.016, 0.015, 0.045, 0.000],  # dist 2
+    3:  [0.707, 0.216, 0.021, 0.015, 0.041, 0.000],  # dist 3
+    4:  [0.751, 0.182, 0.021, 0.012, 0.034, 0.000],  # dist 4
+    5:  [0.873, 0.102, 0.008, 0.007, 0.010, 0.000],  # dist 5
+    6:  [0.907, 0.075, 0.006, 0.005, 0.007, 0.000],  # dist 6
+    7:  [0.942, 0.047, 0.005, 0.002, 0.004, 0.000],  # dist 7
+    8:  [0.966, 0.030, 0.002, 0.001, 0.001, 0.000],  # dist 8
+    9:  [0.990, 0.009, 0.000, 0.000, 0.001, 0.000],  # dist 9
+    99: [0.991, 0.009, 0.000, 0.000, 0.000, 0.000],  # dist 10+
 }
 
 
@@ -258,50 +264,33 @@ def fill_unobserved_dynamic(
             adj_forests = _count_adjacent_forests(initial_grid, y, x)
             dist = _distance_to_nearest_settlement(initial_grid, y, x, settlements)
 
-            if code == 1:  # Settlement
-                # Round 1 data: 100% of observed settlements are alive
-                # Settlements have very high survival rate
-                if coastal and adj_forests >= 2:
-                    # Coastal + well-fed → likely becomes port
-                    tensor[y, x] = [0.03, 0.20, 0.50, 0.12, 0.10, 0.05]
-                elif adj_forests >= 2:
-                    # Well-fed → very likely survives
-                    tensor[y, x] = [0.03, 0.60, 0.10, 0.12, 0.10, 0.05]
-                elif coastal:
-                    # Coastal but less food → port or settlement
-                    tensor[y, x] = [0.05, 0.25, 0.40, 0.15, 0.10, 0.05]
-                elif adj_forests == 0:
-                    # No food → higher ruin chance but still more likely alive
-                    tensor[y, x] = [0.08, 0.30, 0.05, 0.37, 0.15, 0.05]
-                else:
-                    # Moderate food
-                    tensor[y, x] = [0.05, 0.50, 0.08, 0.22, 0.10, 0.05]
+            if code == 1:  # Settlement — calibrated from Round 1 ground truth
+                if adj_forests == 0:
+                    tensor[y, x] = [0.470, 0.315, 0.000, 0.035, 0.180, 0.000]
+                elif adj_forests == 1:
+                    tensor[y, x] = [0.356, 0.435, 0.000, 0.024, 0.186, 0.000]
+                elif adj_forests == 2:
+                    tensor[y, x] = [0.329, 0.466, 0.000, 0.026, 0.179, 0.000]
+                else:  # 3+
+                    tensor[y, x] = [0.357, 0.444, 0.000, 0.033, 0.166, 0.000]
 
-            elif code == 2:  # Port
-                # Ports survive well
-                if adj_forests >= 1:
-                    tensor[y, x] = [0.03, 0.12, 0.60, 0.10, 0.10, 0.05]
-                else:
-                    tensor[y, x] = [0.05, 0.12, 0.45, 0.23, 0.10, 0.05]
+            elif code == 2:  # Port — only 1 sample, use it
+                tensor[y, x] = [0.320, 0.130, 0.310, 0.020, 0.220, 0.000]
 
-            elif code == 3:  # Ruin
+            elif code == 3:  # Ruin — no ground truth data, keep heuristic
                 if dist <= 3:
-                    # Near settlement → might be reclaimed
-                    tensor[y, x] = [0.08, 0.25, 0.08, 0.24, 0.30, 0.05]
+                    tensor[y, x] = [0.15, 0.20, 0.05, 0.25, 0.30, 0.05]
                 else:
-                    # Far from settlement → forest reclaims
-                    tensor[y, x] = [0.08, 0.05, 0.02, 0.25, 0.55, 0.05]
+                    tensor[y, x] = [0.10, 0.05, 0.02, 0.25, 0.53, 0.05]
 
-            elif code == 4:  # Forest
-                if dist <= 2:
-                    # Near settlement → might be cleared for expansion
-                    tensor[y, x] = [0.08, 0.15, 0.05, 0.05, 0.62, 0.05]
-                elif dist <= 5:
-                    # Medium distance — some expansion risk
-                    tensor[y, x] = [0.05, 0.08, 0.03, 0.04, 0.75, 0.05]
+            elif code == 4:  # Forest — calibrated from Round 1 ground truth
+                if coastal:
+                    if adj_forests <= 1:
+                        tensor[y, x] = [0.035, 0.070, 0.085, 0.008, 0.802, 0.000]
+                    else:
+                        tensor[y, x] = [0.042, 0.102, 0.078, 0.008, 0.770, 0.000]
                 else:
-                    # Forest stays forest
-                    tensor[y, x] = [0.03, 0.03, 0.02, 0.02, 0.85, 0.05]
+                    tensor[y, x] = [0.056, 0.157, 0.000, 0.010, 0.777, 0.000]
 
             elif code in {0, 11}:  # Empty/Plains
                 # KEY INSIGHT: Settlements expand AGGRESSIVELY into empty plains
