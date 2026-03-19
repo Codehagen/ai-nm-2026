@@ -105,28 +105,18 @@ def evaluate_round(round_id: str, client: AstarClient) -> float:
             for s in round_info.initial_states[seed_idx].settlements
         ]
 
-        pred_full = build_prediction(
+        # Use same-seed observations only (cross-seed transfer disabled)
+        same_seed_obs = [
+            o for o in all_observations if o["seed_index"] == seed_idx
+        ]
+        prediction = build_prediction(
             initial_grid=initial_grid,
             settlements=settlements,
-            observations=all_observations,
+            observations=same_seed_obs,
             seed_index=seed_idx,
             all_initial_grids=all_initial_grids,
-            all_observations=all_observations,
+            all_observations=same_seed_obs,
             calibration=calibration,
-        )
-        pred_conservative = build_prediction(
-            initial_grid=initial_grid,
-            settlements=settlements,
-            observations=all_observations,
-            seed_index=seed_idx,
-            all_initial_grids=all_initial_grids,
-            all_observations=[
-                o for o in all_observations if o["seed_index"] == seed_idx
-            ],
-            calibration=None,
-        )
-        prediction = ensemble_predictions(
-            [pred_full, pred_conservative], weights=[0.7, 0.3]
         )
         prediction = normalize_prediction(prediction)
 

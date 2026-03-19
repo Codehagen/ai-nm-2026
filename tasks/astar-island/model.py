@@ -152,13 +152,20 @@ def update_with_observations(
                     obs_count[abs_y, abs_x] += 1
 
     # Update tensor where we have observations
+    # Bayesian blend: with few observations, the prior (from Layer 1) should
+    # dominate. With many observations, the frequency should dominate.
+    # We use a pseudo-count approach: treat the prior as N_PRIOR virtual observations.
+    N_PRIOR = 20  # prior strength — equivalent to 20 virtual observations
     observed_mask = obs_count > 0
     for y in range(h):
         for x in range(w):
             if observed_mask[y, x]:
-                # Convert counts to frequency distribution
-                freq = counts[y, x] / obs_count[y, x]
-                tensor[y, x] = freq
+                n = obs_count[y, x]
+                freq = counts[y, x] / n
+                prior = tensor[y, x]  # from Layer 1
+                # Weighted average: more observations → more weight on freq
+                weight = n / (n + N_PRIOR)
+                tensor[y, x] = weight * freq + (1 - weight) * prior
 
     return tensor
 
@@ -485,10 +492,10 @@ def build_prediction(
         tensor, initial_grid, settlements, observations, seed_index,
     )
 
-    # Layer 4: Cross-seed transfer
-    tensor = apply_cross_seed_transfer(
-        tensor, initial_grid, all_observations, seed_index, all_initial_grids,
-    )
+    # Layer 4: Cross-seed transfer (disabled — hurts score by ~0.5 pts)
+    # tensor = apply_cross_seed_transfer(
+    #     tensor, initial_grid, all_observations, seed_index, all_initial_grids,
+    # )
 
     # Layer 5: Calibration from past rounds
     tensor = apply_calibration(tensor, initial_grid, calibration)
