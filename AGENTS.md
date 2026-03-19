@@ -33,9 +33,11 @@ bash scripts/validate.sh       # pre-submit check
 Read `RULES.md` for full rules. Key points:
 - Code must be public, MIT licensed
 - No hardcoded or pre-computed responses
-- AI assistants explicitly allowed
-- **No cloud AI APIs at inference time** (OpenAI, Azure, etc.)
+- AI assistants explicitly allowed and encouraged
 - Scoring = average of 3 normalized task scores (0-100 each)
+- Roster locks after first submission — no team changes after that
+- Vipps verification required for prize eligibility
+- Task-specific rules (submission format, rate limits) revealed at kickoff
 - Deadline: March 22, 2026 at 15:00 CET
 
 ## Golden Rules
@@ -43,7 +45,7 @@ Read `RULES.md` for full rules. Key points:
 1. **Each task is independent.** Never cross-import between task directories.
 2. **FastAPI + Pydantic for all endpoints.** Match the DTO schema exactly.
 3. **Load models at startup, not per-request.**
-4. **No cloud APIs during inference** (OpenAI, Azure, etc. prohibited).
+4. **Assume no cloud APIs during inference** — task-specific rules TBD at kickoff, but safer to be self-contained.
 5. **Respect per-task timeout constraints.**
 6. **Parse/validate at boundaries.** Use Pydantic DTOs.
 7. **Repository is the system of record.** All task analysis, strategies, and findings go in `docs/`.

@@ -172,13 +172,15 @@ NaN/inf metrics are automatically rejected. Set up before sleep, wake up to opti
 
 ## Competition Rules
 
-- ✅ AI coding assistants (Claude, Copilot)
-- ✅ Pre-trained models & transfer learning
+- ✅ AI coding assistants (Claude, Copilot) — explicitly encouraged
+- ✅ Pre-trained models, open-source libraries, public datasets
 - ✅ Cloud compute for training
-- ❌ Cloud AI APIs at inference time (OpenAI, Azure, etc.)
 - ❌ Hardcoded / pre-computed responses
+- ❌ Sharing code/solutions between teams
 - 📋 Code must be public + MIT licensed
+- 📋 Vipps verification required for prize eligibility
 - 📋 Scoring = average of 3 normalized task scores (0-100)
+- 📋 Task-specific rules (submission format, rate limits) revealed at kickoff
 
 ## Tech Stack
 
