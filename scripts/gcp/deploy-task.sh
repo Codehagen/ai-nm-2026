@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 cd "$(dirname "$0")/../.."
 
@@ -21,16 +20,29 @@ fi
 echo "Deploying ${TASK} to ${VM} (zone: ${ZONE})..."
 
 # Create target directories on VM
-gcloud compute ssh "${VM}" --zone=$ZONE -- "mkdir -p ~/task ~/shared"
+gcloud compute ssh "${VM}" --zone="${ZONE}" --command="mkdir -p ~/task ~/shared"
 
 # Copy code to VM
-gcloud compute scp --zone=$ZONE --recurse "./tasks/${TASK}/"* "${VM}:~/task/"
-gcloud compute scp --zone=$ZONE --recurse ./shared/* "${VM}:~/shared/" 2>/dev/null || true
-gcloud compute scp --zone=$ZONE ./requirements.txt "${VM}:~/requirements.txt"
+gcloud compute scp --zone="${ZONE}" --recurse "./tasks/${TASK}/"* "${VM}:~/task/"
+gcloud compute scp --zone="${ZONE}" --recurse ./shared/* "${VM}:~/shared/" 2>/dev/null || true
+gcloud compute scp --zone="${ZONE}" ./requirements.txt "${VM}:~/requirements.txt"
 
-# Install deps and start API
+# Install deps (Deep Learning VM has PyTorch+CUDA pre-installed)
 PORT=$((9049 + $(echo "cv ml nlp" | tr ' ' '\n' | grep -n "^${TASK}$" | cut -d: -f1)))
-gcloud compute ssh "${VM}" --zone=$ZONE --command="cd ~/task && pip install -q -r ~/requirements.txt -r requirements.txt && pkill -f 'python.*api.py' || true && nohup python3 ~/task/api.py > /tmp/api.log 2>&1 & echo 'API started on port ${PORT}'"
+gcloud compute ssh "${VM}" --zone="${ZONE}" --command="pip install -q --break-system-packages \
+    fastapi uvicorn pydantic transformers scikit-learn xgboost lightgbm \
+    opencv-python Pillow optuna wandb numpy pandas httpx pytest scipy 2>&1 | tail -3; true"
 
-IP=$(gcloud compute instances describe "${VM}" --zone=$ZONE --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
-echo "Deployed: http://${IP}:${PORT}"
+# Stop old API, start new one via systemd (survives SSH disconnect)
+gcloud compute ssh "${VM}" --zone="${ZONE}" --command="systemctl stop ainm-api.service 2>/dev/null; true"
+gcloud compute ssh "${VM}" --zone="${ZONE}" --command="systemd-run --unit=ainm-api --remain-after-exit bash -c 'cd /root/task && python3 api.py > /tmp/api.log 2>&1'"
+
+# Wait for startup and verify
+sleep 3
+IP=$(gcloud compute instances describe "${VM}" --zone="${ZONE}" --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+HEALTH=$(gcloud compute ssh "${VM}" --zone="${ZONE}" --command="curl -s http://localhost:${PORT}/" 2>/dev/null)
+
+echo ""
+echo "VM:       ${VM} (${ZONE})"
+echo "Endpoint: http://${IP}:${PORT}"
+echo "Health:   ${HEALTH}"
