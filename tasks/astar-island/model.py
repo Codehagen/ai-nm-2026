@@ -67,17 +67,18 @@ def build_static_prediction(initial_grid: list[list[int]]) -> np.ndarray:
                 # Mountain — never changes
                 tensor[y, x] = [0, 0, 0, 0, 0, 1.0]
             elif code == 4:
-                # Forest — mostly stays, small chance of being cleared/settled
+                # Forest — mostly stays (~21% init → ~21% observed), slight decline
                 tensor[y, x] = [0.05, 0.05, 0.02, 0.03, 0.80, 0.05]
             elif code == 1:
-                # Settlement — could survive, become port, become ruin, or be cleared
-                tensor[y, x] = [0.10, 0.40, 0.15, 0.25, 0.05, 0.05]
+                # Settlement — very high survival rate (100% observed alive)
+                # Settlements expand aggressively: 2-4% → 15-17% of map
+                tensor[y, x] = [0.05, 0.55, 0.15, 0.15, 0.05, 0.05]
             elif code == 2:
-                # Port — similar to settlement but port-biased
-                tensor[y, x] = [0.10, 0.15, 0.40, 0.25, 0.05, 0.05]
+                # Port — similar high survival, ports are settlements that happen to be coastal
+                tensor[y, x] = [0.05, 0.15, 0.55, 0.15, 0.05, 0.05]
             elif code == 3:
-                # Ruin — could stay ruin, be reclaimed, or grow over
-                tensor[y, x] = [0.15, 0.10, 0.05, 0.35, 0.30, 0.05]
+                # Ruin — rare in observations (~1.2%), likely reclaimed or forested
+                tensor[y, x] = [0.10, 0.15, 0.05, 0.30, 0.35, 0.05]
 
     return tensor
 
@@ -207,8 +208,12 @@ def fill_unobserved_dynamic(
         for x in range(w):
             code = initial_grid[y][x]
 
-            # Skip static cells and already-observed cells
-            if code in STATIC_TERRAIN_CODES or obs_mask[y, x]:
+            # Skip already-observed cells
+            if obs_mask[y, x]:
+                continue
+
+            # Skip truly static cells (ocean, mountain)
+            if code in {10, 5}:
                 continue
 
             coastal = _is_coastal(initial_grid, y, x)
@@ -216,41 +221,69 @@ def fill_unobserved_dynamic(
             dist = _distance_to_nearest_settlement(initial_grid, y, x, settlements)
 
             if code == 1:  # Settlement
+                # Round 1 data: 100% of observed settlements are alive
+                # Settlements have very high survival rate
                 if coastal and adj_forests >= 2:
-                    # Coastal + well-fed → likely port
-                    tensor[y, x] = [0.05, 0.20, 0.45, 0.15, 0.10, 0.05]
+                    # Coastal + well-fed → likely becomes port
+                    tensor[y, x] = [0.03, 0.20, 0.50, 0.12, 0.10, 0.05]
                 elif adj_forests >= 2:
-                    # Well-fed → likely survives
-                    tensor[y, x] = [0.05, 0.50, 0.10, 0.20, 0.10, 0.05]
+                    # Well-fed → very likely survives
+                    tensor[y, x] = [0.03, 0.60, 0.10, 0.12, 0.10, 0.05]
+                elif coastal:
+                    # Coastal but less food → port or settlement
+                    tensor[y, x] = [0.05, 0.25, 0.40, 0.15, 0.10, 0.05]
                 elif adj_forests == 0:
-                    # No food → likely ruin
-                    tensor[y, x] = [0.10, 0.15, 0.05, 0.50, 0.15, 0.05]
+                    # No food → higher ruin chance but still more likely alive
+                    tensor[y, x] = [0.08, 0.30, 0.05, 0.37, 0.15, 0.05]
                 else:
                     # Moderate food
-                    tensor[y, x] = [0.10, 0.35, 0.10, 0.30, 0.10, 0.05]
+                    tensor[y, x] = [0.05, 0.50, 0.08, 0.22, 0.10, 0.05]
 
             elif code == 2:  # Port
+                # Ports survive well
                 if adj_forests >= 1:
-                    # Fed port → likely survives
-                    tensor[y, x] = [0.05, 0.15, 0.50, 0.15, 0.10, 0.05]
+                    tensor[y, x] = [0.03, 0.12, 0.60, 0.10, 0.10, 0.05]
                 else:
-                    tensor[y, x] = [0.10, 0.10, 0.35, 0.30, 0.10, 0.05]
+                    tensor[y, x] = [0.05, 0.12, 0.45, 0.23, 0.10, 0.05]
 
             elif code == 3:  # Ruin
                 if dist <= 3:
                     # Near settlement → might be reclaimed
-                    tensor[y, x] = [0.10, 0.20, 0.10, 0.30, 0.25, 0.05]
+                    tensor[y, x] = [0.08, 0.25, 0.08, 0.24, 0.30, 0.05]
                 else:
                     # Far from settlement → forest reclaims
-                    tensor[y, x] = [0.10, 0.05, 0.02, 0.30, 0.48, 0.05]
+                    tensor[y, x] = [0.08, 0.05, 0.02, 0.25, 0.55, 0.05]
 
             elif code == 4:  # Forest
                 if dist <= 2:
                     # Near settlement → might be cleared for expansion
-                    tensor[y, x] = [0.10, 0.10, 0.05, 0.05, 0.65, 0.05]
+                    tensor[y, x] = [0.08, 0.15, 0.05, 0.05, 0.62, 0.05]
+                elif dist <= 5:
+                    # Medium distance — some expansion risk
+                    tensor[y, x] = [0.05, 0.08, 0.03, 0.04, 0.75, 0.05]
                 else:
                     # Forest stays forest
-                    tensor[y, x] = [0.05, 0.03, 0.02, 0.03, 0.82, 0.05]
+                    tensor[y, x] = [0.03, 0.03, 0.02, 0.02, 0.85, 0.05]
+
+            elif code in {0, 11}:  # Empty/Plains
+                # KEY INSIGHT: Settlements expand AGGRESSIVELY into empty plains
+                # ~62% initial plains → ~54% observed = ~13% get colonized
+                if dist <= 2:
+                    # Very close to settlement → high colonization chance
+                    if coastal:
+                        tensor[y, x] = [0.30, 0.25, 0.20, 0.08, 0.12, 0.05]
+                    else:
+                        tensor[y, x] = [0.35, 0.35, 0.05, 0.08, 0.12, 0.05]
+                elif dist <= 5:
+                    # Medium distance — moderate colonization
+                    if coastal:
+                        tensor[y, x] = [0.55, 0.15, 0.10, 0.05, 0.10, 0.05]
+                    else:
+                        tensor[y, x] = [0.60, 0.18, 0.03, 0.05, 0.09, 0.05]
+                elif dist <= 8:
+                    # Farther — low but non-zero colonization
+                    tensor[y, x] = [0.75, 0.08, 0.02, 0.03, 0.07, 0.05]
+                # else: keep the static prediction (high P(empty))
 
     return tensor
 
