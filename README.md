@@ -107,29 +107,37 @@ bash scripts/gcp/deploy-task.sh cv
 Solo competitor, no local GPU — all compute runs on sponsored GCP.
 
 ```bash
-# Create GPU VMs (one per task)
-bash scripts/gcp/create-vm.sh cv medium    # L4 24GB
-bash scripts/gcp/create-vm.sh ml light     # T4 16GB
-bash scripts/gcp/create-vm.sh nlp medium   # L4 24GB
+# Fleet management (spin up all VMs at once)
+scripts/gcp/fleet-up.sh baseline              # 3 VMs: cv=L4, ml=T4, nlp=L4
+scripts/gcp/fleet-up.sh baseline --spot       # same, 70% cheaper
+scripts/gcp/fleet-up.sh overnight --spot      # 7-9 VMs for parallel autoresearch
+scripts/gcp/fleet-deploy.sh                   # deploy to ALL running VMs
 
-# Deploy & train
-bash scripts/gcp/deploy-task.sh cv         # deploy code to VM
-bash scripts/gcp/train-task.sh cv          # run training on GPU
+# Single VM operations
+scripts/gcp/create-vm.sh cv medium            # L4 24GB
+scripts/gcp/deploy-task.sh cv                 # deploy code to VM
+scripts/gcp/train-task.sh cv                  # run training on GPU
 
-# Monitor
-bash scripts/gcp/status.sh                 # check all endpoints
+# Parallel experiments (multiple VMs per task)
+scripts/gcp/create-vm.sh cv heavy --spot --name=vit
+scripts/gcp/create-vm.sh cv heavy --spot --name=effnet
 
-# Cleanup
-bash scripts/gcp/teardown.sh               # delete all VMs
+# Vertex AI (serverless training + HPO, no VM management)
+scripts/gcp/vertex-train.sh cv heavy          # A100 training job
+scripts/gcp/vertex-hpo.sh cv config.yaml      # hyperparameter tuning
+
+# Monitor & cleanup
+scripts/gcp/status.sh                         # fleet status with GPU/cost
+scripts/gcp/teardown.sh                       # delete all VMs
 ```
 
 **GPU tiers:**
 
-| Tier | Machine | GPU | VRAM | Use case |
-|------|---------|-----|------|----------|
-| Light | n1-standard-8 + T4 | 1x T4 | 16GB | Tabular ML, small models |
-| Medium | g2-standard-8 + L4 | 1x L4 | 24GB | CV, NLP fine-tuning |
-| Heavy | a2-highgpu-1g + A100 | 1x A100 | 40GB | Large transformers |
+| Tier | Machine | GPU | VRAM | Cost/hr | Spot |
+|------|---------|-----|------|---------|------|
+| Light | n1-standard-8 + T4 | 1x T4 | 16GB | ~$0.35 | ~$0.11 |
+| Medium | g2-standard-8 + L4 | 1x L4 | 24GB | ~$0.70 | ~$0.21 |
+| Heavy | a2-highgpu-1g + A100 | 1x A100 | 40GB | ~$2.95 | ~$0.89 |
 
 ## Docker
 
@@ -146,13 +154,13 @@ TASK_MODE=train docker compose up
 
 ## Autoresearch (Overnight Optimization)
 
-Uses the [autoresearch-mlx](https://github.com/Walgermo/autoresearch-mlx) protocol — Karpathy's autonomous experiment loop. The sibling repo lives at `~/Utvikling/autoresearch-mlx/`.
+Uses the [autoresearch-mlx](https://github.com/Walgermo/autoresearch-mlx) protocol — Karpathy's autonomous experiment loop.
 
 **Two modes:**
 - **Local (Apple Silicon)**: Run autoresearch-mlx directly with MLX. Best for NLP/small models.
 - **GCP (PyTorch/CUDA)**: Use `shared/autoresearch.py` helpers on GPU VMs. Best for CV/large models.
 
-**The loop** (from `autoresearch-mlx/program.md`):
+**The loop:**
 1. Edit `train.py` with an experimental idea
 2. Commit the change
 3. Run training within fixed time budget
@@ -160,7 +168,7 @@ Uses the [autoresearch-mlx](https://github.com/Walgermo/autoresearch-mlx) protoc
 5. If worse → discard (`git reset --hard`)
 6. Log to `results.tsv`, repeat indefinitely
 
-Set it up before sleep, wake up to optimized models.
+NaN/inf metrics are automatically rejected. Set up before sleep, wake up to optimized models.
 
 ## Competition Rules
 
@@ -178,10 +186,10 @@ Set it up before sleep, wake up to optimized models.
 |-----------|--------|
 | Language | Python 3.11+ |
 | API | FastAPI + Pydantic |
-| ML | PyTorch, Transformers, scikit-learn, XGBoost, LightGBM |
+| ML | PyTorch, Transformers, scikit-learn, XGBoost, LightGBM, scipy |
 | Package mgr | uv |
 | Testing | pytest |
-| Compute | GCP (T4/L4/A100) |
+| Compute | GCP (T4/L4/A100), Vertex AI (serverless training + HPO) |
 | CI | GitHub Actions |
 
 ## Time Budget (69 hours)
