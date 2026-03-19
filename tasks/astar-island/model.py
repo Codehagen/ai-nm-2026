@@ -539,9 +539,12 @@ def build_prediction(
     # only ~10 observations per seed; GT-calibrated priors outperform raw frequencies)
     # tensor = update_with_observations(tensor, observations, seed_index)
 
-    # Layer 3: Fill unobserved dynamic cells
+    # Layer 3: Apply context-specific priors to ALL dynamic cells.
+    # With Layer 2 disabled, Layer 3's priors (adj_forests, coastal) are better
+    # than Layer 1's distance-only tables for settlements. Pass empty observations
+    # to bypass the obs_mask and fill everything.
     tensor = fill_unobserved_dynamic(
-        tensor, initial_grid, settlements, observations, seed_index,
+        tensor, initial_grid, settlements, [], seed_index,
     )
 
     # Layer 4: Cross-seed transfer (disabled — hurts score by ~0.5 pts)
