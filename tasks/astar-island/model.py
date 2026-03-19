@@ -51,21 +51,57 @@ EMPIRICAL_TRANSITIONS = {
     11: [0.7771, 0.1611, 0.0145, 0.0126, 0.0348, 0.0000],  # Plains (n=4719)
 }
 
-# Distance-based transition for Plains (code 11) — distance to nearest settlement
-# Measured empirically from Round 1 Seed 0 observations
-# Format: max_distance → [P(empty), P(settlement), P(port), P(ruin), P(forest), P(mountain)]
+# Distance-based transition for INLAND Plains (code 11, not coastal)
 # Calibrated from Round 1 GROUND TRUTH — all 5 seeds pooled
-PLAINS_BY_DISTANCE = {
-    1:  [0.696, 0.232, 0.012, 0.016, 0.045, 0.000],  # n=592
-    2:  [0.713, 0.211, 0.014, 0.016, 0.047, 0.000],  # n=965
-    3:  [0.725, 0.192, 0.019, 0.016, 0.048, 0.000],  # n=1008
-    4:  [0.757, 0.167, 0.022, 0.014, 0.040, 0.000],  # n=801
-    5:  [0.875, 0.093, 0.011, 0.008, 0.012, 0.000],  # n=566
-    6:  [0.905, 0.070, 0.010, 0.006, 0.009, 0.000],  # n=347
-    7:  [0.944, 0.043, 0.006, 0.003, 0.004, 0.000],  # n=239
-    8:  [0.965, 0.027, 0.005, 0.001, 0.002, 0.000],  # n=145
-    9:  [0.991, 0.008, 0.000, 0.001, 0.000, 0.000],  # n=38
-    99: [0.992, 0.008, 0.000, 0.000, 0.000, 0.000],  # n=18
+# KEY: Inland cells NEVER become ports (P(port) = 0.0)
+PLAINS_INLAND_BY_DISTANCE = {
+    1:  [0.701, 0.238, 0.000, 0.016, 0.046, 0.000],  # n=547
+    2:  [0.717, 0.219, 0.000, 0.016, 0.048, 0.000],  # n=870
+    3:  [0.728, 0.206, 0.000, 0.016, 0.051, 0.000],  # n=870
+    4:  [0.760, 0.184, 0.000, 0.015, 0.042, 0.000],  # n=649
+    5:  [0.875, 0.103, 0.000, 0.009, 0.013, 0.000],  # n=436
+    6:  [0.907, 0.077, 0.000, 0.006, 0.010, 0.000],  # n=254
+    7:  [0.948, 0.046, 0.000, 0.003, 0.004, 0.000],  # n=179
+    8:  [0.986, 0.013, 0.000, 0.001, 0.001, 0.000],  # n=254
+    99: [0.995, 0.005, 0.000, 0.000, 0.000, 0.000],
+}
+
+# Distance-based transition for COASTAL Plains (code 11, adjacent to ocean)
+# KEY: Coastal cells CAN become ports — significant P(port) near settlements
+PLAINS_COASTAL_BY_DISTANCE = {
+    1:  [0.641, 0.155, 0.155, 0.015, 0.034, 0.000],  # n=45
+    2:  [0.674, 0.138, 0.140, 0.014, 0.034, 0.000],  # n=95
+    3:  [0.709, 0.109, 0.136, 0.014, 0.033, 0.000],  # n=138
+    4:  [0.745, 0.096, 0.114, 0.011, 0.034, 0.000],  # n=152
+    5:  [0.873, 0.062, 0.049, 0.006, 0.010, 0.000],  # n=130
+    6:  [0.900, 0.049, 0.038, 0.005, 0.008, 0.000],  # n=93
+    7:  [0.935, 0.033, 0.024, 0.003, 0.005, 0.000],  # n=62
+    8:  [0.983, 0.010, 0.006, 0.001, 0.001, 0.000],  # n=108
+    99: [0.995, 0.003, 0.002, 0.000, 0.000, 0.000],
+}
+
+# Distance-based transition for INLAND Forests (code 4, not coastal)
+# Forests near settlements get colonized; far forests stay forest
+FOREST_INLAND_BY_DISTANCE = {
+    1:  [0.098, 0.243, 0.000, 0.017, 0.641, 0.000],  # n=186
+    2:  [0.103, 0.225, 0.000, 0.017, 0.655, 0.000],  # n=316
+    3:  [0.102, 0.203, 0.000, 0.017, 0.678, 0.000],  # n=299
+    4:  [0.088, 0.192, 0.000, 0.014, 0.707, 0.000],  # n=247
+    5:  [0.029, 0.097, 0.000, 0.008, 0.866, 0.000],  # n=132
+    6:  [0.009, 0.047, 0.000, 0.003, 0.941, 0.000],  # n=260
+    99: [0.005, 0.020, 0.000, 0.002, 0.973, 0.000],
+}
+
+# Distance-based transition for COASTAL Forests (code 4, adjacent to ocean)
+# Coastal forests can become ports
+FOREST_COASTAL_BY_DISTANCE = {
+    1:  [0.076, 0.145, 0.170, 0.013, 0.596, 0.000],  # n=20
+    2:  [0.067, 0.155, 0.134, 0.014, 0.630, 0.000],  # n=32
+    3:  [0.062, 0.117, 0.145, 0.014, 0.662, 0.000],  # n=49
+    4:  [0.066, 0.109, 0.115, 0.011, 0.699, 0.000],  # n=48
+    5:  [0.017, 0.070, 0.054, 0.005, 0.854, 0.000],  # n=41
+    6:  [0.006, 0.027, 0.021, 0.002, 0.944, 0.000],  # n=93
+    99: [0.003, 0.010, 0.008, 0.001, 0.978, 0.000],
 }
 
 
@@ -76,9 +112,8 @@ PLAINS_BY_DISTANCE = {
 def build_static_prediction(initial_grid: list[list[int]]) -> np.ndarray:
     """Build prediction tensor using empirical transition probabilities.
 
-    For most terrain types, uses global empirical transitions.
-    For Plains (code 11), uses distance-based priors since settlement
-    colonization decays sharply with distance.
+    Uses coastal/inland split with distance-based priors for Plains and Forests.
+    Key insight: only coastal cells can become ports; inland P(port) = 0.
     """
     h = len(initial_grid)
     w = len(initial_grid[0]) if h > 0 else 0
@@ -95,8 +130,8 @@ def build_static_prediction(initial_grid: list[list[int]]) -> np.ndarray:
         for x in range(w):
             code = initial_grid[y][x]
 
-            if code == 11:
-                # Plains — use distance-based transition probabilities
+            if code in {11, 0}:
+                # Plains/Empty — use coastal/inland + distance-based transitions
                 if settlement_positions:
                     dist = min(
                         abs(y - sy) + abs(x - sx)
@@ -105,16 +140,34 @@ def build_static_prediction(initial_grid: list[list[int]]) -> np.ndarray:
                 else:
                     dist = 99
 
-                # Find the right distance bucket
-                for max_d in sorted(PLAINS_BY_DISTANCE.keys()):
+                coastal = _is_coastal(initial_grid, y, x)
+                table = PLAINS_COASTAL_BY_DISTANCE if coastal else PLAINS_INLAND_BY_DISTANCE
+
+                for max_d in sorted(table.keys()):
                     if dist <= max_d:
-                        tensor[y, x] = PLAINS_BY_DISTANCE[max_d]
+                        tensor[y, x] = table[max_d]
+                        break
+
+            elif code == 4:
+                # Forest — use coastal/inland + distance-based transitions
+                if settlement_positions:
+                    dist = min(
+                        abs(y - sy) + abs(x - sx)
+                        for sy, sx in settlement_positions
+                    )
+                else:
+                    dist = 99
+
+                coastal = _is_coastal(initial_grid, y, x)
+                table = FOREST_COASTAL_BY_DISTANCE if coastal else FOREST_INLAND_BY_DISTANCE
+
+                for max_d in sorted(table.keys()):
+                    if dist <= max_d:
+                        tensor[y, x] = table[max_d]
                         break
 
             elif code in EMPIRICAL_TRANSITIONS:
                 tensor[y, x] = EMPIRICAL_TRANSITIONS[code]
-            elif code == 0:
-                tensor[y, x] = [1.0, 0, 0, 0, 0, 0]
             elif code == 3:
                 tensor[y, x] = [0.15, 0.15, 0.05, 0.25, 0.35, 0.05]
 
@@ -284,31 +337,19 @@ def fill_unobserved_dynamic(
                 else:
                     tensor[y, x] = [0.10, 0.05, 0.02, 0.25, 0.53, 0.05]
 
-            elif code == 4:  # Forest — pooled from all 5 seeds GT
-                if coastal:
-                    tensor[y, x] = [0.042, 0.092, 0.093, 0.009, 0.764, 0.000]
-                else:
-                    tensor[y, x] = [0.078, 0.178, 0.000, 0.014, 0.730, 0.000]
+            elif code == 4:  # Forest — distance + coastal from GT tables
+                table = FOREST_COASTAL_BY_DISTANCE if coastal else FOREST_INLAND_BY_DISTANCE
+                for max_d in sorted(table.keys()):
+                    if dist <= max_d:
+                        tensor[y, x] = table[max_d]
+                        break
 
-            elif code in {0, 11}:  # Empty/Plains
-                # KEY INSIGHT: Settlements expand AGGRESSIVELY into empty plains
-                # ~62% initial plains → ~54% observed = ~13% get colonized
-                if dist <= 2:
-                    # Very close to settlement → high colonization chance
-                    if coastal:
-                        tensor[y, x] = [0.30, 0.25, 0.20, 0.08, 0.12, 0.05]
-                    else:
-                        tensor[y, x] = [0.35, 0.35, 0.05, 0.08, 0.12, 0.05]
-                elif dist <= 5:
-                    # Medium distance — moderate colonization
-                    if coastal:
-                        tensor[y, x] = [0.55, 0.15, 0.10, 0.05, 0.10, 0.05]
-                    else:
-                        tensor[y, x] = [0.60, 0.18, 0.03, 0.05, 0.09, 0.05]
-                elif dist <= 8:
-                    # Farther — low but non-zero colonization
-                    tensor[y, x] = [0.75, 0.08, 0.02, 0.03, 0.07, 0.05]
-                # else: keep the static prediction (high P(empty))
+            elif code in {0, 11}:  # Plains — distance + coastal from GT tables
+                table = PLAINS_COASTAL_BY_DISTANCE if coastal else PLAINS_INLAND_BY_DISTANCE
+                for max_d in sorted(table.keys()):
+                    if dist <= max_d:
+                        tensor[y, x] = table[max_d]
+                        break
 
     return tensor
 
