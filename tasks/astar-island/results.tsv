@@ -17,3 +17,5 @@ reverted	89.504375	0.0	15	discard	per-seed scaling by initial settlement count	t
 reverted	89.773624	0.0	8	discard	adj_forest boost for plains P(settlement)	marginal loss vs baseline
 e80623f	90.605182	0.0	142	keep	add GBT ensemble (blend=0.5) trained on R1 GT features	-
 f96e630	91.906229	0.0	14	keep	add dist2/nearby_settlements/total_settlements to GBT features	-
+e89bdbd	92.153153	0.0	0	keep	increase GBT to 200 trees (LOSO-validated: 91.18)	-
+03a6251	92.677288	0.0	12	keep	add dist_ocean feature to GBT	-
