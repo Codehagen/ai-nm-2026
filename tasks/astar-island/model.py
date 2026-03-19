@@ -752,8 +752,8 @@ def build_prediction(
     #     tensor, initial_grid, all_observations, seed_index, all_initial_grids,
     # )
 
-    # Layer 5: Calibration from past rounds
-    tensor = apply_calibration(tensor, initial_grid, calibration)
+    # Layer 5: Calibration (disabled — GBT subsumes calibration's role)
+    # tensor = apply_calibration(tensor, initial_grid, calibration)
 
     # Layer 6: GBT blend — captures feature interactions the tables miss
     gbt_pred = gbt_predict(initial_grid, settlements)
