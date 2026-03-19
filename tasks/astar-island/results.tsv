@@ -4,3 +4,4 @@ commit	val_metric	memory_gb	diff_lines	status	description	reject_reason
 4ac75ec	80.407478	0.0	5	keep	GT-calibrated global transitions	-
 07a40cb	80.621764	0.0	2	keep	PROB_FLOOR 0.001 to 0.0001	-
 f90c0b6	89.014199	0.0	80	keep	coastal/inland split for plains+forests with distance-based GT tables	-
+uncommit	89.343843	0.0	15	keep	disable noisy Bayesian obs layer + reduce calibration blend 0.5→0.2	-
