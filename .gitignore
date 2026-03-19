@@ -50,3 +50,7 @@ Thumbs.db
 wandb/
 runs/
 .gstack/
+
+# Node.js
+node_modules/
+dist/

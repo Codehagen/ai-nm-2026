@@ -1,12 +1,33 @@
 import { z } from "zod";
 
-export const PredictRequestSchema = z.object({
-  // Replace with actual task request schema
+// --- Request ---
+
+export const FileAttachmentSchema = z.object({
+  filename: z.string(),
+  content_base64: z.string(),
+  mime_type: z.string(),
 });
 
-export const PredictResponseSchema = z.object({
-  // Replace with actual task response schema
+export const TripletexCredentialsSchema = z.object({
+  base_url: z.string().url(),
+  session_token: z.string(),
 });
 
-export type PredictRequest = z.infer<typeof PredictRequestSchema>;
-export type PredictResponse = z.infer<typeof PredictResponseSchema>;
+export const SolveRequestSchema = z.object({
+  prompt: z.string(),
+  files: z.array(FileAttachmentSchema).default([]),
+  tripletex_credentials: TripletexCredentialsSchema,
+});
+
+// --- Response ---
+
+export const SolveResponseSchema = z.object({
+  status: z.literal("completed"),
+});
+
+// --- Inferred types ---
+
+export type FileAttachment = z.infer<typeof FileAttachmentSchema>;
+export type TripletexCredentials = z.infer<typeof TripletexCredentialsSchema>;
+export type SolveRequest = z.infer<typeof SolveRequestSchema>;
+export type SolveResponse = z.infer<typeof SolveResponseSchema>;
