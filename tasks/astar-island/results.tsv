@@ -12,3 +12,4 @@ uncommit	89.343843	0.0	15	keep	disable noisy Bayesian obs layer + reduce calibra
 3aac15b	89.425969	0.0	3	discard	align calibration coastal key with exposed_coastal	mismatched lookup keys
 reverted	89.466994	0.0	5	discard	regenerate calibration priors with exposed_coastal keys	over-smoothing with GT-derived tables
 fffc9a1	89.768145	0.0	20	keep	boost P(settlement) for forests adjacent to settlement cells	-
+14f1d60	89.790387	0.0	19	keep	boost P(settlement) for plains adjacent to settlement cells	-

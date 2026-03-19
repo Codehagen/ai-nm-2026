@@ -390,8 +390,26 @@ def fill_unobserved_dynamic(
                 table = PLAINS_COASTAL_BY_DISTANCE if exposed_coastal else PLAINS_INLAND_BY_DISTANCE
                 for max_d in sorted(table.keys()):
                     if dist <= max_d:
-                        tensor[y, x] = table[max_d]
+                        base = np.array(table[max_d], dtype=np.float64)
                         break
+                else:
+                    base = np.array(table[99], dtype=np.float64)
+
+                # Boost P(settlement) for plains adjacent to settlement cells
+                if not exposed_coastal and dist <= 3:
+                    adj_settl = sum(
+                        1 for dy in [-1, 0, 1] for dx in [-1, 0, 1]
+                        if not (dy == 0 and dx == 0)
+                        and 0 <= y + dy < h and 0 <= x + dx < w
+                        and initial_grid[y + dy][x + dx] in {1, 2}
+                    )
+                    if adj_settl >= 1:
+                        boost = 0.02 * min(adj_settl, 2)
+                        base[1] += boost
+                        base[0] -= boost
+                        base[0] = max(0.01, base[0])
+
+                tensor[y, x] = base
 
     return tensor
 
