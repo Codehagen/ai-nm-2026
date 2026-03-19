@@ -6,3 +6,4 @@ commit	val_metric	memory_gb	diff_lines	status	description	reject_reason
 f90c0b6	89.014199	0.0	80	keep	coastal/inland split for plains+forests with distance-based GT tables	-
 uncommit	89.343843	0.0	15	keep	disable noisy Bayesian obs layer + reduce calibration blend 0.5→0.2	-
 89ac76f	89.512792	0.0	29	keep	exposed coastal split (2+ ocean neighbors for port tables)	-
+4875ee2	89.513903	0.0	7	keep	coastal settlement port priors + fix inland P(port)=0	-
