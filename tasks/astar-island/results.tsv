@@ -13,3 +13,6 @@ uncommit	89.343843	0.0	15	keep	disable noisy Bayesian obs layer + reduce calibra
 reverted	89.466994	0.0	5	discard	regenerate calibration priors with exposed_coastal keys	over-smoothing with GT-derived tables
 fffc9a1	89.768145	0.0	20	keep	boost P(settlement) for forests adjacent to settlement cells	-
 14f1d60	89.790387	0.0	19	keep	boost P(settlement) for plains adjacent to settlement cells	-
+reverted	89.504375	0.0	15	discard	per-seed scaling by initial settlement count	too aggressive scaling
+reverted	89.773624	0.0	8	discard	adj_forest boost for plains P(settlement)	marginal loss vs baseline
+e80623f	90.605182	0.0	142	keep	add GBT ensemble (blend=0.5) trained on R1 GT features	-

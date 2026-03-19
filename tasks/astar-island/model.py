@@ -1,31 +1,20 @@
-"""Astar Island prediction engine — multi-layer heuristic model.
+"""Astar Island prediction engine — heuristic + GBT hybrid model.
 
 Prediction layers:
-  1. STATIC — deterministic cells (ocean, mountain, deep forest, empty plains)
-  2. OBSERVED — frequency distribution from viewport query observations
-  3. UNOBSERVED DYNAMIC — priors based on initial state + simulation mechanics
-  4. CROSS-SEED TRANSFER — pool observations from similar cells across seeds
-  5. CALIBRATION — adjust priors using learned parameters from past rounds
+  1. STATIC — distance-based coastal/inland priors from GT tables
+  2. OBSERVED — DISABLED (noisy with few observations)
+  3. CONTEXT — adj_forests, adj_settlements, exposed_coastal priors
+  4. CROSS-SEED — DISABLED
+  5. CALIBRATION — blend with learned context priors
+  6. GBT BLEND — blend with gradient-boosted tree predictions
 
-┌──────────────────────────────────────────────────────────────┐
-│  build_prediction(initial_grid, observations, calibration)    │
-│                                                               │
-│  Layer 1: static_prediction()     → ocean=1.0, mountain=1.0  │
-│      │                                                        │
-│  Layer 2: update_with_observations() → frequency counting     │
-│      │                                                        │
-│  Layer 3: fill_unobserved_dynamic()  → heuristic priors      │
-│      │                                                        │
-│  Layer 4: apply_cross_seed_transfer() → pool across seeds    │
-│      │                                                        │
-│  Layer 5: apply_calibration()     → adjust from past rounds  │
-│      │                                                        │
-│  normalize_prediction()           → floor + renormalize       │
-└──────────────────────────────────────────────────────────────┘
+The GBT model captures feature interactions the hand-tuned tables miss.
+Trained on Round 1 GT, validated with leave-one-seed-out CV.
 """
 
 import json
 import os
+import pickle
 from typing import Optional
 
 import numpy as np
@@ -37,6 +26,133 @@ from dtos import (
     PROB_FLOOR,
 )
 from utils import normalize_prediction, grid_to_class_array
+
+
+# ──────────────────────────────────────────────────────────────
+# GBT model support
+# ──────────────────────────────────────────────────────────────
+
+GBT_BLEND_WEIGHT = 0.5  # how much to weight GBT vs heuristic (LOSO-validated)
+_gbt_models = None  # lazy-loaded
+
+
+def _extract_cell_features(
+    initial_grid: list[list[int]],
+    settlements: list,
+) -> tuple[np.ndarray, list[tuple[int, int]]]:
+    """Extract per-cell feature vectors for dynamic cells.
+
+    Returns (features_array, list_of_coords) where coords maps row index → (y, x).
+    """
+    h = len(initial_grid)
+    w = len(initial_grid[0]) if h > 0 else 0
+
+    settl_pos = []
+    for s in settlements:
+        if isinstance(s, dict):
+            settl_pos.append((s.get("x", 0), s.get("y", 0)))
+        else:
+            settl_pos.append((s.x, s.y))
+
+    features = []
+    coords = []
+    for y in range(h):
+        for x in range(w):
+            code = initial_grid[y][x]
+            if code in {10, 5}:
+                continue
+
+            dist = min(
+                (abs(y - sy) + abs(x - sx) for sx, sy in settl_pos), default=99
+            )
+            adj_ocean = sum(
+                1 for dy in [-1, 0, 1] for dx in [-1, 0, 1]
+                if not (dy == 0 and dx == 0)
+                and 0 <= y + dy < h and 0 <= x + dx < w
+                and initial_grid[y + dy][x + dx] == 10
+            )
+            adj_forest = sum(
+                1 for dy in [-1, 0, 1] for dx in [-1, 0, 1]
+                if not (dy == 0 and dx == 0)
+                and 0 <= y + dy < h and 0 <= x + dx < w
+                and initial_grid[y + dy][x + dx] == 4
+            )
+            adj_settl = sum(
+                1 for dy in [-1, 0, 1] for dx in [-1, 0, 1]
+                if not (dy == 0 and dx == 0)
+                and 0 <= y + dy < h and 0 <= x + dx < w
+                and initial_grid[y + dy][x + dx] in {1, 2}
+            )
+            adj_mountain = sum(
+                1 for dy in [-1, 0, 1] for dx in [-1, 0, 1]
+                if not (dy == 0 and dx == 0)
+                and 0 <= y + dy < h and 0 <= x + dx < w
+                and initial_grid[y + dy][x + dx] == 5
+            )
+
+            features.append([
+                code, dist, adj_ocean, adj_forest, adj_settl, adj_mountain,
+                int(code == 11), int(code == 4), int(code == 1), int(code == 2),
+                int(adj_ocean >= 2),
+            ])
+            coords.append((y, x))
+
+    return np.array(features) if features else np.empty((0, 11)), coords
+
+
+def load_gbt_models() -> Optional[list]:
+    """Load pre-trained GBT models from pickle."""
+    global _gbt_models
+    if _gbt_models is not None:
+        return _gbt_models
+
+    path = os.path.join(os.path.dirname(__file__), "data", "gbt_models.pkl")
+    if not os.path.exists(path):
+        return None
+
+    with open(path, "rb") as f:
+        _gbt_models = pickle.load(f)
+    return _gbt_models
+
+
+def gbt_predict(
+    initial_grid: list[list[int]],
+    settlements: list,
+) -> Optional[np.ndarray]:
+    """Generate predictions using the pre-trained GBT ensemble.
+
+    Returns H×W×6 tensor, or None if models not available.
+    """
+    models = load_gbt_models()
+    if models is None:
+        return None
+
+    h = len(initial_grid)
+    w = len(initial_grid[0]) if h > 0 else 0
+    features, coords = _extract_cell_features(initial_grid, settlements)
+
+    if len(features) == 0:
+        return None
+
+    tensor = np.zeros((h, w, NUM_CLASSES))
+    # Static cells
+    for y in range(h):
+        for x in range(w):
+            if initial_grid[y][x] == 10:
+                tensor[y, x] = [1, 0, 0, 0, 0, 0]
+            elif initial_grid[y][x] == 5:
+                tensor[y, x] = [0, 0, 0, 0, 0, 1]
+
+    # GBT predictions for dynamic cells
+    gbt_flat = np.zeros((len(coords), NUM_CLASSES))
+    for cls in range(NUM_CLASSES):
+        gbt_flat[:, cls] = models[cls].predict(features)
+
+    for i, (y, x) in enumerate(coords):
+        tensor[y, x] = np.maximum(gbt_flat[i], PROB_FLOOR)
+        tensor[y, x] /= tensor[y, x].sum()
+
+    return tensor
 
 
 # Empirical transition probabilities computed from Round 1 observations
@@ -592,6 +708,11 @@ def build_prediction(
 
     # Layer 5: Calibration from past rounds
     tensor = apply_calibration(tensor, initial_grid, calibration)
+
+    # Layer 6: GBT blend — captures feature interactions the tables miss
+    gbt_pred = gbt_predict(initial_grid, settlements)
+    if gbt_pred is not None:
+        tensor = (1 - GBT_BLEND_WEIGHT) * tensor + GBT_BLEND_WEIGHT * gbt_pred
 
     # Final normalization — CRITICAL: enforce floor + renormalize
     tensor = normalize_prediction(tensor)
