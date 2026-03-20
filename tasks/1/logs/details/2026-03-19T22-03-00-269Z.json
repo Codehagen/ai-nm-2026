@@ -1,0 +1,74 @@
+{
+  "timestamp": "2026-03-19T22:03:00.269Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Opprett en ansatt med navn Kari Olsen, e-post kari@olsen.no. Hun skal være kontoadministrator.",
+  "filesCount": 0,
+  "steps": 8,
+  "toolCalls": 11,
+  "apiCalls": 11,
+  "apiErrors": 5,
+  "elapsedMs": 99853,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/employee/entitlement/template",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/employee/entitlementTemplate",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/employee/entitlement",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee/entitlement",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/employee/entitlement/template",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/employee/entitlement",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee/entitlement",
+      "ok": true
+    }
+  ]
+}

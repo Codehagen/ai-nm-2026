@@ -1,0 +1,192 @@
+{
+  "timestamp": "2026-03-20T18:15:32.547Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Erfassen Sie 5 Stunden für Jonas Müller (jonas.muller@example.org) auf der Aktivität \"Analyse\" im Projekt \"E-Commerce-Entwicklung\" für Waldstein GmbH (Org.-Nr. 983707777). Stundensatz: 1850 NOK/h. Erstellen Sie eine Projektrechnung an den Kunden basierend auf den erfassten Stunden.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 13,
+  "apiCalls": 13,
+  "apiErrors": 1,
+  "elapsedMs": 42428,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "name": "Default",
+        "departmentNumber": "1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "organizationNumber": "983707777",
+        "name": "Waldstein GmbH",
+        "isCustomer": true
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/activity",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "name": "Analyse"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "name": "Analyse",
+        "priceExcludingVatCurrency": 1850,
+        "vatType": {
+          "id": 3
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1920",
+        "fields": "id,version,bankAccountNumber,name"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "department": {
+          "id": 906891
+        },
+        "userType": "STANDARD",
+        "firstName": "Jonas",
+        "lastName": "Müller",
+        "email": "jonas.muller@example.org",
+        "dateOfBirth": "1990-01-15"
+      },
+      "errorMessage": "Validering feilet. The email already exists. GET /employee?email=<the email> to find the existing employee and use their ID instead of creating a new one.",
+      "validationMessages": [
+        {
+          "field": "email",
+          "message": "Det finnes allerede en bruker med denne e-postadressen.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true,
+      "body": {
+        "name": "E-Commerce-Entwicklung",
+        "customer": {
+          "id": 108255102
+        },
+        "isInternal": false,
+        "startDate": "2026-03-20",
+        "projectManager": {
+          "id": 18187708
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/357103965",
+      "ok": true,
+      "body": {
+        "id": 357103965,
+        "version": 0,
+        "name": "Bankinnskudd",
+        "bankAccountNumber": "86011117947"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "email": "jonas.muller@example.org",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/timesheet/entry",
+      "ok": true,
+      "body": {
+        "hours": 5,
+        "employee": {
+          "id": 18187716
+        },
+        "project": {
+          "id": 401963973
+        },
+        "date": "2026-03-20",
+        "activity": {
+          "id": 5081001
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "orderDate": "2026-03-20",
+        "customer": {
+          "id": 108255102
+        },
+        "orderLines": [
+          {
+            "vatType": {
+              "id": 3
+            },
+            "product": {
+              "id": 84388179
+            },
+            "count": 5,
+            "unitPriceExcludingVatCurrency": 1850
+          }
+        ],
+        "deliveryDate": "2026-03-20",
+        "project": {
+          "id": 401963973
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "orders": [
+          {
+            "id": 401963977
+          }
+        ],
+        "invoiceDueDate": "2026-04-03",
+        "invoiceDate": "2026-03-20"
+      }
+    }
+  ]
+}

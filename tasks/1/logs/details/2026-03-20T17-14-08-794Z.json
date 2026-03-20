@@ -1,0 +1,156 @@
+{
+  "timestamp": "2026-03-20T17:14:08.794Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Erstellen Sie eine Rechnung für den Kunden Silberberg GmbH (Org.-Nr. 977792827) mit drei Produktzeilen: Wartung (8747) zu 16950 NOK mit 25 % MwSt., Softwarelizenz (8391) zu 3250 NOK mit 15 % MwSt. (Lebensmittel), und Netzwerkdienst (4819) zu 5550 NOK mit 0 % MwSt. (befreit).",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 10,
+  "apiCalls": 10,
+  "apiErrors": 0,
+  "elapsedMs": 38643,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/customer",
+      "ok": true,
+      "params": {
+        "fields": "id,name",
+        "organizationNumber": "977792827"
+      },
+      "body": {}
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "8747"
+      },
+      "body": {}
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "8391"
+      },
+      "body": {}
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "4819",
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version"
+      },
+      "body": {}
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      },
+      "body": {}
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/353471851",
+      "ok": true,
+      "body": {
+        "name": "Bankinnskudd",
+        "id": 353471851,
+        "version": 0,
+        "bankAccountNumber": "86011117947"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/product/84377835",
+      "ok": true,
+      "body": {
+        "name": "Netzwerkdienst",
+        "id": 84377835,
+        "priceExcludingVatCurrency": 5550,
+        "vatType": {
+          "id": 5
+        },
+        "version": 0
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "orderLines": [
+          {
+            "vatType": {
+              "id": 3
+            },
+            "product": {
+              "id": 84377827
+            },
+            "count": 1,
+            "unitPriceExcludingVatCurrency": 16950
+          },
+          {
+            "vatType": {
+              "id": 31
+            },
+            "product": {
+              "id": 84377830
+            },
+            "count": 1,
+            "unitPriceExcludingVatCurrency": 3250
+          },
+          {
+            "unitPriceExcludingVatCurrency": 5550,
+            "count": 1,
+            "product": {
+              "id": 84377835
+            },
+            "vatType": {
+              "id": 5
+            }
+          }
+        ],
+        "orderDate": "2026-03-20",
+        "deliveryDate": "2026-03-20",
+        "customer": {
+          "id": 107828676
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/order/401962443",
+      "ok": true,
+      "params": {
+        "fields": "orderLines(id,product(id),count,unitPriceExcludingVatCurrency,vatType(id))"
+      },
+      "body": {}
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-04-03",
+        "orders": [
+          {
+            "id": 401962443
+          }
+        ],
+        "invoiceDate": "2026-03-20"
+      }
+    }
+  ]
+}

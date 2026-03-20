@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-03-20T15:46:23.462Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Crie o cliente Porto Alegre Lda com número de organização 834147254. O endereço é Storgata 65, 4611 Kristiansand. E-mail: post@porto.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 9817,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "isCustomer": true,
+        "name": "Porto Alegre Lda",
+        "email": "post@porto.no",
+        "postalAddress": {
+          "city": "Kristiansand",
+          "postalCode": "4611",
+          "addressLine1": "Storgata 65"
+        },
+        "organizationNumber": "834147254"
+      }
+    }
+  ]
+}

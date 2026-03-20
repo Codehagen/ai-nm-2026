@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T16:40:40.513Z",
+  "prompt": "Opprett en ansatt med navn Test Person og e-post test@example.org. Startdato er 1. mars 2026.",
+  "files": [],
+  "base_url": "http://localhost:9054",
+  "raw_files": []
+}

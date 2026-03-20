@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-03-20T17:10:37.344Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Crea el cliente Montaña SL con número de organización 957430201. La dirección es Nygata 24, 3015 Drammen. Correo: post@montana.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 10043,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "organizationNumber": "957430201",
+        "name": "Montaña SL",
+        "isCustomer": true,
+        "postalAddress": {
+          "addressLine1": "Nygata 24",
+          "postalCode": "3015",
+          "city": "Drammen"
+        },
+        "email": "post@montana.no"
+      }
+    }
+  ]
+}

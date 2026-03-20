@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T18:02:56.371Z",
+  "prompt": "Create and send an invoice to the customer Northwave Ltd (org no. 812924257) for 21050 NOK excluding VAT. The invoice is for Consulting Hours.",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

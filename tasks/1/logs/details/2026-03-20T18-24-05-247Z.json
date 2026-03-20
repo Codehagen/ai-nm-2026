@@ -1,0 +1,238 @@
+{
+  "timestamp": "2026-03-20T18:24:05.247Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Registre una nota de gastos de viaje para Pablo Sánchez (pablo.sanchez@example.org) por \"Conferencia Drammen\". El viaje duró 3 días con dietas (tarifa diaria 800 NOK). Gastos: billete de avión 7050 NOK y taxi 550 NOK.",
+  "filesCount": 0,
+  "steps": 9,
+  "toolCalls": 17,
+  "apiCalls": 17,
+  "apiErrors": 2,
+  "elapsedMs": 55972,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "name": "Avdeling",
+        "departmentNumber": "1"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "email": "pablo.sanchez@example.org"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "count": "50"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "count": "10"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rateCategory",
+      "ok": true,
+      "params": {
+        "count": "50",
+        "type": "PER_DIEM",
+        "isValidDomestic": "true",
+        "fields": "id,name",
+        "dateFrom": "2026-03-18",
+        "dateTo": "2026-03-20"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": true,
+      "body": {
+        "employee": {
+          "id": 18179936
+        },
+        "travelDetails": {
+          "departureFrom": "Oslo",
+          "purpose": "Conferencia Drammen",
+          "returnDate": "2026-03-20",
+          "departureDate": "2026-03-18",
+          "destination": "Drammen"
+        },
+        "title": "Conferencia Drammen"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "count": "100"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "description": "Fly",
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "description": "Taxi"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rate",
+      "ok": true,
+      "params": {
+        "fields": "id,rate",
+        "rateCategoryId": "740"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": false,
+      "status": 500,
+      "body": {
+        "comments": "Billete de avión",
+        "date": "2026-03-18",
+        "travelExpense": {
+          "id": 11144774
+        },
+        "paymentType": {
+          "id": 26456936
+        },
+        "amountCurrencyIncVat": 7050,
+        "costCategory": {
+          "id": 26456952
+        }
+      },
+      "errorMessage": "POST /travelExpense/cost → 500"
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": false,
+      "status": 409,
+      "body": {
+        "comments": "Taxi",
+        "travelExpense": {
+          "id": 11144774
+        },
+        "date": "2026-03-18",
+        "paymentType": {
+          "id": 26456936
+        },
+        "costCategory": {
+          "id": 26456967
+        },
+        "amountCurrencyIncVat": 550
+      },
+      "errorMessage": "RevisionException"
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/perDiemCompensation",
+      "ok": true,
+      "body": {
+        "rateType": {
+          "id": 25888
+        },
+        "travelExpense": {
+          "id": 11144774
+        },
+        "rate": 800,
+        "count": 3,
+        "isDeductionForBreakfast": false,
+        "overnightAccommodation": "HOTEL",
+        "isDeductionForLunch": false,
+        "location": "Drammen",
+        "isDeductionForDinner": false,
+        "rateCategory": {
+          "id": 740
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/cost",
+      "ok": true,
+      "params": {
+        "fields": "id,amountCurrencyIncVat,costCategory(id)",
+        "travelExpenseId": "11144774"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": true,
+      "body": {
+        "travelExpense": {
+          "id": 11144774
+        },
+        "costCategory": {
+          "id": 26456952
+        },
+        "date": "2026-03-18",
+        "paymentType": {
+          "id": 26456936
+        },
+        "comments": "Billete de avión",
+        "amountCurrencyIncVat": 7050
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": true,
+      "body": {
+        "paymentType": {
+          "id": 26456936
+        },
+        "costCategory": {
+          "id": 26456967
+        },
+        "travelExpense": {
+          "id": 11144774
+        },
+        "date": "2026-03-18",
+        "comments": "Taxi",
+        "amountCurrencyIncVat": 550
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/perDiemCompensation",
+      "ok": true,
+      "params": {
+        "travelExpenseId": "11144774",
+        "fields": "id,rate,count"
+      }
+    }
+  ]
+}

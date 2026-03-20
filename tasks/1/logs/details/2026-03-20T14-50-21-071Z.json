@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-03-20T14:50:21.071Z",
+  "prompt": "Crie uma dimensão contabilística personalizada \"Region\" com os valores \"Sør-Norge\" e \"Nord-Norge\". Em seguida, lance um documento na conta 7140 por 23050 NOK, vinculado ao valor de dimensão \"Sør-Norge\".",
+  "filesCount": 0,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 135912,
+  "status": "error",
+  "error": "Insufficient funds. Please add credits to your account to continue using AI services. Visit https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%3Fmodal%3Dtop-up to top up your credits."
+}

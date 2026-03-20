@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-19T20:21:44.922Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Enregistrez le fournisseur Cascade SARL avec le numéro d'organisation 999591027. E-mail : faktura@cascadesarl.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 10201,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true
+    }
+  ]
+}

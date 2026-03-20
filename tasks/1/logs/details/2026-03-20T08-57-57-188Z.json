@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-20T08:57:57.188Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Cree un cliente con el nombre Sol del Mar S.L., correo electrónico contacto@soldelmar.es y número de organización 556677889.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 6133,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "timestamp": "2026-03-20T11:08:24.406Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Hemos recibido la factura INV-2026-9187 del proveedor Montaña SL (org. nº 884646979) por 19500 NOK con IVA incluido. El importe corresponde a servicios de oficina (cuenta 7300). Registre la factura del proveedor con el IVA soportado correcto (25 %).",
+  "filesCount": 0,
+  "steps": 20,
+  "toolCalls": 19,
+  "apiCalls": 19,
+  "apiErrors": 15,
+  "elapsedMs": 104963,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": false,
+      "status": 500
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/vatType",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/expense",
+      "ok": false,
+      "status": 403
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": false,
+      "status": 422
+    }
+  ]
+}

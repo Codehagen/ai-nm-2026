@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-03-19T22:04:23.004Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Erstellen Sie einen Mitarbeiter mit dem Namen Hans Müller, E-Mail hans.mueller@firma.de. Geburtsdatum: 1992-07-10.",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 3,
+  "apiCalls": 3,
+  "apiErrors": 1,
+  "elapsedMs": 38952,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    }
+  ]
+}

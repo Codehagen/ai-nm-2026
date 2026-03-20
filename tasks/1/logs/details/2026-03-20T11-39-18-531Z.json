@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-20T11:39:18.531Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Créez un client nommé Lumière SARL avec l'adresse e-mail contact@lumiere.fr et le numéro d'organisation 556677889.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 5849,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    }
+  ]
+}

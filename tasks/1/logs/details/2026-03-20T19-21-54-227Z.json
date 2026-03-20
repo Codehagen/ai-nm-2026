@@ -1,0 +1,157 @@
+{
+  "timestamp": "2026-03-20T19:21:54.227Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Register a travel expense for Lucy Walker (lucy.walker@example.org) for \"Client visit Trondheim\". The trip lasted 4 days (departure 2026-03-19, return 2026-03-22) with per diem (daily rate 800 NOK). Expenses: flight ticket 7200 NOK and taxi 650 NOK.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 10,
+  "apiCalls": 10,
+  "apiErrors": 0,
+  "elapsedMs": 22787,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "name": "Avdeling",
+        "departmentNumber": "1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true,
+      "body": {
+        "lastName": "Walker",
+        "department": {
+          "id": 30000011
+        },
+        "dateOfBirth": "1990-01-15",
+        "firstName": "Lucy",
+        "email": "lucy.walker@example.org",
+        "userType": "STANDARD"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "count": "50",
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "count": "10"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rateCategory",
+      "ok": true,
+      "params": {
+        "type": "PER_DIEM",
+        "count": "50",
+        "isValidDomestic": "true",
+        "fields": "id,name",
+        "dateFrom": "2026-03-19",
+        "dateTo": "2026-03-22"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": true,
+      "body": {
+        "travelDetails": {
+          "departureFrom": "Oslo",
+          "departureDate": "2026-03-19",
+          "purpose": "Client visit",
+          "destination": "Trondheim",
+          "returnDate": "2026-03-22"
+        },
+        "title": "Client visit Trondheim",
+        "employee": {
+          "id": 30000012
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": true,
+      "body": {
+        "costCategory": {
+          "id": 30000001
+        },
+        "paymentType": {
+          "id": 30000001
+        },
+        "amountCurrencyIncVat": 7200,
+        "date": "2026-03-19",
+        "comments": "Flight ticket",
+        "travelExpense": {
+          "id": 30000013
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": true,
+      "body": {
+        "amountCurrencyIncVat": 650,
+        "date": "2026-03-19",
+        "comments": "Taxi",
+        "travelExpense": {
+          "id": 30000013
+        },
+        "costCategory": {
+          "id": 30000002
+        },
+        "paymentType": {
+          "id": 30000001
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rate",
+      "ok": true,
+      "params": {
+        "rateCategoryId": "30000001",
+        "fields": "id,rate"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/perDiemCompensation",
+      "ok": true,
+      "body": {
+        "rateCategory": {
+          "id": 30000001
+        },
+        "travelExpense": {
+          "id": 30000013
+        },
+        "isDeductionForDinner": false,
+        "location": "Trondheim",
+        "count": 4,
+        "rate": 800,
+        "isDeductionForLunch": false,
+        "rateType": {
+          "id": 30000001
+        },
+        "overnightAccommodation": "HOTEL",
+        "isDeductionForBreakfast": false
+      }
+    }
+  ]
+}

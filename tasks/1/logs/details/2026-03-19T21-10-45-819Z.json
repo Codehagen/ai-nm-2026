@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-19T21:10:45.819Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Opprett kunden Nordlys AS med organisasjonsnummer 999888777. E-post: post@nordlys.no",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 10410,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-03-20T17:01:06.970Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "The payment from Clearwater Ltd (org no. 845903077) for the invoice \"Cloud Storage\" (43950 NOK excl. VAT) was returned by the bank. Reverse the payment so the invoice shows the outstanding amount again.",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 4,
+  "elapsedMs": 22716,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "invoiceDateFrom": "2020-01-01",
+        "fields": "id,invoiceNumber,amount,amountOutstanding,customer,postings",
+        "invoiceDateTo": "2030-01-01"
+      },
+      "errorMessage": "GET /invoice → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id",
+        "count": "1"
+      },
+      "errorMessage": "GET /employee → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/customer",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "organizationNumber": "845903077",
+        "fields": "id,name"
+      },
+      "errorMessage": "GET /customer → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/company/settings",
+      "ok": false,
+      "status": 403,
+      "errorMessage": "GET /company/settings → 403"
+    }
+  ]
+}

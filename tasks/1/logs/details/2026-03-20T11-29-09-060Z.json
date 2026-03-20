@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-03-20T11:29:09.060Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Opprett en ansatt med navn Lars Berg, e-post lars@berg.no. Han skal være kontoadministrator.",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 3,
+  "apiCalls": 3,
+  "apiErrors": 0,
+  "elapsedMs": 13370,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/employee/entitlement/:grantEntitlementsByTemplate",
+      "ok": true
+    }
+  ]
+}

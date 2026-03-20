@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-03-20T17:25:13.076Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "O cliente Estrela Lda (org. nº 975389642) tem uma fatura pendente de 47200 NOK sem IVA por \"Serviço de rede\". Registe o pagamento total desta fatura.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 0,
+  "elapsedMs": 17395,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/customer",
+      "ok": true,
+      "params": {
+        "fields": "id,name",
+        "organizationNumber": "975389642"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": true,
+      "params": {
+        "invoiceDateTo": "2030-01-01",
+        "invoiceDateFrom": "2020-01-01",
+        "fields": "id,invoiceNumber,amount,customer,amountRoundoff"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147490084/:payment",
+      "ok": true,
+      "params": {
+        "paidAmount": "59000",
+        "paymentTypeId": "26186498",
+        "paymentDate": "2026-03-20"
+      }
+    }
+  ]
+}

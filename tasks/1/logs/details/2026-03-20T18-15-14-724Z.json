@@ -1,0 +1,92 @@
+{
+  "timestamp": "2026-03-20T18:15:14.724Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Erstellen Sie das Projekt \"Analyse Windkraft\" verknüpft mit dem Kunden Windkraft GmbH (Org.-Nr. 897356171). Projektleiter ist Finn Richter (finn.richter@example.org).",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 1,
+  "elapsedMs": 27420,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "name": "Default",
+        "departmentNumber": "1"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "organizationNumber": "897356171",
+        "name": "Windkraft GmbH",
+        "isCustomer": true
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "department": {
+          "id": 906879
+        },
+        "lastName": "Richter",
+        "firstName": "Finn",
+        "email": "finn.richter@example.org",
+        "userType": "STANDARD",
+        "dateOfBirth": "1990-01-15"
+      },
+      "errorMessage": "Validering feilet. The email already exists. GET /employee?email=<the email> to find the existing employee and use their ID instead of creating a new one.",
+      "validationMessages": [
+        {
+          "field": "email",
+          "message": "Det finnes allerede en bruker med denne e-postadressen.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "email": "finn.richter@example.org"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true,
+      "body": {
+        "projectManager": {
+          "id": 18169263
+        },
+        "startDate": "2026-03-20",
+        "customer": {
+          "id": 108255074
+        },
+        "isInternal": false,
+        "name": "Analyse Windkraft"
+      }
+    }
+  ]
+}

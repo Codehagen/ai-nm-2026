@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T11:40:52.341Z",
+  "prompt": "Run payroll for employee Sarah Connor (sarah.connor@company.com) for this month. Base salary is 45000 NOK. Add overtime compensation of 12000 NOK.",
+  "files": [],
+  "base_url": "http://localhost:19055",
+  "raw_files": []
+}

@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-03-19T18:41:35.567Z",
+  "prompt": "Opprett en kunde med navn Test AS",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 4,
+  "elapsedMs": 18889,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 405
+    },
+    {
+      "method": "POST",
+      "path": "/v2/customer",
+      "ok": false,
+      "status": 405
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 405
+    },
+    {
+      "method": "GET",
+      "path": "/customer",
+      "ok": false,
+      "status": 404
+    }
+  ]
+}

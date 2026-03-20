@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-03-20T17:54:38.774Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Register the supplier Silveroak Ltd with organization number 811867500. Email: faktura@silveroakltd.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 8334,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true,
+      "body": {
+        "isSupplier": true,
+        "organizationNumber": "811867500",
+        "email": "faktura@silveroakltd.no",
+        "name": "Silveroak Ltd"
+      }
+    }
+  ]
+}

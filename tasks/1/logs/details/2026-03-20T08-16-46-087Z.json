@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-20T08:16:46.087Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Opprett ein kunde med namn Bølgekraft AS, e-post post@blgekraft.no og organisasjonsnummer 812297848.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 6475,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-03-20T09:19:21.286Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Opprett en faktura for kunde Havblikk AS (org.nr 998877123) med produkt Designtjenester til 5000 kr eks. mva (25% mva). Fakturaen skal dateres 2026-03-20 med forfall 2026-04-20.",
+  "filesCount": 0,
+  "steps": 7,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 0,
+  "elapsedMs": 25222,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/30000001",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    }
+  ]
+}

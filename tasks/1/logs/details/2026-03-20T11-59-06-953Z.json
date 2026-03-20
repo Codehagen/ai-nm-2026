@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-03-20T11:59:06.953Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Le client Étoile SARL (nº org. 955361490) a réclamé concernant la facture pour Maintenance (45550 NOK HT). Émettez un avoir complet qui annule l'intégralité de la facture.",
+  "filesCount": 0,
+  "steps": 11,
+  "toolCalls": 10,
+  "apiCalls": 10,
+  "apiErrors": 0,
+  "elapsedMs": 40755,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/30000009",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/30000013/:send",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice/30000013/:createCreditNote",
+      "ok": true
+    }
+  ]
+}

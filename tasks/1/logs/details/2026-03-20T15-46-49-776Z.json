@@ -1,0 +1,195 @@
+{
+  "timestamp": "2026-03-20T15:46:49.776Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Crie uma fatura para o cliente Oceano Lda (org. nº 999444970) com três linhas de produto: Desenvolvimento de sistemas (4449) a 16550 NOK com 25 % IVA, Relatório de análise (1191) a 10950 NOK com 15 % IVA (alimentos), e Manutenção (9861) a 500 NOK com 0 % IVA (isento).",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 11,
+  "apiCalls": 11,
+  "apiErrors": 3,
+  "elapsedMs": 37220,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1920",
+        "fields": "id,version,bankAccountNumber,name"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Oceano Lda",
+        "isCustomer": true,
+        "organizationNumber": "999444970"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "vatType": {
+          "id": 3
+        },
+        "number": "4449",
+        "name": "Desenvolvimento de sistemas"
+      },
+      "errorMessage": "Validering feilet. The product number already exists. GET /product?number=<the number>&fields=id,name to find the existing product and use its ID.",
+      "validationMessages": [
+        {
+          "field": "number",
+          "message": "Produktnummeret 4449 er i bruk.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "name": "Relatório de análise",
+        "number": "1191",
+        "vatType": {
+          "id": 31
+        }
+      },
+      "errorMessage": "Validering feilet. The product number already exists. GET /product?number=<the number>&fields=id,name to find the existing product and use its ID.",
+      "validationMessages": [
+        {
+          "field": "number",
+          "message": "Produktnummeret 1191 er i bruk.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "vatType": {
+          "id": 5
+        },
+        "number": "9861",
+        "name": "Manutenção"
+      },
+      "errorMessage": "Validering feilet. The product number already exists. GET /product?number=<the number>&fields=id,name to find the existing product and use its ID.",
+      "validationMessages": [
+        {
+          "field": "number",
+          "message": "Produktnummeret 9861 er i bruk.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/353405726",
+      "ok": true,
+      "body": {
+        "version": 0,
+        "id": 353405726,
+        "bankAccountNumber": "86011117947",
+        "name": "Bankinnskudd"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name",
+        "number": "4449"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "1191",
+        "fields": "id,name"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name",
+        "number": "9861"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "deliveryDate": "2026-03-20",
+        "customer": {
+          "id": 108247609
+        },
+        "orderDate": "2026-03-20",
+        "orderLines": [
+          {
+            "unitPriceExcludingVatCurrency": 16550,
+            "product": {
+              "id": 84377453
+            },
+            "count": 1,
+            "vatType": {
+              "id": 3
+            }
+          },
+          {
+            "vatType": {
+              "id": 31
+            },
+            "count": 1,
+            "product": {
+              "id": 84377455
+            },
+            "unitPriceExcludingVatCurrency": 10950
+          },
+          {
+            "count": 1,
+            "vatType": {
+              "id": 5
+            },
+            "product": {
+              "id": 84377456
+            },
+            "unitPriceExcludingVatCurrency": 500
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDate": "2026-03-20",
+        "invoiceDueDate": "2026-04-03",
+        "orders": [
+          {
+            "id": 401960312
+          }
+        ]
+      }
+    }
+  ]
+}

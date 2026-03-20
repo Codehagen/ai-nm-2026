@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T10:16:29.096Z",
+  "prompt": "Erstellen Sie einen Auftrag für den Kunden Sonnental GmbH (Org.-Nr. 904562262) mit den Produkten Netzwerkdienst (5874) zu 9150 NOK und Wartung (8734) zu 22150 NOK. Wandeln Sie den Auftrag in eine Rechnung um und registrieren Sie die vollständige Zahlung.",
+  "files": [],
+  "base_url": "http://localhost:9054",
+  "raw_files": []
+}

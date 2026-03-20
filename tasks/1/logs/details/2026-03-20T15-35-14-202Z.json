@@ -1,0 +1,93 @@
+{
+  "timestamp": "2026-03-20T15:35:14.202Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Create an invoice for the customer Windmill Ltd (org no. 994973150) with three product lines: System Development (6517) at 22950 NOK with 25% VAT, Maintenance (5339) at 8900 NOK with 15% VAT (food), and Consulting Hours (8246) at 10450 NOK with 0% VAT (exempt).",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 6,
+  "elapsedMs": 15284,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      },
+      "errorMessage": "GET /ledger/account → 403"
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "isCustomer": true,
+        "organizationNumber": "994973150",
+        "name": "Windmill Ltd"
+      },
+      "errorMessage": "POST /customer → 403"
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "number": "6517",
+        "vatType": {
+          "id": 3
+        },
+        "priceExcludingVatCurrency": 22950,
+        "name": "System Development"
+      },
+      "errorMessage": "POST /product → 403"
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "name": "Maintenance",
+        "number": "5339",
+        "priceExcludingVatCurrency": 8900,
+        "vatType": {
+          "id": 31
+        }
+      },
+      "errorMessage": "POST /product → 403"
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "vatType": {
+          "id": 5
+        },
+        "priceExcludingVatCurrency": 10450,
+        "number": "8246",
+        "name": "Consulting Hours"
+      },
+      "errorMessage": "POST /product → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      },
+      "errorMessage": "GET /ledger/account → 403"
+    }
+  ]
+}

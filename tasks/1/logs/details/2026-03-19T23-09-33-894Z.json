@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-03-19T23:09:33.894Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Temos um novo funcionário chamado Rita Almeida, nascido em 29. December 1995. Crie-o como funcionário com o e-mail rita.almeida@example.org e data de início 7. June 2026.",
+  "filesCount": 0,
+  "steps": 7,
+  "toolCalls": 6,
+  "apiCalls": 5,
+  "apiErrors": 1,
+  "elapsedMs": 36330,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/employee/employment",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    }
+  ]
+}

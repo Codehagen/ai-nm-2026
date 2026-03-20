@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-03-20T17:25:08.163Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Registre el proveedor Dorada SL con número de organización 853166553. Correo electrónico: faktura@doradasl.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 8391,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true,
+      "body": {
+        "name": "Dorada SL",
+        "isSupplier": true,
+        "email": "faktura@doradasl.no",
+        "organizationNumber": "853166553"
+      }
+    }
+  ]
+}

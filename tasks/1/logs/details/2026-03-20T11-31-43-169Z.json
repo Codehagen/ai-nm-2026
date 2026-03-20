@@ -1,0 +1,49 @@
+{
+  "timestamp": "2026-03-20T11:31:43.169Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Hemos recibido la factura INV-2026-9187 del proveedor Montaña SL (org. nº 884646979) por 19500 NOK con IVA incluido. El importe corresponde a servicios de oficina (cuenta 7300). Registre la factura del proveedor con el IVA soportado correcto (25 %).",
+  "filesCount": 0,
+  "steps": 8,
+  "toolCalls": 7,
+  "apiCalls": 7,
+  "apiErrors": 0,
+  "elapsedMs": 29636,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-20T09:53:46.332Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Create a credit note for the most recent invoice.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 12664,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice/30000007/:createCreditNote",
+      "ok": true
+    }
+  ]
+}

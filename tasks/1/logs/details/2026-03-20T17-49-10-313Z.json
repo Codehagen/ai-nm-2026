@@ -1,0 +1,143 @@
+{
+  "timestamp": "2026-03-20T17:49:10.313Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Køyr løn for Test Testesen (test.testesen@example.org) for denne månaden. Grunnløn er 40000 kr. Legg til ein eingongsbonus på 10000 kr.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 10,
+  "apiCalls": 10,
+  "apiErrors": 0,
+  "elapsedMs": 30531,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true,
+      "params": {
+        "departmentNumber": "1",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "email": "test.testesen@example.org",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/division",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/salary/type",
+      "ok": true,
+      "params": {
+        "number": "2000",
+        "fields": "id,number"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/salary/type",
+      "ok": true,
+      "params": {
+        "fields": "id,number",
+        "number": "2002"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true,
+      "body": {
+        "userType": "STANDARD",
+        "firstName": "Test",
+        "email": "test.testesen@example.org",
+        "department": {
+          "id": 844789
+        },
+        "dateOfBirth": "1990-01-15",
+        "lastName": "Testesen"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/municipality",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/division",
+      "ok": true,
+      "body": {
+        "startDate": "2026-01-01",
+        "municipality": {
+          "id": 1
+        },
+        "name": "Hovedenhet",
+        "municipalityDate": "2026-01-01",
+        "organizationNumber": "000000000"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": true,
+      "body": {
+        "startDate": "2026-03-01",
+        "division": {
+          "id": 108252091
+        },
+        "employee": {
+          "id": 18568651
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/salary/transaction",
+      "ok": true,
+      "params": {
+        "generateTaxDeduction": "true"
+      },
+      "body": {
+        "date": "2026-03-20",
+        "year": 2026,
+        "month": 3,
+        "payslips": [
+          {
+            "employee": {
+              "id": 18568651
+            },
+            "specifications": [
+              {
+                "salaryType": {
+                  "id": 69137810
+                },
+                "rate": 40000,
+                "count": 1
+              },
+              {
+                "rate": 10000,
+                "salaryType": {
+                  "id": 69137829
+                },
+                "count": 1
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

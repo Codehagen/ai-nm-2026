@@ -1,0 +1,46 @@
+{
+  "timestamp": "2026-03-19T20:06:58.448Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Opprett prosjektet \"Integrasjon Vestfjord\" knytt til kunden Vestfjord AS (org.nr 954285405). Prosjektleiar er Håkon Eide (hakon.eide@example.org).",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 2,
+  "elapsedMs": 33285,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true
+    }
+  ]
+}

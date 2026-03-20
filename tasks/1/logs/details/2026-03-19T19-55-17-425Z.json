@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-19T19:55:17.425Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Registrer leverandøren Fossekraft AS med organisasjonsnummer 977371635. E-post: faktura@fossekraft.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 10370,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true
+    }
+  ]
+}

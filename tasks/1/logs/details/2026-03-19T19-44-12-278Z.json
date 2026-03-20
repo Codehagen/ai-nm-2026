@@ -1,0 +1,66 @@
+{
+  "timestamp": "2026-03-19T19:44:12.278Z",
+  "model": "google/gemini-3.1-flash-lite-preview",
+  "prompt": "Tenemos un nuevo empleado llamado Lucía Hernández, nacido el 14. March 1986. Créelo como empleado con el correo lucia.hernandez@example.org y fecha de inicio 17. January 2026.",
+  "filesCount": 0,
+  "steps": 11,
+  "toolCalls": 10,
+  "apiCalls": 9,
+  "apiErrors": 7,
+  "elapsedMs": 27422,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/employee/userType",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    }
+  ]
+}

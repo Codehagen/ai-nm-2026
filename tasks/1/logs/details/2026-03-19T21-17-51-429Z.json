@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-03-19T21:17:51.429Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Crea el producto \"Galletas de avena\" con número de producto 4431. El precio es 41050 NOK sin IVA, utilizando la tasa de IVA estándar del 25%.",
+  "filesCount": 0,
+  "steps": 1,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 1,
+  "elapsedMs": 13093,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422
+    }
+  ]
+}

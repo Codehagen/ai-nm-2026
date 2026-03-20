@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-03-19T19:30:40.177Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Create the project \"Analysis Ridgepoint\" linked to the customer Ridgepoint Ltd (org no. 987409339). The project manager is Alice Harris (alice.harris@example.org).",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 1,
+  "elapsedMs": 19859,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true
+    }
+  ]
+}

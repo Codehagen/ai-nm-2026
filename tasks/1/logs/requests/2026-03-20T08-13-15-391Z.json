@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T08:13:15.392Z",
+  "prompt": "Create an employee named John Smith with email john.smith@company.com.",
+  "files": [],
+  "base_url": "http://localhost:9054",
+  "raw_files": []
+}

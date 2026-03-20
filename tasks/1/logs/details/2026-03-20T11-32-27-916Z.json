@@ -1,0 +1,59 @@
+{
+  "timestamp": "2026-03-20T11:32:27.916Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Erstellen Sie einen Auftrag für den Kunden Sonnental GmbH (Org.-Nr. 904562262) mit den Produkten Netzwerkdienst (5874) zu 9150 NOK und Wartung (8734) zu 22150 NOK. Wandeln Sie den Auftrag in eine Rechnung um und registrieren Sie die vollständige Zahlung.",
+  "filesCount": 0,
+  "steps": 10,
+  "toolCalls": 9,
+  "apiCalls": 9,
+  "apiErrors": 0,
+  "elapsedMs": 38504,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/30000001",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/30000010/:payment",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T17:00:44.192Z",
+  "prompt": "Opprett en fri regnskapsdimensjon \"Kostsenter\" med verdiene \"IT\" og \"Innkjøp\". Bokfør deretter et bilag på konto 7300 for 25700 kr, knyttet til dimensjonsverdien \"IT\".",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

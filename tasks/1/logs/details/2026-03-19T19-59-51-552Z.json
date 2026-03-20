@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-19T19:59:51.552Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Opprett produktet \"Havregryn\" med produktnummer 3113. Prisen er 29250 kr eksklusiv MVA, og MVA-sats for næringsmiddel på 15 % skal nyttast.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 17707,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/vatType",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    }
+  ]
+}

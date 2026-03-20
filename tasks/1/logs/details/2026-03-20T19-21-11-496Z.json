@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-03-20T19:21:11.496Z",
+  "prompt": "Utfør lønnskjøring for ansatt Kari Olsen (kari.olsen@firma.no) for denne måneden. Fastlønn er 40000 NOK. Legg til en overtidsgodtgjørelse på 8500 NOK.",
+  "filesCount": 0,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 87736,
+  "status": "timeout"
+}

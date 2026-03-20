@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T07:37:08.516Z",
+  "prompt": "Opprett en faktura for kunde Acme AS (org.nr 987654321) med produkt Konsulenttimer til 15700 kr eks. mva (25% mva). Fakturaen skal dateres i dag med forfall om 30 dager. Registrer betaling av fakturaen i dag.",
+  "files": [],
+  "base_url": "http://localhost:9054",
+  "raw_files": []
+}

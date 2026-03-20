@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-03-20T17:13:44.623Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Crie o produto \"Sessão de formação\" com número de produto 6378. O preço é 37050 NOK sem IVA, utilizando a taxa padrão de 25 %.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 2,
+  "elapsedMs": 12803,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "6378"
+      },
+      "errorMessage": "GET /product → 403"
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "priceExcludingVatCurrency": 37050,
+        "number": "6378",
+        "vatType": {
+          "id": 3
+        },
+        "name": "Sessão de formação"
+      },
+      "errorMessage": "POST /product → 403"
+    }
+  ]
+}

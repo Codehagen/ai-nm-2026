@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T15:46:12.555Z",
+  "prompt": "Crie uma fatura para o cliente Oceano Lda (org. nº 999444970) com três linhas de produto: Desenvolvimento de sistemas (4449) a 16550 NOK com 25 % IVA, Relatório de análise (1191) a 10950 NOK com 15 % IVA (alimentos), e Manutenção (9861) a 500 NOK com 0 % IVA (isento).",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

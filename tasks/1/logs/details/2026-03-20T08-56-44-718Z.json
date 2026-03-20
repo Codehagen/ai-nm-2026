@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-03-20T08:56:44.718Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Cree un proyecto llamado Migración Cloud para el cliente Sol Digital S.L. (org. nr 223344556). El gerente del proyecto debe ser María López, maria@soldigital.es.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 5,
+  "apiCalls": 5,
+  "apiErrors": 0,
+  "elapsedMs": 18832,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true
+    }
+  ]
+}

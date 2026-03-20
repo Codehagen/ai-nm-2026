@@ -1,0 +1,138 @@
+{
+  "timestamp": "2026-03-20T19:20:00.630Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Opprett en faktura for kunde Fjelltopp AS (org.nr 776655443) med tre produktlinjer: Konsulenttjenester til 8000 NOK eks. mva (25% mva), Catering til 5000 NOK eks. mva (15% mva næringsmiddel), og Frakt til 2000 NOK eks. mva (0% mva avgiftsfri).",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 0,
+  "elapsedMs": 16863,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "isCustomer": true,
+        "organizationNumber": "776655443",
+        "name": "Fjelltopp AS"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "name": "Konsulenttjenester",
+        "vatType": {
+          "id": 3
+        },
+        "priceExcludingVatCurrency": 8000
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "priceExcludingVatCurrency": 5000,
+        "name": "Catering",
+        "vatType": {
+          "id": 31
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "priceExcludingVatCurrency": 2000,
+        "vatType": {
+          "id": 5
+        },
+        "name": "Frakt"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/30000001",
+      "ok": true,
+      "body": {
+        "version": 0,
+        "id": 30000001,
+        "bankAccountNumber": "86011117947",
+        "name": "Bankinnskudd"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "orderDate": "2026-03-20",
+        "orderLines": [
+          {
+            "vatType": {
+              "id": 3
+            },
+            "count": 1,
+            "product": {
+              "id": 30000012
+            },
+            "unitPriceExcludingVatCurrency": 8000
+          },
+          {
+            "count": 1,
+            "vatType": {
+              "id": 31
+            },
+            "unitPriceExcludingVatCurrency": 5000,
+            "product": {
+              "id": 30000013
+            }
+          },
+          {
+            "count": 1,
+            "vatType": {
+              "id": 5
+            },
+            "unitPriceExcludingVatCurrency": 2000,
+            "product": {
+              "id": 30000014
+            }
+          }
+        ],
+        "customer": {
+          "id": 30000011
+        },
+        "deliveryDate": "2026-03-20"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDate": "2026-03-20",
+        "invoiceDueDate": "2026-04-03",
+        "orders": [
+          {
+            "id": 30000015
+          }
+        ]
+      }
+    }
+  ]
+}

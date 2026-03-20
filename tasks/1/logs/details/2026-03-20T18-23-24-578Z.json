@@ -1,0 +1,90 @@
+{
+  "timestamp": "2026-03-20T18:23:24.578Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Wir haben die Rechnung INV-2026-8172 vom Lieferanten Nordlicht GmbH (Org.-Nr. 803273723) über 19100 NOK einschließlich MwSt. erhalten. Der Betrag betrifft Bürodienstleistungen (Konto 6500). Erfassen Sie die Lieferantenrechnung mit der korrekten Vorsteuer (25 %).",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 0,
+  "elapsedMs": 21710,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true,
+      "body": {
+        "organizationNumber": "803273723",
+        "name": "Nordlicht GmbH",
+        "isSupplier": true
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "6500",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "number": "2400"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": true,
+      "params": {
+        "sendToLedger": "true"
+      },
+      "body": {
+        "invoiceDate": "2026-03-20",
+        "supplier": {
+          "id": 108256146
+        },
+        "invoiceDueDate": "2026-04-19",
+        "voucher": {
+          "date": "2026-03-20",
+          "description": "Faktura INV-2026-8172 fra Nordlicht GmbH",
+          "postings": [
+            {
+              "date": "2026-03-20",
+              "vatType": {
+                "id": 1
+              },
+              "amountGross": 19100,
+              "description": "Bürodienstleistungen",
+              "amountGrossCurrency": 19100,
+              "account": {
+                "id": 354553922
+              },
+              "row": 1
+            },
+            {
+              "amountGrossCurrency": -19100,
+              "account": {
+                "id": 354553715
+              },
+              "supplier": {
+                "id": 108256146
+              },
+              "row": 2,
+              "date": "2026-03-20",
+              "amountGross": -19100,
+              "description": "Lieferantenkredit"
+            }
+          ]
+        },
+        "invoiceNumber": "INV-2026-8172"
+      }
+    }
+  ]
+}

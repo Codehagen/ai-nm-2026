@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-03-19T23:01:46.166Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Crie e envie uma fatura ao cliente Porto Alegre Lda (org. nº 842889154) por 11200 NOK sem IVA. A fatura refere-se a Consultoria de dados.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 0,
+  "elapsedMs": 42943,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147518279/:send",
+      "ok": true
+    }
+  ]
+}

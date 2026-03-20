@@ -1,0 +1,204 @@
+{
+  "timestamp": "2026-03-20T17:32:04.175Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Registrer en reiseregning for Astrid Larsen (astrid.larsen@example.org) for \"Konferanse Ålesund\". Reisen varte 4 dager med diett (dagsats 800 kr). Utlegg: flybillett 6750 kr og taxi 500 kr.",
+  "filesCount": 0,
+  "steps": 7,
+  "toolCalls": 13,
+  "apiCalls": 13,
+  "apiErrors": 2,
+  "elapsedMs": 44759,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "email": "astrid.larsen@example.org",
+        "fields": "id,firstName,lastName"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": true,
+      "body": {
+        "employee": {
+          "id": 18179726
+        },
+        "title": "Konferanse Ålesund",
+        "travelDetails": {
+          "departureDate": "2026-03-16",
+          "returnDate": "2026-03-19",
+          "purpose": "Konferanse",
+          "destination": "Ålesund",
+          "departureFrom": "Oslo"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "count": "50"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/paymentType",
+      "ok": true,
+      "params": {
+        "count": "10",
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rateCategory",
+      "ok": true,
+      "params": {
+        "dateFrom": "2026-03-16",
+        "dateTo": "2026-03-19",
+        "type": "PER_DIEM",
+        "isValidDomestic": "true",
+        "count": "50",
+        "fields": "id,name"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "description": "Fly",
+        "count": "50"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "description": "Taxi",
+        "count": "50"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rate",
+      "ok": true,
+      "params": {
+        "fields": "id,rate",
+        "rateCategoryId": "740"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": false,
+      "status": 409,
+      "body": {
+        "costCategory": {
+          "id": 26453326
+        },
+        "comments": "Flybillett",
+        "amountCurrencyIncVat": 6750,
+        "date": "2026-03-16",
+        "travelExpense": {
+          "id": 11144509
+        },
+        "paymentType": {
+          "id": 26453310
+        }
+      },
+      "errorMessage": "RevisionException"
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": false,
+      "status": 409,
+      "body": {
+        "paymentType": {
+          "id": 26453310
+        },
+        "travelExpense": {
+          "id": 11144509
+        },
+        "date": "2026-03-16",
+        "amountCurrencyIncVat": 500,
+        "comments": "Taxi",
+        "costCategory": {
+          "id": 26453341
+        }
+      },
+      "errorMessage": "RevisionException"
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/perDiemCompensation",
+      "ok": true,
+      "body": {
+        "isDeductionForBreakfast": false,
+        "overnightAccommodation": "HOTEL",
+        "isDeductionForDinner": false,
+        "rate": 800,
+        "isDeductionForLunch": false,
+        "rateCategory": {
+          "id": 740
+        },
+        "count": 4,
+        "rateType": {
+          "id": 25888
+        },
+        "travelExpense": {
+          "id": 11144509
+        },
+        "location": "Ålesund"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": true,
+      "body": {
+        "travelExpense": {
+          "id": 11144509
+        },
+        "costCategory": {
+          "id": 26453326
+        },
+        "paymentType": {
+          "id": 26453310
+        },
+        "comments": "Flybillett",
+        "amountCurrencyIncVat": 6750,
+        "date": "2026-03-16"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": true,
+      "body": {
+        "costCategory": {
+          "id": 26453341
+        },
+        "date": "2026-03-16",
+        "comments": "Taxi",
+        "amountCurrencyIncVat": 500,
+        "travelExpense": {
+          "id": 11144509
+        },
+        "paymentType": {
+          "id": 26453310
+        }
+      }
+    }
+  ]
+}

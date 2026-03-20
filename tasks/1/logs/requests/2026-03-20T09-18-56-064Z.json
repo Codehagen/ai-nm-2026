@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T09:18:56.064Z",
+  "prompt": "Opprett en faktura for kunde Havblikk AS (org.nr 998877123) med produkt Designtjenester til 5000 kr eks. mva (25% mva). Fakturaen skal dateres 2026-03-20 med forfall 2026-04-20.",
+  "files": [],
+  "base_url": "http://localhost:9054",
+  "raw_files": []
+}

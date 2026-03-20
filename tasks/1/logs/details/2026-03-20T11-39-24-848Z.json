@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-20T11:39:24.848Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Erstellen Sie einen Mitarbeiter mit dem Namen Elias Meyer und der E-Mail-Adresse elias.meyer@example.org.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 12154,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "timestamp": "2026-03-20T11:54:40.262Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Le client Étoile SARL (nº org. 955361490) a réclamé concernant la facture pour \"Maintenance\" (45550 NOK HT). Émettez un avoir complet qui annule l'intégralité de la facture.",
+  "filesCount": 0,
+  "steps": 12,
+  "toolCalls": 11,
+  "apiCalls": 11,
+  "apiErrors": 4,
+  "elapsedMs": 59534,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/2147490414",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice/2147490414/:createCreditNote",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/invoice/2147490414/:createCreditNote",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/order/401933553",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/order/orderline/1607481072",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147524097/:send",
+      "ok": true
+    }
+  ]
+}

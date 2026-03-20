@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-03-19T22:12:20.205Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Create an invoice for customer Greenfield Corp (org number 334455667) for the product Software License, 5 units at 3000 NOK excluding VAT (25% VAT). Invoice date: 2026-03-19, due date: 2026-04-19.",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 5,
+  "apiCalls": 5,
+  "apiErrors": 0,
+  "elapsedMs": 60117,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-20T08:42:58.827Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Opprett en ansatt med navn Kari Olsen og e-post kari@olsen.no.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 10093,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    }
+  ]
+}

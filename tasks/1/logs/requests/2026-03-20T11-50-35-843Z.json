@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T11:50:35.843Z",
+  "prompt": "Vi har mottatt faktura FV-2026-445 fra leverandør SandboxSupplier AS (org.nr 887766554) på 25000 NOK inkl. mva. Beløpet gjelder kontortjenester (konto 7300). Registrer leverandørfakturaen med korrekt inngående mva (25%).",
+  "files": [],
+  "base_url": "https://kkpqfuj-amager.tripletex.dev/v2",
+  "raw_files": []
+}

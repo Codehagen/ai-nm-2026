@@ -1,0 +1,87 @@
+{
+  "timestamp": "2026-03-20T16:58:07.505Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Me har motteke faktura INV-2026-3752 frå leverandøren Elvdal AS (org.nr 957733883) på 50000 kr inklusiv MVA. Beløpet gjeld kontortenester (konto 6590). Registrer leverandørfakturaen med korrekt inngåande MVA (25 %).",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 0,
+  "elapsedMs": 23811,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true,
+      "body": {
+        "name": "Elvdal AS",
+        "isSupplier": true,
+        "organizationNumber": "957733883"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "number": "6590"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "2400",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-04-19",
+        "invoiceNumber": "INV-2026-3752",
+        "supplier": {
+          "id": 108249430
+        },
+        "voucher": {
+          "description": "Faktura INV-2026-3752 frå Elvdal AS",
+          "date": "2026-03-20",
+          "postings": [
+            {
+              "row": 1,
+              "amountGrossCurrency": 50000,
+              "date": "2026-03-20",
+              "vatType": {
+                "id": 1
+              },
+              "account": {
+                "id": 354489923
+              },
+              "amountGross": 50000,
+              "description": "Kontortenester"
+            },
+            {
+              "date": "2026-03-20",
+              "row": 2,
+              "amountGrossCurrency": -50000,
+              "supplier": {
+                "id": 108249430
+              },
+              "description": "Leverandørgjeld",
+              "account": {
+                "id": 354489706
+              },
+              "amountGross": -50000
+            }
+          ]
+        },
+        "invoiceDate": "2026-03-20"
+      }
+    }
+  ]
+}

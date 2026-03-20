@@ -1,0 +1,113 @@
+{
+  "timestamp": "2026-03-20T17:25:15.429Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Crie um pedido para o cliente Floresta Lda (org. nº 912426440) com os produtos Relatório de análise (4537) a 9300 NOK e Manutenção (8310) a 18550 NOK. Converta o pedido em fatura e registe o pagamento total.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 0,
+  "elapsedMs": 35481,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/customer",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "organizationNumber": "912426440"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "4537"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "8310"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "orderDate": "2026-03-20",
+        "customer": {
+          "id": 107831697
+        },
+        "orderLines": [
+          {
+            "vatType": {
+              "id": 3
+            },
+            "unitPriceExcludingVatCurrency": 9300,
+            "count": 1,
+            "product": {
+              "id": 84380261
+            }
+          },
+          {
+            "unitPriceExcludingVatCurrency": 18550,
+            "vatType": {
+              "id": 3
+            },
+            "product": {
+              "id": 84380262
+            },
+            "count": 1
+          }
+        ],
+        "deliveryDate": "2026-03-20"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDate": "2026-03-20",
+        "orders": [
+          {
+            "id": 401962765
+          }
+        ],
+        "invoiceDueDate": "2026-04-03"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147534000/:payment",
+      "ok": true,
+      "params": {
+        "paymentDate": "2026-03-20",
+        "paymentTypeId": "26312722",
+        "paidAmount": "34812.5"
+      }
+    }
+  ]
+}

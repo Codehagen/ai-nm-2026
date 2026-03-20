@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-19T20:00:55.012Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Registrieren Sie den Lieferanten Sonnental GmbH mit der Organisationsnummer 957072445. E-Mail: faktura@sonnentalgmbh.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 10010,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true
+    }
+  ]
+}

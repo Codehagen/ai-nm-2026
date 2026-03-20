@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-03-19T20:18:11.259Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Kunden Tindra AS (org.nr 923598324) har en utestående faktura på 15700 kr eksklusiv MVA for \"Konsulenttimer\". Registrer full betaling på denne fakturaen.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 1,
+  "elapsedMs": 39864,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147515210/:payment",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147515210/:payment",
+      "ok": true
+    }
+  ]
+}

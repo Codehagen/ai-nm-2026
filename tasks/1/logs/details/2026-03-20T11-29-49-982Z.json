@@ -1,0 +1,54 @@
+{
+  "timestamp": "2026-03-20T11:29:49.982Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Opprett en faktura for kunde Solvik AS (org.nr 887766554) med produkt Webutvikling til 1200 kr eks. mva (25% mva). Fakturaen skal dateres i dag med forfall om 30 dager. Registrer betaling av fakturaen i dag.",
+  "filesCount": 0,
+  "steps": 9,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 0,
+  "elapsedMs": 31670,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/30000001",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/30000009/:payment",
+      "ok": true
+    }
+  ]
+}

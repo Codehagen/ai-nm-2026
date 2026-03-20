@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T11:37:24.921Z",
+  "prompt": "Opprett en faktura for kunde Solvik AS (org.nr 887766554) med produkt Webutvikling til 1200 kr eks. mva (25% mva). Fakturaen skal dateres i dag med forfall om 30 dager. Registrer betaling av fakturaen i dag.",
+  "files": [],
+  "base_url": "http://localhost:19056",
+  "raw_files": []
+}

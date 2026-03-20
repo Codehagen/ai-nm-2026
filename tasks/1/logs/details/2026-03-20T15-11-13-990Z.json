@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-03-20T15:11:13.990Z",
+  "model": "gemini-2.5-pro",
+  "prompt": "Opprett en kunde med navn GeminiTest AS og organisasjonsnummer 111222333.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 2,
+  "elapsedMs": 10789,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 0,
+      "body": {
+        "isCustomer": true,
+        "organizationNumber": "111222333",
+        "name": "GeminiTest AS"
+      },
+      "errorMessage": "Network error on POST /customer: fetch failed"
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 0,
+      "body": {
+        "organizationNumber": "111222333",
+        "isCustomer": true,
+        "name": "GeminiTest AS"
+      },
+      "errorMessage": "Network error on POST /customer: fetch failed"
+    }
+  ]
+}

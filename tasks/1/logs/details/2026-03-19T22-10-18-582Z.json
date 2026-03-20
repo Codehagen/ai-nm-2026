@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-03-19T22:10:18.582Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Create a project called 'Cloud Migration' for customer TechVentures Inc (org number 112233445). Project manager: Anna Lee (anna@techventures.com).",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 1,
+  "elapsedMs": 42551,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    }
+  ]
+}

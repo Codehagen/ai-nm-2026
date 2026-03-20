@@ -1,0 +1,178 @@
+{
+  "timestamp": "2026-03-20T10:55:59.683Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Führen Sie die Gehaltsabrechnung für Laura Schneider (laura.schneider@example.org) für diesen Monat durch. Das Grundgehalt beträgt 33000 NOK. Fügen Sie einen einmaligen Bonus von 17850 NOK zum Grundgehalt hinzu.",
+  "filesCount": 0,
+  "steps": 30,
+  "toolCalls": 30,
+  "apiCalls": 30,
+  "apiErrors": 14,
+  "elapsedMs": 126526,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/salary/transaction",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/salary/type",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/salary/payslip",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/salary/payslip",
+      "ok": false,
+      "status": 500
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 500
+    },
+    {
+      "method": "GET",
+      "path": "/company",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/company/settings",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/salary/settings",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/salary/settings",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/salary/type",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 500
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": false,
+      "status": 422
+    }
+  ]
+}

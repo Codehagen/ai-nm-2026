@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-20T08:47:26.185Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Delete the travel expense report titled Client Visit Bergen.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 7431,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/travelExpense",
+      "ok": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/travelExpense/30000053",
+      "ok": true
+    }
+  ]
+}

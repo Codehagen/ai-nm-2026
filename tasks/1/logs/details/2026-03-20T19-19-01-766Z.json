@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-03-20T19:19:01.766Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Opprett en reiseregning med tittel Kundebesøk Oslo for den første ansatte i kontoen. Avreisedato 2026-03-19, returdato 2026-03-20.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 14031,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "count": "1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": true,
+      "body": {
+        "travelDetails": {
+          "destination": "Oslo",
+          "departureDate": "2026-03-19",
+          "purpose": "Kundebesøk",
+          "returnDate": "2026-03-20",
+          "departureFrom": "Ukjent"
+        },
+        "employee": {
+          "id": 30000001
+        },
+        "title": "Kundebesøk Oslo"
+      }
+    }
+  ]
+}

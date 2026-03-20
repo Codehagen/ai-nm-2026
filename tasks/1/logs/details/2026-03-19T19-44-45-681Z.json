@@ -1,0 +1,127 @@
+{
+  "timestamp": "2026-03-19T19:44:45.681Z",
+  "model": "google/gemini-3.1-flash-lite-preview",
+  "prompt": "O cliente Floresta Lda (org. nº 864828442) tem uma fatura pendente de 29100 NOK sem IVA por \"Design web\". Registe o pagamento total desta fatura.",
+  "filesCount": 0,
+  "steps": 21,
+  "toolCalls": 20,
+  "apiCalls": 20,
+  "apiErrors": 13,
+  "elapsedMs": 53958,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order/401947882/:createInvoice",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account?number=1920",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice/2147514449/:payment",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/invoice/2147514449/:payment",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/invoice/2147514449/payment",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/2147514449",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice/payment",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/invoice/payment/list",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/voucher?id=608816253",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/invoice/2147514449/:approve",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/payment?invoiceId=2147514449",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/invoice/2147514449/:approve",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/2147514449/payment?fields=*",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/invoice/2147514449/:send?sendMethod=EMAIL",
+      "ok": false,
+      "status": 400
+    }
+  ]
+}

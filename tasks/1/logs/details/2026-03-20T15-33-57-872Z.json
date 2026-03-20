@@ -1,0 +1,101 @@
+{
+  "timestamp": "2026-03-20T15:33:57.872Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Opprett og send en faktura til kunden Brattli AS (org.nr 845762686) på 26450 kr eksklusiv MVA. Fakturaen gjelder Skylagring.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 7,
+  "apiCalls": 7,
+  "apiErrors": 0,
+  "elapsedMs": 31234,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1920",
+        "fields": "id,version,bankAccountNumber,name"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/352042493",
+      "ok": true,
+      "body": {
+        "version": 0,
+        "bankAccountNumber": "86011117947",
+        "name": "Bankinnskudd",
+        "id": 352042493
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "isCustomer": true,
+        "name": "Brattli AS",
+        "organizationNumber": "845762686"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "name": "Skylagring",
+        "vatType": {
+          "id": 3
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "deliveryDate": "2026-03-20",
+        "customer": {
+          "id": 108247354
+        },
+        "orderDate": "2026-03-20",
+        "orderLines": [
+          {
+            "unitPriceExcludingVatCurrency": 26450,
+            "product": {
+              "id": 84386773
+            },
+            "count": 1,
+            "vatType": {
+              "id": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-04-03",
+        "invoiceDate": "2026-03-20",
+        "orders": [
+          {
+            "id": 401960107
+          }
+        ]
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147530409/:send",
+      "ok": true,
+      "params": {
+        "sendType": "EMAIL"
+      }
+    }
+  ]
+}

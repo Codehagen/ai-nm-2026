@@ -1,0 +1,114 @@
+{
+  "timestamp": "2026-03-20T16:53:14.785Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Opprett ein ordre for kunden Nordlys AS (org.nr 951788031) med produkta Datarådgjeving (9057) til 36900 kr og Programvarelisens (4573) til 19450 kr. Konverter ordren til faktura og registrer full betaling.",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 0,
+  "elapsedMs": 31465,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "isCustomer": true,
+        "name": "Nordlys AS",
+        "organizationNumber": "951788031"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "9057"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "4573"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "deliveryDate": "2026-03-20",
+        "orderLines": [
+          {
+            "product": {
+              "id": 84380164
+            },
+            "vatType": {
+              "id": 3
+            },
+            "unitPriceExcludingVatCurrency": 36900,
+            "count": 1
+          },
+          {
+            "count": 1,
+            "unitPriceExcludingVatCurrency": 19450,
+            "vatType": {
+              "id": 3
+            },
+            "product": {
+              "id": 84380167
+            }
+          }
+        ],
+        "orderDate": "2026-03-20",
+        "customer": {
+          "id": 108249293
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-04-03",
+        "invoiceDate": "2026-03-20",
+        "orders": [
+          {
+            "id": 401961899
+          }
+        ]
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147532894/:payment",
+      "ok": true,
+      "params": {
+        "paidAmount": "70437.5",
+        "paymentTypeId": "26310370",
+        "paymentDate": "2026-03-20"
+      }
+    }
+  ]
+}

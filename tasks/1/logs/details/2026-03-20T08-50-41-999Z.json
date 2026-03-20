@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-20T08:50:41.999Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Create a customer named Alpine Solutions Ltd with email info@alpine.co.uk and organization number 998877665.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 5185,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    }
+  ]
+}

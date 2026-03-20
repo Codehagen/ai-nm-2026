@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T14:29:53.806Z",
+  "prompt": "Opprett en kunde med navn Testfirma AS, e-post post@testfirma.no og organisasjonsnummer 987654321.",
+  "files": [],
+  "base_url": "http://localhost:9054",
+  "raw_files": []
+}

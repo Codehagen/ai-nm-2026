@@ -1,0 +1,61 @@
+{
+  "timestamp": "2026-03-19T20:02:00.317Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Opprett og send ein faktura til kunden Fjelltopp AS (org.nr 927173875) på 42600 kr eksklusiv MVA. Fakturaen gjeld Nettverksteneste.",
+  "filesCount": 0,
+  "steps": 8,
+  "toolCalls": 9,
+  "apiCalls": 9,
+  "apiErrors": 2,
+  "elapsedMs": 48942,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/351647859",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/351647859",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147514841/:send",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147514841/:send",
+      "ok": true
+    }
+  ]
+}

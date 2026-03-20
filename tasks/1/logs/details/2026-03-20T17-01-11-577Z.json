@@ -1,0 +1,93 @@
+{
+  "timestamp": "2026-03-20T17:01:11.577Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Tenemos un nuevo empleado llamado Lucía Rodríguez, nacido el 30. April 1996. Créelo como empleado con el correo lucia.rodriguez@example.org y fecha de inicio 22. April 2026.",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 7,
+  "apiCalls": 7,
+  "apiErrors": 0,
+  "elapsedMs": 31424,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "departmentNumber": "1",
+        "name": "Default"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/division",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "id,name"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "email": "lucia.rodriguez@example.org",
+        "fields": "id,firstName,lastName"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true,
+      "body": {
+        "lastName": "Rodríguez",
+        "email": "lucia.rodriguez@example.org",
+        "dateOfBirth": "1996-04-30",
+        "department": {
+          "id": 904199
+        },
+        "userType": "STANDARD",
+        "firstName": "Lucía"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/municipality",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/division",
+      "ok": true,
+      "body": {
+        "name": "Hovedenhet",
+        "municipalityDate": "2026-01-01",
+        "startDate": "2026-01-01",
+        "organizationNumber": "000000000",
+        "municipality": {
+          "id": 1
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": true,
+      "body": {
+        "employee": {
+          "id": 18566814
+        },
+        "division": {
+          "id": 108249536
+        },
+        "startDate": "2026-04-22"
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-20T08:42:30.462Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Erstellen Sie einen Kunden mit dem Namen Windkraft GmbH, E-Mail info@windkraft.de und Organisationsnummer 918267581.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 6092,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    }
+  ]
+}

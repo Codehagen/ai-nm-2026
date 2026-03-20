@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T16:57:39.342Z",
+  "prompt": "Créez une dimension comptable personnalisée \"Prosjekttype\" avec les valeurs \"Internt\" et \"Utvikling\". Puis comptabilisez une pièce sur le compte 7300 pour 10150 NOK, liée à la valeur de dimension \"Utvikling\".",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

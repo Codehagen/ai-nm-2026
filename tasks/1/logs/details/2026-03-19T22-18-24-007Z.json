@@ -1,0 +1,93 @@
+{
+  "timestamp": "2026-03-19T22:18:24.007Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Opprett en reiseregning med tittel 'Konferanse Bergen' for den ansatte, avreise 2026-03-10, retur 2026-03-12. Slett deretter reiseregningen.",
+  "filesCount": 0,
+  "steps": 15,
+  "toolCalls": 14,
+  "apiCalls": 14,
+  "apiErrors": 9,
+  "elapsedMs": 176934,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/travelExpense/11141993",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/swagger.json",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/travelExpense/11141995",
+      "ok": true
+    }
+  ]
+}

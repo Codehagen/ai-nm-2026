@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-20T08:05:27.915Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Opprett et produkt med navn Konsulenttjenester til 1500 kr eks. mva med 25% MVA.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 7879,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    }
+  ]
+}

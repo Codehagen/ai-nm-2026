@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-20T11:42:16.541Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Supprimez la note de frais de voyage intitulée Visite Client Paris.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 7651,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/travelExpense",
+      "ok": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/travelExpense/30000006",
+      "ok": true
+    }
+  ]
+}

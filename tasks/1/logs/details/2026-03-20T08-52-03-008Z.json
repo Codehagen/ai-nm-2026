@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-20T08:52:03.008Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Opprett en reiseregning med tittel Kundebesøk Oslo for den første ansatte i kontoen. Avreisedato 2026-03-19, returdato 2026-03-20.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 9501,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": true
+    }
+  ]
+}

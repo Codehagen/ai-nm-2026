@@ -1,0 +1,92 @@
+{
+  "timestamp": "2026-03-20T17:01:12.470Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Opprett en fri regnskapsdimensjon \"Kostsenter\" med verdiene \"IT\" og \"Innkjøp\". Bokfør deretter et bilag på konto 7300 for 25700 kr, knyttet til dimensjonsverdien \"IT\".",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 0,
+  "elapsedMs": 28278,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionName",
+      "ok": true,
+      "body": {
+        "dimensionName": "Kostsenter"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionValue",
+      "ok": true,
+      "body": {
+        "dimensionIndex": 1,
+        "displayName": "IT"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionValue",
+      "ok": true,
+      "body": {
+        "dimensionIndex": 1,
+        "displayName": "Innkjøp"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "number": "7300"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": true,
+      "body": {
+        "description": "Kostnad IT",
+        "date": "2026-03-20",
+        "postings": [
+          {
+            "account": {
+              "id": 357562917
+            },
+            "amountGrossCurrency": 25700,
+            "date": "2026-03-20",
+            "row": 1,
+            "description": "Kostnad IT",
+            "freeAccountingDimension1": {
+              "id": 15676
+            },
+            "amountGross": 25700
+          },
+          {
+            "row": 2,
+            "account": {
+              "id": 357562608
+            },
+            "amountGrossCurrency": -25700,
+            "date": "2026-03-20",
+            "amountGross": -25700,
+            "description": "Motkonto"
+          }
+        ]
+      }
+    }
+  ]
+}

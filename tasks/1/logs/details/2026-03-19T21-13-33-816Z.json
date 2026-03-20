@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-03-19T21:13:33.816Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Opprett produktet \"Skylagring\" med produktnummer 1478. Prisen er 32250 kr eksklusiv MVA, og standard MVA-sats på 25 % skal benyttes.",
+  "filesCount": 0,
+  "steps": 1,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 1,
+  "elapsedMs": 2312,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422
+    }
+  ]
+}

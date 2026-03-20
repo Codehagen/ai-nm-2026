@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T09:20:55.292Z",
+  "prompt": "Create an invoice for customer Oakwood Corp (org nr 445566778) with product Data Analysis at 3200 NOK excl. VAT (25% VAT). Invoice date today, due in 14 days. Register payment of the invoice today.",
+  "files": [],
+  "base_url": "http://localhost:9054",
+  "raw_files": []
+}

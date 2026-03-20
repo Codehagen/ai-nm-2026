@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-03-19T20:07:13.865Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Le client Forêt SARL (nº org. 925519685) a une facture impayée de 40750 NOK hors TVA pour \"Design web\". Enregistrez le paiement intégral de cette facture.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 1,
+  "elapsedMs": 39024,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147514950/:payment",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147514950/:payment",
+      "ok": true
+    }
+  ]
+}

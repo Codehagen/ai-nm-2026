@@ -1,0 +1,122 @@
+{
+  "timestamp": "2026-03-19T22:15:26.306Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Opprett en reiseregning for den ansatte med tittel 'Kundebesøk Oslo'. Avreisedato: 2026-03-15, returdato: 2026-03-16.",
+  "filesCount": 0,
+  "steps": 21,
+  "toolCalls": 20,
+  "apiCalls": 20,
+  "apiErrors": 8,
+  "elapsedMs": 136688,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/11141984",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/travelExpense/11141984",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/travelExpense/11141984",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/travelExpense/11141984",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/travelExpense/11141984",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/travelExpense/11141988",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/travelExpense/11141988",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/11141988",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/travelExpense/11141988",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/11141988",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/travelExpense/11141988",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/travelExpense/11141984",
+      "ok": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/travelExpense/11141988",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T11:29:18.291Z",
+  "prompt": "Opprett en faktura for kunde Greenfield Corp (org.nr 334455667) med produkt Skylagring til 2500 kr eks. mva (25% mva). Fakturaen dateres 2026-03-20 med forfall 2026-04-20. Send fakturaen på e-post.",
+  "files": [],
+  "base_url": "http://localhost:19057",
+  "raw_files": []
+}

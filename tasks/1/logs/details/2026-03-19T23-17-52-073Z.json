@@ -1,0 +1,46 @@
+{
+  "timestamp": "2026-03-19T23:17:52.073Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Wir haben einen neuen Mitarbeiter namens Elias Meyer, geboren am 17. June 1989. Bitte legen Sie ihn als Mitarbeiter mit der E-Mail elias.meyer@example.org und dem Startdatum 29. June 2026 an.",
+  "filesCount": 0,
+  "steps": 7,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 2,
+  "elapsedMs": 50617,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/employee/employment/2761335",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-03-19T22:11:19.345Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Opprett en faktura til kunden Solvik AS (org.nr 887766554) for produktet Webutvikling, 10 timer à 1200 kr eks. mva (25% MVA). Fakturadato: 2026-03-19, forfallsdato: 2026-04-19.",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 5,
+  "apiCalls": 5,
+  "apiErrors": 0,
+  "elapsedMs": 59982,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    }
+  ]
+}

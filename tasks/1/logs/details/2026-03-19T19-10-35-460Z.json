@@ -1,0 +1,140 @@
+{
+  "timestamp": "2026-03-19T19:10:35.460Z",
+  "prompt": "Crie e envie uma fatura ao cliente Porto Alegre Lda (org. nº 842889154) por 11200 NOK sem IVA. A fatura refere-se a Consultoria de dados.",
+  "filesCount": 0,
+  "steps": 24,
+  "toolCalls": 23,
+  "apiCalls": 23,
+  "apiErrors": 12,
+  "elapsedMs": 105907,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/company",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/company/>withLoginAccess",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/bank",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/bank",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/bank/statement",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/company/>withLoginAccess",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/company",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account/348615067",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/348615067",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/348615067",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/348615067",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice/2147513375/:send",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147513375/:send",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147513375/:send",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147513375/:send",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/2147513375",
+      "ok": true
+    }
+  ]
+}

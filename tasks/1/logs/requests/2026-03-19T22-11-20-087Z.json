@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-19T22:11:20.087Z",
+  "prompt": "Create an invoice for customer Greenfield Corp (org number 334455667) for the product Software License, 5 units at 3000 NOK excluding VAT (25% VAT). Invoice date: 2026-03-19, due date: 2026-04-19.",
+  "files": [],
+  "base_url": "https://kkpqfuj-amager.tripletex.dev/v2",
+  "raw_files": []
+}

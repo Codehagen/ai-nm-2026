@@ -1,0 +1,119 @@
+{
+  "timestamp": "2026-03-19T20:45:32.077Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Kunden Tindra AS (org.nr 923598324) har en utestående faktura på 15700 kr eksklusiv MVA for Konsulentarbeid. Registrer full betaling av denne fakturaen.",
+  "filesCount": 0,
+  "steps": 17,
+  "toolCalls": 20,
+  "apiCalls": 20,
+  "apiErrors": 5,
+  "elapsedMs": 104262,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/vatType",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/vatType",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order/orderline",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/order/orderline/1607494030",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice/2147515806/:createCreditNote",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147515806/:createCreditNote",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order/orderline",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147515837/:payment",
+      "ok": true
+    }
+  ]
+}

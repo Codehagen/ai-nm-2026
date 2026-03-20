@@ -1,0 +1,67 @@
+{
+  "timestamp": "2026-03-19T20:06:08.792Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Erstellen und senden Sie eine Rechnung an den Kunden Flussgold GmbH (Org.-Nr. 918267581) über 6400 NOK ohne MwSt. Die Rechnung betrifft Webdesign.",
+  "filesCount": 0,
+  "steps": 9,
+  "toolCalls": 10,
+  "apiCalls": 10,
+  "apiErrors": 3,
+  "elapsedMs": 55704,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/351648917",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/351648917",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/351648917",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/351648917",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147514934/:send",
+      "ok": true
+    }
+  ]
+}

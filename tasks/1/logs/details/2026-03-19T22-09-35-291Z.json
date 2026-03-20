@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-03-19T22:09:35.291Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Opprett et prosjekt med navn 'Nettside Redesign' for kunden Havblikk AS (org.nr 998877123). Prosjektleder: Lars Berg (lars@berg.no).",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 1,
+  "elapsedMs": 33124,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    }
+  ]
+}

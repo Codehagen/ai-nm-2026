@@ -1,0 +1,49 @@
+{
+  "timestamp": "2026-03-20T11:41:30.308Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Vi har mottatt faktura FV-2026-445 fra leverandør Fjellservice AS (org.nr 887766554) på 25000 NOK inkl. mva. Beløpet gjelder kontortjenester (konto 7300). Registrer leverandørfakturaen med korrekt inngående mva (25%).",
+  "filesCount": 0,
+  "steps": 8,
+  "toolCalls": 7,
+  "apiCalls": 7,
+  "apiErrors": 0,
+  "elapsedMs": 37972,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": true
+    }
+  ]
+}

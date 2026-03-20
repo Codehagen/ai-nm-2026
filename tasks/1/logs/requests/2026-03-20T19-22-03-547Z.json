@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T19:22:03.547Z",
+  "prompt": "Register a travel expense for Lucy Walker (lucy.walker@example.org) for \"Client visit Trondheim\". The trip lasted 4 days (departure 2026-03-19, return 2026-03-22) with per diem (daily rate 800 NOK). Expenses: flight ticket 7200 NOK and taxi 650 NOK.",
+  "files": [],
+  "base_url": "http://localhost:29054",
+  "raw_files": []
+}

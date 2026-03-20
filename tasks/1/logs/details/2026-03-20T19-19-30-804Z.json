@@ -1,0 +1,94 @@
+{
+  "timestamp": "2026-03-20T19:19:30.804Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Opprett en faktura for kunde Havblikk AS (org.nr 998877123) med produkt Designtjenester til 5000 kr eks. mva (25% mva). Fakturaen skal dateres 2026-03-20 med forfall 2026-04-20.",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 0,
+  "elapsedMs": 19073,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "isCustomer": true,
+        "name": "Havblikk AS",
+        "organizationNumber": "998877123"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "priceExcludingVatCurrency": 5000,
+        "vatType": {
+          "id": 3
+        },
+        "name": "Designtjenester"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1920",
+        "fields": "id,version,bankAccountNumber,name"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/30000001",
+      "ok": true,
+      "body": {
+        "id": 30000001,
+        "bankAccountNumber": "86011117947",
+        "version": 0,
+        "name": "Bankinnskudd"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "customer": {
+          "id": 30000011
+        },
+        "orderDate": "2026-03-20",
+        "orderLines": [
+          {
+            "product": {
+              "id": 30000012
+            },
+            "unitPriceExcludingVatCurrency": 5000,
+            "vatType": {
+              "id": 3
+            },
+            "count": 1
+          }
+        ],
+        "deliveryDate": "2026-03-20"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDate": "2026-03-20",
+        "orders": [
+          {
+            "id": 30000013
+          }
+        ],
+        "invoiceDueDate": "2026-04-20"
+      }
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-03-19T23:02:02.939Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Opprett produktet \"Skylagring\" med produktnummer 1478. Prisen er 32250 kr eksklusiv MVA, og standard MVA-sats på 25 % skal brukes.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 1,
+  "elapsedMs": 16749,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    }
+  ]
+}

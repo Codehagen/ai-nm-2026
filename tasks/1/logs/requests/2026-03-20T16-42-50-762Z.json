@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T16:42:50.763Z",
+  "prompt": "Crie uma dimensão contabilística personalizada \"Marked\" com os valores \"Offentlig\" e \"Bedrift\". Em seguida, lance um documento na conta 6540 por 44100 NOK, vinculado ao valor de dimensão \"Offentlig\".",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

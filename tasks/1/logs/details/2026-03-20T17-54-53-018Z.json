@@ -1,0 +1,87 @@
+{
+  "timestamp": "2026-03-20T17:54:53.018Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "We have received invoice INV-2026-9601 from the supplier Oakwood Ltd (org no. 967247049) for 79750 NOK including VAT. The amount relates to office services (account 6540). Register the supplier invoice with the correct input VAT (25%).",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 0,
+  "elapsedMs": 20330,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true,
+      "body": {
+        "name": "Oakwood Ltd",
+        "isSupplier": true,
+        "organizationNumber": "967247049"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "number": "6540"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "number": "2400"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": true,
+      "body": {
+        "invoiceNumber": "INV-2026-9601",
+        "invoiceDate": "2026-03-20",
+        "supplier": {
+          "id": 108252730
+        },
+        "invoiceDueDate": "2026-04-19",
+        "voucher": {
+          "description": "Faktura INV-2026-9601 fra Oakwood Ltd",
+          "date": "2026-03-20",
+          "postings": [
+            {
+              "amountGross": 79750,
+              "vatType": {
+                "id": 1
+              },
+              "date": "2026-03-20",
+              "description": "Office services",
+              "row": 1,
+              "amountGrossCurrency": 79750,
+              "account": {
+                "id": 354533295
+              }
+            },
+            {
+              "description": "Supplier credit",
+              "date": "2026-03-20",
+              "row": 2,
+              "amountGross": -79750,
+              "account": {
+                "id": 354533084
+              },
+              "amountGrossCurrency": -79750,
+              "supplier": {
+                "id": 108252730
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

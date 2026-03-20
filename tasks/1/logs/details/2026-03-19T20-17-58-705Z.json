@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-03-19T20:17:58.705Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Nous avons un nouvel employé nommé Nathan Moreau, né le 17. April 1981. Veuillez le créer en tant qu'employé avec l'e-mail nathan.moreau@example.org et la date de début 6. January 2026.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 5,
+  "apiCalls": 5,
+  "apiErrors": 2,
+  "elapsedMs": 33228,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": true
+    }
+  ]
+}

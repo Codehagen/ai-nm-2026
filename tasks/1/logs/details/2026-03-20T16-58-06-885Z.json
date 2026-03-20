@@ -1,0 +1,90 @@
+{
+  "timestamp": "2026-03-20T16:58:06.885Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Créez une dimension comptable personnalisée \"Prosjekttype\" avec les valeurs \"Internt\" et \"Utvikling\". Puis comptabilisez une pièce sur le compte 7300 pour 10150 NOK, liée à la valeur de dimension \"Utvikling\".",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 0,
+  "elapsedMs": 27541,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionName",
+      "ok": true,
+      "body": {
+        "dimensionName": "Prosjekttype"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionValue",
+      "ok": true,
+      "body": {
+        "dimensionIndex": 1,
+        "displayName": "Internt"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionValue",
+      "ok": true,
+      "body": {
+        "displayName": "Utvikling",
+        "dimensionIndex": 1
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "number": "7300"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1920",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": true,
+      "body": {
+        "postings": [
+          {
+            "amountGross": 10150,
+            "account": {
+              "id": 357559743
+            },
+            "row": 1,
+            "freeAccountingDimension1": {
+              "id": 15666
+            },
+            "amountGrossCurrency": 10150,
+            "date": "2026-03-20"
+          },
+          {
+            "row": 2,
+            "amountGrossCurrency": -10150,
+            "date": "2026-03-20",
+            "amountGross": -10150,
+            "account": {
+              "id": 357559434
+            }
+          }
+        ],
+        "date": "2026-03-20",
+        "description": "Prosjekttype Utvikling"
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-19T22:04:46.289Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Create a customer called Alpine Solutions Ltd with email info@alpine.co.uk and organization number 998877665.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 11854,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    }
+  ]
+}

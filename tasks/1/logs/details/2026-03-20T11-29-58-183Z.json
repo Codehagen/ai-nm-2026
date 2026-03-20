@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-20T11:29:58.183Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Slett reiseregningen med tittel Kundebesøk Oslo.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 8181,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/travelExpense",
+      "ok": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/travelExpense/30000006",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-20T15:11:50.294Z",
+  "model": "gemini-2.5-pro",
+  "prompt": "Opprett en kunde med navn GeminiTest AS og organisasjonsnummer 111222333.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 5469,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "organizationNumber": "111222333",
+        "isCustomer": true,
+        "name": "GeminiTest AS"
+      }
+    }
+  ]
+}

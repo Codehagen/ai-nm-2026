@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-19T23:11:38.282Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Registrieren Sie den Lieferanten Brückentor GmbH mit der Organisationsnummer 978195806. E-Mail: faktura@brckentorgmbh.no.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 67594,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/supplier",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true
+    }
+  ]
+}

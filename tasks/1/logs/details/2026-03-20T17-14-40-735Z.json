@@ -1,0 +1,243 @@
+{
+  "timestamp": "2026-03-20T17:14:40.735Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Erfassen Sie eine Reisekostenabrechnung für Paul Richter (paul.richter@example.org) für \"Kundenbesuch Bergen\". Die Reise dauerte 4 Tage mit Tagegeld (Tagessatz 800 NOK). Auslagen: Flugticket 2700 NOK und Taxi 600 NOK.",
+  "filesCount": 0,
+  "steps": 14,
+  "toolCalls": 17,
+  "apiCalls": 17,
+  "apiErrors": 2,
+  "elapsedMs": 68935,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee?email=paul.richter@example.org",
+      "ok": true,
+      "params": {
+        "fields": "id,firstName,lastName"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": true,
+      "body": {
+        "employee": {
+          "id": 18179666
+        },
+        "travelDetails": {
+          "destination": "Bergen",
+          "departureDate": "2026-03-17",
+          "returnDate": "2026-03-20",
+          "purpose": "Kundenbesuch",
+          "departureFrom": "Oslo"
+        },
+        "title": "Kundenbesuch Bergen"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "count": "50"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "count": "10"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "from": "5",
+        "count": "50",
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "count": "50",
+        "fields": "id,description",
+        "from": "10"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "from": "15",
+        "fields": "id,description",
+        "count": "50"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "count": "50",
+        "from": "20",
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "from": "25",
+        "fields": "id,description",
+        "count": "50"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "count": "50",
+        "fields": "id,description",
+        "from": "30"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rateCategory",
+      "ok": true,
+      "params": {
+        "type": "PER_DIEM",
+        "dateTo": "2026-03-20",
+        "isValidDomestic": "true",
+        "fields": "id,name",
+        "dateFrom": "2026-03-17",
+        "count": "50"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rate",
+      "ok": true,
+      "params": {
+        "rateCategoryId": "740",
+        "fields": "id,rate"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": false,
+      "status": 409,
+      "body": {
+        "date": "2026-03-17",
+        "comments": "Flugticket",
+        "paymentType": {
+          "id": 26452379
+        },
+        "travelExpense": {
+          "id": 11144395
+        },
+        "amountCurrencyIncVat": 2700,
+        "costCategory": {
+          "id": 26452395
+        }
+      },
+      "errorMessage": "RevisionException"
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": false,
+      "status": 409,
+      "body": {
+        "costCategory": {
+          "id": 26452410
+        },
+        "amountCurrencyIncVat": 600,
+        "paymentType": {
+          "id": 26452379
+        },
+        "travelExpense": {
+          "id": 11144395
+        },
+        "comments": "Taxi",
+        "date": "2026-03-17"
+      },
+      "errorMessage": "RevisionException"
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/perDiemCompensation",
+      "ok": true,
+      "body": {
+        "rateType": {
+          "id": 25888
+        },
+        "count": 4,
+        "isDeductionForLunch": false,
+        "isDeductionForBreakfast": false,
+        "travelExpense": {
+          "id": 11144395
+        },
+        "overnightAccommodation": "HOTEL",
+        "isDeductionForDinner": false,
+        "location": "Bergen",
+        "rate": 800,
+        "rateCategory": {
+          "id": 740
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": true,
+      "body": {
+        "travelExpense": {
+          "id": 11144395
+        },
+        "amountCurrencyIncVat": 2700,
+        "comments": "Flugticket",
+        "costCategory": {
+          "id": 26452395
+        },
+        "paymentType": {
+          "id": 26452379
+        },
+        "date": "2026-03-17"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": true,
+      "body": {
+        "comments": "Taxi",
+        "costCategory": {
+          "id": 26452410
+        },
+        "travelExpense": {
+          "id": 11144395
+        },
+        "paymentType": {
+          "id": 26452379
+        },
+        "date": "2026-03-17",
+        "amountCurrencyIncVat": 600
+      }
+    }
+  ]
+}

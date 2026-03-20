@@ -55,3 +55,10 @@ runs/
 node_modules/
 dist/
 logs/
+
+# Unignore task 1 logs and results (shared with team)
+!tasks/1/logs/
+!tasks/1/logs/**
+!tasks/1/tests/benchmark-results/
+!tasks/1/tests/benchmark-results/**
+!tasks/1/autoresearch/run.out

@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T16:30:36.624Z",
+  "prompt": "Erstellen Sie eine Rechnung für den Kunden Nordlicht GmbH (Org.-Nr. 855854171) mit drei Produktzeilen: Netzwerkdienst (2450) zu 28650 NOK mit 25 % MwSt., Cloud-Speicher (6871) zu 13750 NOK mit 15 % MwSt. (Lebensmittel), und Wartung (2881) zu 18000 NOK mit 0 % MwSt. (befreit).",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

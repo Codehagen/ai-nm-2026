@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-03-19T23:13:52.584Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Erstellen und senden Sie eine Rechnung an den Kunden Flussgold GmbH (Org.-Nr. 918267581) über 6400 NOK ohne MwSt. Die Rechnung betrifft Webdesign.",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 0,
+  "elapsedMs": 42894,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147518354/:send",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "timestamp": "2026-03-20T16:20:42.646Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Erstellen und senden Sie eine Rechnung an den Kunden Grünfeld GmbH (Org.-Nr. 974406322) über 6650 NOK ohne MwSt. Die Rechnung betrifft Beratungsstunden.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 0,
+  "elapsedMs": 38273,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Grünfeld GmbH",
+        "organizationNumber": "974406322",
+        "isCustomer": true
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "name": "Beratungsstunden",
+        "priceExcludingVatCurrency": 6650,
+        "vatType": {
+          "id": 3
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/352065769",
+      "ok": true,
+      "body": {
+        "version": 0,
+        "name": "Bankinnskudd",
+        "id": 352065769,
+        "bankAccountNumber": "86011117947"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "orderLines": [
+          {
+            "unitPriceExcludingVatCurrency": 6650,
+            "vatType": {
+              "id": 3
+            },
+            "product": {
+              "id": 84387153
+            },
+            "count": 1
+          }
+        ],
+        "customer": {
+          "id": 108248403
+        },
+        "deliveryDate": "2026-03-20",
+        "orderDate": "2026-03-20"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/order/401961051",
+      "ok": true,
+      "params": {
+        "fields": "*,orderLines(*)"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-04-03",
+        "orders": [
+          {
+            "id": 401961051
+          }
+        ],
+        "invoiceDate": "2026-03-20"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147531787/:send",
+      "ok": true,
+      "params": {
+        "sendType": "EMAIL"
+      }
+    }
+  ]
+}

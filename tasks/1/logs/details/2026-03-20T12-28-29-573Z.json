@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-03-20T12:28:29.573Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Opprett kunden Fjordkraft AS med organisasjonsnummer 843216285. Adressen er Fjordveien 129, 2317 Hamar. E-post: post@fjordkraft.no.",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 1,
+  "elapsedMs": 23378,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/address/405337487",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/address/405337487",
+      "ok": true
+    }
+  ]
+}

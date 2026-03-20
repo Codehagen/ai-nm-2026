@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-03-19T23:19:56.403Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Nous avons un nouvel employé nommé Nathan Moreau, né le 17. April 1981. Veuillez le créer en tant qu'employé avec l'e-mail nathan.moreau@example.org et la date de début 6. January 2026.",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 1,
+  "elapsedMs": 43192,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/employee/employment/2737860",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/employee/employment/2761507",
+      "ok": true
+    }
+  ]
+}

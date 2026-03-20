@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-19T19:56:47.796Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Opprett kunden Bølgekraft AS med organisasjonsnummer 812297848. Adressa er Havnegata 113, 7010 Trondheim. E-post: post@blgekraft.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 9200,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    }
+  ]
+}

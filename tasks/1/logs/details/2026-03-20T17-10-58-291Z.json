@@ -1,0 +1,95 @@
+{
+  "timestamp": "2026-03-20T17:10:58.291Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Cree una dimensión contable personalizada \"Produktlinje\" con los valores \"Standard\" y \"Basis\". Luego registre un asiento en la cuenta 7100 por 43400 NOK, vinculado al valor de dimensión \"Standard\".",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 0,
+  "elapsedMs": 24269,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionName",
+      "ok": true,
+      "body": {
+        "dimensionName": "Produktlinje"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionValue",
+      "ok": true,
+      "body": {
+        "displayName": "Standard",
+        "dimensionIndex": 1
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionValue",
+      "ok": true,
+      "body": {
+        "dimensionIndex": 1,
+        "displayName": "Basis"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "number": "7100"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": true,
+      "params": {
+        "sendToLedger": "true"
+      },
+      "body": {
+        "description": "Asiento con dimensión",
+        "postings": [
+          {
+            "row": 1,
+            "amountGrossCurrency": 43400,
+            "amountGross": 43400,
+            "date": "2026-03-20",
+            "description": "Gasto",
+            "account": {
+              "id": 357571902
+            },
+            "freeAccountingDimension1": {
+              "id": 15699
+            }
+          },
+          {
+            "amountGross": -43400,
+            "date": "2026-03-20",
+            "description": "Banco",
+            "account": {
+              "id": 357571601
+            },
+            "row": 2,
+            "amountGrossCurrency": -43400
+          }
+        ],
+        "date": "2026-03-20"
+      }
+    }
+  ]
+}

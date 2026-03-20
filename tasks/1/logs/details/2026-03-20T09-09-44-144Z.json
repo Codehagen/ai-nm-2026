@@ -1,0 +1,88 @@
+{
+  "timestamp": "2026-03-20T09:09:44.144Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Set a fixed price of 135300 NOK on the project \"CRM Integration\" for Greenfield Ltd (org no. 989358626). The project manager is Daniel Johnson (daniel.johnson@example.org). Invoice the customer for 33% of the fixed price as a milestone payment.",
+  "filesCount": 0,
+  "steps": 15,
+  "toolCalls": 14,
+  "apiCalls": 14,
+  "apiErrors": 4,
+  "elapsedMs": 68858,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/356250688",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/356250688",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/356250688",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    }
+  ]
+}

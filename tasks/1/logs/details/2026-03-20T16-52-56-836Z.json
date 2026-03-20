@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-03-20T16:52:56.836Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Créez le client Colline SARL avec le numéro d'organisation 939137599. L'adresse est Kirkegata 77, 4611 Kristiansand. E-mail : post@colline.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 12381,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "postalAddress": {
+          "city": "Kristiansand",
+          "addressLine1": "Kirkegata 77",
+          "postalCode": "4611"
+        },
+        "name": "Colline SARL",
+        "isCustomer": true,
+        "organizationNumber": "939137599",
+        "email": "post@colline.no"
+      }
+    }
+  ]
+}

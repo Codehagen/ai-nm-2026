@@ -1,0 +1,163 @@
+{
+  "timestamp": "2026-03-20T15:46:56.163Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Erstellen Sie einen Auftrag für den Kunden Nordlicht GmbH (Org.-Nr. 985301476) mit den Produkten Netzwerkdienst (8953) zu 17750 NOK und Wartung (4503) zu 12300 NOK. Wandeln Sie den Auftrag in eine Rechnung um und registrieren Sie die vollständige Zahlung.",
+  "filesCount": 0,
+  "steps": 7,
+  "toolCalls": 10,
+  "apiCalls": 10,
+  "apiErrors": 2,
+  "elapsedMs": 41666,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Nordlicht GmbH",
+        "organizationNumber": "985301476",
+        "isCustomer": true
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "priceExcludingVatCurrency": 17750,
+        "vatType": {
+          "id": 3
+        },
+        "name": "Netzwerkdienst",
+        "number": "8953"
+      },
+      "errorMessage": "Validering feilet. The product number already exists. GET /product?number=<the number>&fields=id,name to find the existing product and use its ID.",
+      "validationMessages": [
+        {
+          "field": "number",
+          "message": "Produktnummeret 8953 er i bruk.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "number": "4503",
+        "name": "Wartung",
+        "priceExcludingVatCurrency": 12300,
+        "vatType": {
+          "id": 3
+        }
+      },
+      "errorMessage": "Validering feilet. The product number already exists. GET /product?number=<the number>&fields=id,name to find the existing product and use its ID.",
+      "validationMessages": [
+        {
+          "field": "number",
+          "message": "Produktnummeret 4503 er i bruk.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1920",
+        "fields": "id,version,bankAccountNumber,name"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "8953",
+        "fields": "id,name,priceExcludingVatCurrency,vatType"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "4503",
+        "fields": "id,name,priceExcludingVatCurrency,vatType"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "customer": {
+          "id": 108247614
+        },
+        "orderDate": "2026-03-20",
+        "deliveryDate": "2026-03-20",
+        "orderLines": [
+          {
+            "unitPriceExcludingVatCurrency": 17750,
+            "vatType": {
+              "id": 3
+            },
+            "product": {
+              "id": 84379953
+            },
+            "count": 1
+          },
+          {
+            "count": 1,
+            "unitPriceExcludingVatCurrency": 12300,
+            "product": {
+              "id": 84379954
+            },
+            "vatType": {
+              "id": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "orders": [
+          {
+            "id": 401960311
+          }
+        ],
+        "invoiceDate": "2026-03-20",
+        "invoiceDueDate": "2026-04-03"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147530683/:payment",
+      "ok": true,
+      "params": {
+        "paymentTypeId": "26305176",
+        "paidAmount": "37562.5",
+        "paymentDate": "2026-03-20"
+      }
+    }
+  ]
+}

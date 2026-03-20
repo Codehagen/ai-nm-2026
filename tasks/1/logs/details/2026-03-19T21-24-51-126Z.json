@@ -1,0 +1,60 @@
+{
+  "timestamp": "2026-03-19T21:24:51.126Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Kunden Tindra AS (org.nr 923598324) har en utestående faktura på 15700 kr eksklusiv MVA for Konsulentarbeid. Registrer full betaling av denne fakturaen.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 9,
+  "apiCalls": 9,
+  "apiErrors": 1,
+  "elapsedMs": 173835,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/vatType",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147516730/:payment",
+      "ok": true
+    }
+  ]
+}

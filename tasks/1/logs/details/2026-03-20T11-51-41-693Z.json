@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-03-20T11:51:41.693Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Créez un projet nommé Audit Interne pour le client TestClient SARL (org. nº 925519685). Le chef de projet est Sophie Martin, sophie.martin@foret.fr.",
+  "filesCount": 0,
+  "steps": 9,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 2,
+  "elapsedMs": 33969,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true
+    }
+  ]
+}

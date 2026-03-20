@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-03-20T11:41:12.711Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Run payroll for employee Sarah Connor (sarah.connor@company.com) for this month. Base salary is 45000 NOK. Add overtime compensation of 12000 NOK.",
+  "filesCount": 0,
+  "steps": 7,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 0,
+  "elapsedMs": 20370,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/salary/type",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": true
+    }
+  ]
+}

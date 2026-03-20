@@ -1,0 +1,187 @@
+{
+  "timestamp": "2026-03-20T17:25:14.919Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Registe 35 horas para Inês Ferreira (ines.ferreira@example.org) na atividade \"Testing\" do projeto \"Configuração cloud\" para Floresta Lda (org. nº 949247589). Taxa horária: 1000 NOK/h. Gere uma fatura de projeto ao cliente com base nas horas registadas.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 17,
+  "apiCalls": 17,
+  "apiErrors": 17,
+  "elapsedMs": 34917,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee?email=ines.ferreira@example.org",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id,firstName,lastName"
+      },
+      "errorMessage": "GET /employee?email=ines.ferreira@example.org → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id",
+        "count": "1"
+      },
+      "errorMessage": "GET /employee → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/department?departmentNumber=1",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id,name"
+      },
+      "errorMessage": "GET /department?departmentNumber=1 → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/customer?organizationNumber=949247589",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id"
+      },
+      "errorMessage": "GET /customer?organizationNumber=949247589 → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/activity?name=Testing",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id"
+      },
+      "errorMessage": "GET /activity?name=Testing → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/product?name=Testing",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version"
+      },
+      "errorMessage": "GET /product?name=Testing → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account?number=1920",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name"
+      },
+      "errorMessage": "GET /ledger/account?number=1920 → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "email": "ines.ferreira@example.org",
+        "fields": "id,firstName,lastName"
+      },
+      "errorMessage": "GET /employee → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      },
+      "errorMessage": "GET /employee → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "departmentNumber": "1",
+        "fields": "id,name"
+      },
+      "errorMessage": "GET /department → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/customer",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id",
+        "organizationNumber": "949247589"
+      },
+      "errorMessage": "GET /customer → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/activity",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id",
+        "name": "Testing"
+      },
+      "errorMessage": "GET /activity → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "name": "Testing"
+      },
+      "errorMessage": "GET /product → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      },
+      "errorMessage": "GET /ledger/account → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": false,
+      "status": 403,
+      "errorMessage": "GET /employee → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/company/settings",
+      "ok": false,
+      "status": 403,
+      "errorMessage": "GET /company/settings → 403"
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "name": "Avdeling",
+        "departmentNumber": "1"
+      },
+      "errorMessage": "POST /department → 403"
+    }
+  ]
+}

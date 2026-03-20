@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-20T11:28:44.370Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Opprett en kunde med navn Fjordlys AS, e-post post@fjordlys.no og organisasjonsnummer 876543210.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 7651,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    }
+  ]
+}

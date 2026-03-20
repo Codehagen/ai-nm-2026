@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-03-19T22:03:43.309Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Crea un empleado con nombre Carlos García y correo carlos.garcia@empresa.es. Fecha de nacimiento: 1988-11-30.",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 3,
+  "apiCalls": 3,
+  "apiErrors": 1,
+  "elapsedMs": 19091,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    }
+  ]
+}

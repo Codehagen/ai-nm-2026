@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-03-20T14:30:02.111Z",
+  "model": "anthropic/claude-opus-4-6",
+  "prompt": "Opprett en kunde med navn Testfirma AS, e-post post@testfirma.no og organisasjonsnummer 987654321.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 8304,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Testfirma AS",
+        "email": "post@testfirma.no",
+        "organizationNumber": "987654321",
+        "isCustomer": true
+      }
+    }
+  ]
+}

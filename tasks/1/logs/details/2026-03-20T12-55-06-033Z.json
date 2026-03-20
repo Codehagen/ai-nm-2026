@@ -1,0 +1,87 @@
+{
+  "timestamp": "2026-03-20T12:55:06.033Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Me har motteke faktura INV-2026-4876 frå leverandøren Fossekraft AS (org.nr 887157731) på 61800 kr inklusiv MVA. Beløpet gjeld kontortenester (konto 6340). Registrer leverandørfakturaen med korrekt inngåande MVA (25 %).",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 0,
+  "elapsedMs": 24340,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true,
+      "body": {
+        "name": "Fossekraft AS",
+        "isSupplier": true,
+        "organizationNumber": "887157731"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "6340",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "2400",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": true,
+      "body": {
+        "invoiceNumber": "INV-2026-4876",
+        "invoiceDate": "2026-03-20",
+        "invoiceDueDate": "2026-04-19",
+        "supplier": {
+          "id": 108243652
+        },
+        "voucher": {
+          "date": "2026-03-20",
+          "description": "Faktura INV-2026-4876 frå Fossekraft AS",
+          "postings": [
+            {
+              "row": 1,
+              "date": "2026-03-20",
+              "description": "Kontortenester",
+              "account": {
+                "id": 424554542
+              },
+              "amountGross": 61800,
+              "amountGrossCurrency": 61800,
+              "vatType": {
+                "id": 1
+              }
+            },
+            {
+              "row": 2,
+              "date": "2026-03-20",
+              "description": "Leverandørgjeld Fossekraft AS",
+              "account": {
+                "id": 424554344
+              },
+              "supplier": {
+                "id": 108243652
+              },
+              "amountGross": -61800,
+              "amountGrossCurrency": -61800
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

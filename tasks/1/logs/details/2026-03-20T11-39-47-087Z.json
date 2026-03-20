@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-03-20T11:39:47.087Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Führen Sie die Gehaltsabrechnung für Laura Schneider (laura.schneider@example.org) für diesen Monat durch. Das Grundgehalt beträgt 33000 NOK. Fügen Sie einen einmaligen Bonus von 17850 NOK zum Grundgehalt hinzu.",
+  "filesCount": 0,
+  "steps": 7,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 0,
+  "elapsedMs": 22231,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/salary/type",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": true
+    }
+  ]
+}

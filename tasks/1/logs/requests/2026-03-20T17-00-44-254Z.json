@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T17:00:44.254Z",
+  "prompt": "The payment from Clearwater Ltd (org no. 845903077) for the invoice \"Cloud Storage\" (43950 NOK excl. VAT) was returned by the bank. Reverse the payment so the invoice shows the outstanding amount again.",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

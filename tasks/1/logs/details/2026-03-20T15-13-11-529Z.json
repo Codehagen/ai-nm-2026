@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-20T15:13:11.529Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Opprett en kunde med navn Gemini31 AS og organisasjonsnummer 999888777.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 6219,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Gemini31 AS",
+        "isCustomer": true,
+        "organizationNumber": "999888777"
+      }
+    }
+  ]
+}

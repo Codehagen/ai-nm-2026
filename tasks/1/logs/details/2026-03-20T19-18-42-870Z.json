@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-03-20T19:18:42.870Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Opprett en avdeling med navn Salg og avdelingsnummer 200.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 7672,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "departmentNumber": "200",
+        "name": "Salg"
+      }
+    }
+  ]
+}

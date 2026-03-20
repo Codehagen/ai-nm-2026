@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T14:48:05.152Z",
+  "prompt": "Crie uma dimensão contabilística personalizada \"Region\" com os valores \"Sør-Norge\" e \"Nord-Norge\". Em seguida, lance um documento na conta 7140 por 23050 NOK, vinculado ao valor de dimensão \"Sør-Norge\".",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

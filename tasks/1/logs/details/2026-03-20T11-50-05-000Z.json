@@ -1,0 +1,93 @@
+{
+  "timestamp": "2026-03-20T11:50:05.000Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Führen Sie die Gehaltsabrechnung für TestSalary Sandbox (testsalary@test.no) für diesen Monat durch. Das Grundgehalt beträgt 40000 NOK. Fügen Sie einen einmaligen Bonus von 10000 NOK hinzu.",
+  "filesCount": 0,
+  "steps": 16,
+  "toolCalls": 15,
+  "apiCalls": 15,
+  "apiErrors": 4,
+  "elapsedMs": 68036,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/salary/type",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 403
+    },
+    {
+      "method": "GET",
+      "path": "/salary/settings",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/salary/payslip",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/salary/payslip",
+      "ok": false,
+      "status": 403
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": true
+    }
+  ]
+}

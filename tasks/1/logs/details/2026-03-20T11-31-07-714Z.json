@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-20T11:31:07.714Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Exclua o relatório de despesas de viagem com o título Visita ao Cliente Lisboa.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 7383,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/travelExpense",
+      "ok": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/travelExpense/30000006",
+      "ok": true
+    }
+  ]
+}

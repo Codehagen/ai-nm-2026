@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T11:40:39.579Z",
+  "prompt": "Create two employees: Alice Brown (alice@company.com) and Bob Wilson (bob@company.com). Both should be in the Sales department.",
+  "files": [],
+  "base_url": "http://localhost:19057",
+  "raw_files": []
+}

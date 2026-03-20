@@ -1,0 +1,104 @@
+{
+  "timestamp": "2026-03-20T12:05:43.047Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Register a travel expense for Lucy Walker (lucy.walker@example.org) for \"Client visit Trondheim\". The trip lasted 4 days with per diem (daily rate 800 NOK). Expenses: flight ticket 7200 NOK and taxi 650 NOK.",
+  "filesCount": 0,
+  "steps": 17,
+  "toolCalls": 16,
+  "apiCalls": 16,
+  "apiErrors": 10,
+  "elapsedMs": 81268,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/perDiemCompensation",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/perDiemCompensation",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rateType",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/11143101",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/travelExpense/11143101",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "timestamp": "2026-03-20T16:43:23.838Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Crie um pedido para o cliente Cascata Lda (org. nº 927161524) com os produtos Consultoria de dados (8400) a 5700 NOK e Design web (2535) a 3850 NOK. Converta o pedido em fatura e registe o pagamento total.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 0,
+  "elapsedMs": 32992,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/customer",
+      "ok": true,
+      "params": {
+        "fields": "id,name",
+        "organizationNumber": "927161524"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "8400",
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "2535"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1920",
+        "fields": "id,version,bankAccountNumber,name"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "orderLines": [
+          {
+            "vatType": {
+              "id": 3
+            },
+            "unitPriceExcludingVatCurrency": 5700,
+            "count": 1,
+            "product": {
+              "id": 84380142
+            }
+          },
+          {
+            "vatType": {
+              "id": 3
+            },
+            "unitPriceExcludingVatCurrency": 3850,
+            "product": {
+              "id": 84380145
+            },
+            "count": 1
+          }
+        ],
+        "customer": {
+          "id": 107831520
+        },
+        "deliveryDate": "2026-03-20",
+        "orderDate": "2026-03-20"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "orders": [
+          {
+            "id": 401961641
+          }
+        ],
+        "invoiceDate": "2026-03-20",
+        "invoiceDueDate": "2026-04-03"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147532553/:payment",
+      "ok": true,
+      "params": {
+        "paymentDate": "2026-03-20",
+        "paidAmount": "11937.5",
+        "paymentTypeId": "26309830"
+      }
+    }
+  ]
+}

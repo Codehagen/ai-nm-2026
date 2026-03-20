@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-03-20T11:02:43.078Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Utfør lønnskjøring for ansatt Kari Olsen (kari.olsen@firma.no) for denne måneden. Fastlønn er 40000 NOK. Legg til en overtidsgodtgjørelse på 8500 NOK.",
+  "filesCount": 0,
+  "steps": 7,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 0,
+  "elapsedMs": 30341,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/salary/type",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": true
+    }
+  ]
+}

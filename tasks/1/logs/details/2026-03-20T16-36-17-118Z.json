@@ -1,0 +1,89 @@
+{
+  "timestamp": "2026-03-20T16:36:17.118Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Wir haben einen neuen Mitarbeiter namens Sophia Hoffmann, geboren am 7. January 1995. Bitte legen Sie ihn als Mitarbeiter mit der E-Mail sophia.hoffmann@example.org und dem Startdatum 3. June 2026 an.",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 1,
+  "elapsedMs": 24542,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "departmentNumber": "1",
+        "name": "Default"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/division",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "id,name"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true,
+      "body": {
+        "firstName": "Sophia",
+        "email": "sophia.hoffmann@example.org",
+        "lastName": "Hoffmann",
+        "dateOfBirth": "1995-01-07",
+        "department": {
+          "id": 903838
+        },
+        "userType": "STANDARD"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/municipality",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/division",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "municipality": {
+          "id": 1
+        },
+        "startDate": "2026-01-01",
+        "name": "Hovedenhet"
+      },
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "organizationNumber",
+          "message": "Feltet må fylles ut.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": true,
+      "body": {
+        "startDate": "2026-06-03",
+        "employee": {
+          "id": 18566369
+        }
+      }
+    }
+  ]
+}

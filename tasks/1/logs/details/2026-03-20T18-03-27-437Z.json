@@ -1,0 +1,102 @@
+{
+  "timestamp": "2026-03-20T18:03:27.437Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Create and send an invoice to the customer Northwave Ltd (org no. 812924257) for 21050 NOK excluding VAT. The invoice is for Consulting Hours.",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 7,
+  "apiCalls": 7,
+  "apiErrors": 0,
+  "elapsedMs": 31066,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Northwave Ltd",
+        "isCustomer": true,
+        "organizationNumber": "812924257"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "vatType": {
+          "id": 3
+        },
+        "priceExcludingVatCurrency": 21050,
+        "name": "Consulting Hours"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/352135068",
+      "ok": true,
+      "body": {
+        "name": "Bankinnskudd",
+        "bankAccountNumber": "86011117947",
+        "id": 352135068,
+        "version": 0
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "deliveryDate": "2026-03-20",
+        "orderLines": [
+          {
+            "vatType": {
+              "id": 3
+            },
+            "product": {
+              "id": 84388098
+            },
+            "unitPriceExcludingVatCurrency": 21050,
+            "count": 1
+          }
+        ],
+        "orderDate": "2026-03-20",
+        "customer": {
+          "id": 108253738
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-04-03",
+        "orders": [
+          {
+            "id": 401963723
+          }
+        ],
+        "invoiceDate": "2026-03-20"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147535228/:send",
+      "ok": true,
+      "params": {
+        "sendType": "EMAIL"
+      }
+    }
+  ]
+}

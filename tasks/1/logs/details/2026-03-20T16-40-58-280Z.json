@@ -1,0 +1,71 @@
+{
+  "timestamp": "2026-03-20T16:40:58.280Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Opprett en ansatt med navn Test Person og e-post test@example.org. Startdato er 1. mars 2026.",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 5,
+  "apiCalls": 5,
+  "apiErrors": 2,
+  "elapsedMs": 17767,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "departmentNumber": "1",
+        "name": "Avdeling"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/division",
+      "ok": false,
+      "status": 404,
+      "params": {
+        "fields": "id,name",
+        "count": "1"
+      },
+      "errorMessage": "GET /division → 404"
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true,
+      "body": {
+        "dateOfBirth": "1990-01-15",
+        "firstName": "Test",
+        "lastName": "Person",
+        "userType": "STANDARD",
+        "department": {
+          "id": 30000011
+        },
+        "email": "test@example.org"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/municipality",
+      "ok": false,
+      "status": 404,
+      "params": {
+        "fields": "id",
+        "count": "1"
+      },
+      "errorMessage": "GET /municipality → 404"
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": true,
+      "body": {
+        "employee": {
+          "id": 30000012
+        },
+        "startDate": "2026-03-01"
+      }
+    }
+  ]
+}

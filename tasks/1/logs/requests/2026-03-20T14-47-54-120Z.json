@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T14:47:54.120Z",
+  "prompt": "Create an order for the customer Blueshore Ltd (org no. 974618761) with the products Software License (7312) at 25400 NOK and Maintenance (3643) at 15400 NOK. Convert the order to an invoice and register full payment.",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

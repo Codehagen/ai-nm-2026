@@ -1,0 +1,292 @@
+{
+  "timestamp": "2026-03-20T16:44:17.940Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Crie uma dimensão contabilística personalizada \"Marked\" com os valores \"Offentlig\" e \"Bedrift\". Em seguida, lance um documento na conta 6540 por 44100 NOK, vinculado ao valor de dimensão \"Offentlig\".",
+  "filesCount": 0,
+  "steps": 16,
+  "toolCalls": 17,
+  "apiCalls": 17,
+  "apiErrors": 6,
+  "elapsedMs": 87172,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionName",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "name": "Marked"
+      },
+      "errorMessage": "Request mapping failed",
+      "validationMessages": [
+        {
+          "field": "name",
+          "message": "Feltet eksisterer ikke i objektet.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "number": "6540"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/accountingDimensionName",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "*"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionName",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "description": "Marked"
+      },
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "dimensionName",
+          "message": "Kan ikke være null.",
+          "path": "null.dimensionName",
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionName",
+      "ok": true,
+      "body": {
+        "dimensionName": "Marked"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionValue",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "name": "Offentlig",
+        "accountingDimensionName": {
+          "id": 1050
+        }
+      },
+      "errorMessage": "Request mapping failed",
+      "validationMessages": [
+        {
+          "field": "name",
+          "message": "Feltet eksisterer ikke i objektet.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionValue",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "accountingDimensionName": {
+          "id": 1050
+        },
+        "description": "Offentlig"
+      },
+      "errorMessage": "Request mapping failed",
+      "validationMessages": [
+        {
+          "field": "accountingDimensionName",
+          "message": "Feltet eksisterer ikke i objektet.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/accountingDimensionValue",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "*"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionValue",
+      "ok": false,
+      "status": 422,
+      "body": {},
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "displayName",
+          "message": "Kan ikke være null.",
+          "path": "null.displayName",
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionValue",
+      "ok": true,
+      "body": {
+        "displayName": "Offentlig"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionValue",
+      "ok": true,
+      "body": {
+        "dimensionIndex": 1,
+        "displayName": "Bedrift"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionValue",
+      "ok": true,
+      "body": {
+        "displayName": "Offentlig",
+        "dimensionIndex": 1
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "date": "2026-03-20",
+        "postings": [
+          {
+            "account": {
+              "id": 357548066
+            },
+            "accountingDimensionValue1": {
+              "id": 15628
+            },
+            "amountGrossCurrency": 44100,
+            "amountGross": 44100,
+            "row": 1,
+            "date": "2026-03-20"
+          },
+          {
+            "account": {
+              "id": 357547796
+            },
+            "amountGrossCurrency": -44100,
+            "amountGross": -44100,
+            "row": 2,
+            "date": "2026-03-20"
+          }
+        ],
+        "description": "Marked Offentlig"
+      },
+      "errorMessage": "Request mapping failed",
+      "validationMessages": [
+        {
+          "field": "accountingDimensionValue1",
+          "message": "Feltet eksisterer ikke i objektet.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/posting",
+      "ok": true,
+      "params": {
+        "dateTo": "2030-01-01",
+        "count": "1",
+        "dateFrom": "2020-01-01",
+        "fields": "*"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": true,
+      "body": {
+        "date": "2026-03-20",
+        "description": "Test",
+        "postings": [
+          {
+            "amountGrossCurrency": 1,
+            "amountGross": 1,
+            "row": 1,
+            "account": {
+              "id": 357548066
+            },
+            "date": "2026-03-20"
+          },
+          {
+            "row": 2,
+            "date": "2026-03-20",
+            "account": {
+              "id": 357547796
+            },
+            "amountGrossCurrency": -1,
+            "amountGross": -1
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": true,
+      "body": {
+        "postings": [
+          {
+            "date": "2026-03-20",
+            "amountGrossCurrency": 44100,
+            "freeAccountingDimension1": {
+              "id": 15628
+            },
+            "row": 1,
+            "account": {
+              "id": 357548066
+            },
+            "amountGross": 44100
+          },
+          {
+            "account": {
+              "id": 357547796
+            },
+            "row": 2,
+            "amountGross": -44100,
+            "date": "2026-03-20",
+            "amountGrossCurrency": -44100
+          }
+        ],
+        "description": "Marked Offentlig",
+        "date": "2026-03-20"
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-19T23:07:27.236Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Crie o produto \"Manutenção\" com número de produto 9664. O preço é 5500 NOK sem IVA, utilizando a taxa padrão de 25 %.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 9591,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    }
+  ]
+}

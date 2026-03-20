@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-03-19T19:54:28.336Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Temos um novo funcionário chamado Rita Almeida, nascido em 29. December 1995. Crie-o como funcionário com o e-mail rita.almeida@example.org e data de início 7. June 2026.",
+  "filesCount": 0,
+  "steps": 13,
+  "toolCalls": 12,
+  "apiCalls": 12,
+  "apiErrors": 6,
+  "elapsedMs": 70861,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/employee/employment/employmentType",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/employee/employment/employmentType",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/employee/employment",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/employee/employment/details",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    }
+  ]
+}

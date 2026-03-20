@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T17:31:17.220Z",
+  "prompt": "Betalingen fra Lysgård AS (org.nr 812382217) for fakturaen \"Konsulenttimer\" (15600 kr ekskl. MVA) ble returnert av banken. Reverser betalingen slik at fakturaen igjen viser utestående beløp.",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-20T07:36:25.622Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Opprett en kunde med navn Nordlys AS, e-post post@nordlys.no og organisasjonsnummer 999888777.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 6663,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    }
+  ]
+}

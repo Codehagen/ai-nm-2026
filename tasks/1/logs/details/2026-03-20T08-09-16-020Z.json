@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-03-20T08:09:16.020Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Opprett en kreditnota for den siste fakturaen.",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 3,
+  "apiCalls": 3,
+  "apiErrors": 1,
+  "elapsedMs": 14933,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice/30000007/:createCreditNote",
+      "ok": true
+    }
+  ]
+}

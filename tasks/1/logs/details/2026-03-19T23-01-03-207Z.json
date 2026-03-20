@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-19T23:01:03.207Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Opprett en kunde med navn Acme AS og epost post@acme.no",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 11218,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    }
+  ]
+}

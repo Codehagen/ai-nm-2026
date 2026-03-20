@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-03-19T21:00:04.919Z",
+  "prompt": "Opprett kunden Bølgekraft AS med organisasjonsnummer 812297848. Adressa er Havnegata 113, 7010 Trondheim.",
+  "filesCount": 0,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 4015,
+  "status": "error",
+  "error": "No output generated."
+}

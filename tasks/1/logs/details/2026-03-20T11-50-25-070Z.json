@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-20T11:50:25.070Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Oppdater telefonnummeret til den første ansatte i kontoen til 98765432.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 10318,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/employee/18443378",
+      "ok": true
+    }
+  ]
+}

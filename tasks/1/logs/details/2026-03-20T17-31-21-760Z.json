@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-03-20T17:31:21.760Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Registe o fornecedor Luz do Sol Lda com número de organização 857147634. E-mail: faktura@luzdosollda.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 9032,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true,
+      "body": {
+        "email": "faktura@luzdosollda.no",
+        "organizationNumber": "857147634",
+        "isSupplier": true,
+        "name": "Luz do Sol Lda"
+      }
+    }
+  ]
+}

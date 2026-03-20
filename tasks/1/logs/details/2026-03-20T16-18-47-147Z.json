@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-03-20T16:18:47.147Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Registrer 8 timer for Ola Nordmann (ola@example.org) på aktiviteten Konsulentarbeid i prosjektet Webshop for kunde TestKunde AS.",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 6,
+  "elapsedMs": 17911,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 401,
+      "body": {
+        "departmentNumber": "1",
+        "name": "Avdeling"
+      },
+      "errorMessage": "Unauthorized"
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": false,
+      "status": 401,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      },
+      "errorMessage": "Unauthorized"
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 401,
+      "body": {
+        "isCustomer": true,
+        "name": "TestKunde AS"
+      },
+      "errorMessage": "Unauthorized"
+    },
+    {
+      "method": "POST",
+      "path": "/activity",
+      "ok": false,
+      "status": 401,
+      "body": {
+        "name": "Konsulentarbeid"
+      },
+      "errorMessage": "Unauthorized"
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": false,
+      "status": 401,
+      "params": {
+        "fields": "id",
+        "count": "1"
+      },
+      "errorMessage": "Unauthorized"
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": false,
+      "status": 401,
+      "params": {
+        "fields": "id",
+        "count": "1"
+      },
+      "errorMessage": "Unauthorized"
+    }
+  ]
+}

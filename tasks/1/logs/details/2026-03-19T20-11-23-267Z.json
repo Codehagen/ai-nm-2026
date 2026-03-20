@@ -1,0 +1,46 @@
+{
+  "timestamp": "2026-03-19T20:11:23.267Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Erstellen Sie das Projekt \"Integration Windkraft\" verknüpft mit dem Kunden Windkraft GmbH (Org.-Nr. 804172807). Projektleiter ist Hannah Weber (hannah.weber@example.org).",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 2,
+  "elapsedMs": 32896,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true
+    }
+  ]
+}

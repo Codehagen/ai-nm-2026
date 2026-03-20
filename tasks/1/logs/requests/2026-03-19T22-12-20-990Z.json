@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-19T22:12:20.990Z",
+  "prompt": "Opprett en faktura til kunden Fjelltopp AS (org.nr 776655443) for produktet Designtjenester, 1 stk à 5000 kr eks. mva (25% MVA). Fakturadato: 2026-03-19, forfallsdato: 2026-04-19. Registrer deretter full betaling på fakturaen med betalingsdato 2026-03-19.",
+  "files": [],
+  "base_url": "https://kkpqfuj-amager.tripletex.dev/v2",
+  "raw_files": []
+}

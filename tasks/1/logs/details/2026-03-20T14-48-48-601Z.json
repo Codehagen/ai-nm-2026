@@ -1,0 +1,164 @@
+{
+  "timestamp": "2026-03-20T14:48:48.601Z",
+  "model": "anthropic/claude-opus-4-6",
+  "prompt": "Create an order for the customer Blueshore Ltd (org no. 974618761) with the products Software License (7312) at 25400 NOK and Maintenance (3643) at 15400 NOK. Convert the order to an invoice and register full payment.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 10,
+  "apiCalls": 10,
+  "apiErrors": 2,
+  "elapsedMs": 54480,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Blueshore Ltd",
+        "organizationNumber": "974618761",
+        "isCustomer": true
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "name": "Software License",
+        "number": "7312",
+        "priceExcludingVatCurrency": 25400,
+        "vatType": {
+          "id": 3
+        }
+      },
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "number",
+          "message": "Produktnummeret 7312 er i bruk.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "name": "Maintenance",
+        "number": "3643",
+        "priceExcludingVatCurrency": 15400,
+        "vatType": {
+          "id": 3
+        }
+      },
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "number",
+          "message": "Produktnummeret 3643 er i bruk.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1920",
+        "fields": "id,version,bankAccountNumber,name"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "count": "5"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "7312",
+        "fields": "id,name,number"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "3643",
+        "fields": "id,name,number"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "customer": {
+          "id": 108246367
+        },
+        "deliveryDate": "2026-03-20",
+        "orderDate": "2026-03-20",
+        "orderLines": [
+          {
+            "product": {
+              "id": 84379770
+            },
+            "count": 1,
+            "unitPriceExcludingVatCurrency": 25400,
+            "vatType": {
+              "id": 3
+            }
+          },
+          {
+            "product": {
+              "id": 84379772
+            },
+            "count": 1,
+            "unitPriceExcludingVatCurrency": 15400,
+            "vatType": {
+              "id": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDate": "2026-03-20",
+        "invoiceDueDate": "2026-04-03",
+        "orders": [
+          {
+            "id": 401959029
+          }
+        ]
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147528882/:payment",
+      "ok": true,
+      "params": {
+        "paymentDate": "2026-03-20",
+        "paymentTypeId": "26300717",
+        "paidAmount": "51000"
+      }
+    }
+  ]
+}

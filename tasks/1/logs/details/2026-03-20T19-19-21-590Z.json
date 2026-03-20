@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-03-20T19:19:21.590Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Slett reiseregningen med tittel Kundebesøk Oslo.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 9870,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/travelExpense",
+      "ok": true,
+      "params": {
+        "fields": "id,title"
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/travelExpense/30000011",
+      "ok": true
+    }
+  ]
+}

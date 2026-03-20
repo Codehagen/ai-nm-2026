@@ -1,0 +1,85 @@
+{
+  "timestamp": "2026-03-20T15:59:29.913Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Nous avons reçu la facture INV-2026-5683 du fournisseur Lumière SARL (nº org. 904564184) de 75500 NOK TTC. Le montant concerne des services de bureau (compte 7140). Enregistrez la facture fournisseur avec la TVA déductible correcte (25 %).",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 7,
+  "apiCalls": 7,
+  "apiErrors": 7,
+  "elapsedMs": 37591,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "isSupplier": true,
+        "organizationNumber": "904564184",
+        "name": "Lumière SARL"
+      },
+      "errorMessage": "POST /supplier → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id",
+        "number": "7140"
+      },
+      "errorMessage": "GET /ledger/account → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id",
+        "number": "2400"
+      },
+      "errorMessage": "GET /ledger/account → 403"
+    },
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "name": "Lumière SARL",
+        "organizationNumber": "904564184",
+        "isSupplier": true
+      },
+      "errorMessage": "POST /supplier → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id",
+        "count": "1"
+      },
+      "errorMessage": "GET /employee → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": false,
+      "status": 403,
+      "errorMessage": "GET /employee → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/v2/employee",
+      "ok": false,
+      "status": 403,
+      "errorMessage": "GET /v2/employee → 403"
+    }
+  ]
+}

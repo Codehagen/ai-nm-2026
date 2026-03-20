@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-03-20T15:59:00.095Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Registrer leverandøren Dalheim AS med organisasjonsnummer 892196753. E-post: faktura@dalheim.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 7877,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true,
+      "body": {
+        "isSupplier": true,
+        "organizationNumber": "892196753",
+        "name": "Dalheim AS",
+        "email": "faktura@dalheim.no"
+      }
+    }
+  ]
+}

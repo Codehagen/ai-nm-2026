@@ -1,0 +1,113 @@
+{
+  "timestamp": "2026-03-20T14:31:12.517Z",
+  "model": "anthropic/claude-opus-4-6",
+  "prompt": "Create an invoice for customer Oakwood Corp (org nr 445566778) with product Data Analysis at 3200 NOK excl. VAT (25% VAT). Invoice date today, due in 14 days. Register payment of the invoice today.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 0,
+  "elapsedMs": 33327,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Oakwood Corp",
+        "organizationNumber": "445566778",
+        "isCustomer": true
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "name": "Data Analysis",
+        "priceExcludingVatCurrency": 3200,
+        "vatType": {
+          "id": 3
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1920",
+        "fields": "id,version,bankAccountNumber,name"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "count": "5"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/30000001",
+      "ok": true,
+      "body": {
+        "id": 30000001,
+        "version": 0,
+        "name": "Bankinnskudd",
+        "bankAccountNumber": "86011117947"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "customer": {
+          "id": 30000011
+        },
+        "orderDate": "2026-03-20",
+        "deliveryDate": "2026-03-20",
+        "orderLines": [
+          {
+            "product": {
+              "id": 30000012
+            },
+            "count": 1,
+            "unitPriceExcludingVatCurrency": 3200,
+            "vatType": {
+              "id": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDate": "2026-03-20",
+        "invoiceDueDate": "2026-04-03",
+        "orders": [
+          {
+            "id": 30000013
+          }
+        ]
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/30000014/:payment",
+      "ok": true,
+      "params": {
+        "paymentDate": "2026-03-20",
+        "paymentTypeId": "30000002",
+        "paidAmount": "4000"
+      }
+    }
+  ]
+}

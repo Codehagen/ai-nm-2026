@@ -1,0 +1,142 @@
+{
+  "timestamp": "2026-03-20T16:36:23.958Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Opprett en faktura til kunden Havbris AS (org.nr 977448239) med tre produktlinjer: Konsulenttimer (6390) til 2850 kr med 25 % MVA, Systemutvikling (1652) til 2650 kr med 15 % MVA (næringsmiddel), og Webdesign (3273) til 7400 kr med 0 % MVA (avgiftsfri).",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 9,
+  "apiCalls": 9,
+  "apiErrors": 0,
+  "elapsedMs": 33314,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1920",
+        "fields": "id,version,bankAccountNumber,name"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/customer",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "organizationNumber": "977448239"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "6390",
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "1652",
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "3273"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/353450162",
+      "ok": true,
+      "body": {
+        "bankAccountNumber": "86011117947",
+        "id": 353450162,
+        "name": "Bankinnskudd",
+        "version": 0
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/product/84377708",
+      "ok": true,
+      "body": {
+        "version": 0,
+        "id": 84377708,
+        "priceExcludingVatCurrency": 7400,
+        "name": "Webdesign",
+        "vatType": {
+          "id": 5
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "orderLines": [
+          {
+            "vatType": {
+              "id": 3
+            },
+            "product": {
+              "id": 84377704
+            },
+            "unitPriceExcludingVatCurrency": 2850,
+            "count": 1
+          },
+          {
+            "count": 1,
+            "unitPriceExcludingVatCurrency": 2650,
+            "product": {
+              "id": 84377707
+            },
+            "vatType": {
+              "id": 31
+            }
+          },
+          {
+            "product": {
+              "id": 84377708
+            },
+            "vatType": {
+              "id": 5
+            },
+            "count": 1,
+            "unitPriceExcludingVatCurrency": 7400
+          }
+        ],
+        "customer": {
+          "id": 107828551
+        },
+        "deliveryDate": "2026-03-20",
+        "orderDate": "2026-03-20"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-04-03",
+        "invoiceDate": "2026-03-20",
+        "orders": [
+          {
+            "id": 401961425
+          }
+        ]
+      }
+    }
+  ]
+}

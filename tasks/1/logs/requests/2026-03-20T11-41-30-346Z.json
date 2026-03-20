@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T11:41:30.346Z",
+  "prompt": "Cree una factura para el cliente Estrela Lda (org. nº 975389642) con el producto Servicio de red a 4700 NOK sin IVA (25% IVA). Fecha de factura hoy, vencimiento en 30 días. Registre el pago completo de la factura hoy.",
+  "files": [],
+  "base_url": "http://localhost:19056",
+  "raw_files": []
+}

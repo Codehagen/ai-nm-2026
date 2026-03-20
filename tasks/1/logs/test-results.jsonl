@@ -1,0 +1,1 @@
+{"timestamp":"2026-03-19T22:59:30.801Z","total":1,"passed":1,"results":[{"id":"2026-03-19T19-05-45-247Z","prompt":"Opprett en kunde med navn Acme AS og epost post@acme.no","apiCalls":1,"apiErrors":0,"elapsedMs":9419,"status":"completed","pass":true,"comparison":"= (was 0)"}]}

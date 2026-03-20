@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-03-19T19:24:10.207Z",
+  "prompt": "Opprett produktet \"Skylagring\" med produktnummer 1478. Prisen er 32250 kr eksklusiv MVA, og standard MVA-sats på 25 % skal brukes.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 13931,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/vatType",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    }
+  ]
+}

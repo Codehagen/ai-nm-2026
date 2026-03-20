@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-03-19T21:18:05.760Z",
+  "prompt": "Kunden Tindra AS (org.nr 923598324) har en utestående faktura på 15700 kr eksklusiv MVA for Konsulentarbeid. Registrer full betaling av denne fakturaen.",
+  "filesCount": 0,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 13722,
+  "status": "error",
+  "error": "Cannot read properties of undefined (reading 'name')"
+}

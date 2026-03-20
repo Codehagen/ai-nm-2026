@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-03-20T14:59:33.370Z",
+  "prompt": "Registre 34 horas para Carmen Romero (carmen.romero@example.org) en la actividad \"Analyse\" del proyecto \"Desarrollo de app\" para Sierra SL (org. nº 849835467). Tarifa por hora: 1150 NOK/h. Genere una factura de proyecto al cliente basada en las horas registradas.",
+  "filesCount": 0,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 932,
+  "status": "error",
+  "error": "Insufficient funds. Please add credits to your account to continue using AI services. Visit https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%3Fmodal%3Dtop-up to top up your credits."
+}

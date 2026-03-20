@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T17:13:30.148Z",
+  "prompt": "Erstellen Sie eine Rechnung für den Kunden Silberberg GmbH (Org.-Nr. 977792827) mit drei Produktzeilen: Wartung (8747) zu 16950 NOK mit 25 % MwSt., Softwarelizenz (8391) zu 3250 NOK mit 15 % MwSt. (Lebensmittel), und Netzwerkdienst (4819) zu 5550 NOK mit 0 % MwSt. (befreit).",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

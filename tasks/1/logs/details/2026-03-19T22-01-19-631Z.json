@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-03-19T22:01:19.631Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Opprett en ansatt med navn Erik Hansen og e-post erik.hansen@firma.no. Fødselsdato: 1985-06-15.",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 3,
+  "apiCalls": 3,
+  "apiErrors": 1,
+  "elapsedMs": 43131,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    }
+  ]
+}

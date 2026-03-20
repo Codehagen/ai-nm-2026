@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T08:55:48.846Z",
+  "prompt": "Erstellen Sie eine Rechnung für den Kunden Bergwerk AG (Org.-Nr. 667788990) mit dem Produkt IT-Beratung zu 4500 NOK exkl. MwSt. (25% MwSt.). Rechnungsdatum heute, Fälligkeit in 30 Tagen. Registrieren Sie die Zahlung der Rechnung heute.",
+  "files": [],
+  "base_url": "http://localhost:9054",
+  "raw_files": []
+}

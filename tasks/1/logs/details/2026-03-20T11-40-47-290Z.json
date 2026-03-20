@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-03-20T11:40:47.290Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Slett bilaget med beskrivelse Feilregistrering.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 7715,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/voucher",
+      "ok": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/ledger/voucher/30000006",
+      "ok": true
+    }
+  ]
+}

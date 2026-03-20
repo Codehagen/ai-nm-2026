@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-19T22:08:39.886Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Crie um produto chamado Serviço de Consultoria com preço de 2000 NOK sem IVA (25% IVA).",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 17423,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-03-19T19:05:52.790Z",
+  "prompt": "Opprett en kunde med navn Acme AS og epost post@acme.no",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 7541,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    }
+  ]
+}

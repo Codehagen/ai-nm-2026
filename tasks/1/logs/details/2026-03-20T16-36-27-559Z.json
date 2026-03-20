@@ -1,0 +1,110 @@
+{
+  "timestamp": "2026-03-20T16:36:27.559Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Opprett og send en faktura til kunden Polaris AS (org.nr 963373937) på 32600 kr eksklusiv MVA. Fakturaen gjelder Webdesign.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 0,
+  "elapsedMs": 35919,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/customer",
+      "ok": true,
+      "params": {
+        "organizationNumber": "963373937",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "name": "Webdesign"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/352074233",
+      "ok": true,
+      "body": {
+        "name": "Bankinnskudd",
+        "bankAccountNumber": "86011117947",
+        "version": 0,
+        "id": 352074233
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "name": "Webdesign",
+        "priceExcludingVatCurrency": 32600,
+        "vatType": {
+          "id": 3
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "customer": {
+          "id": 107820784
+        },
+        "orderLines": [
+          {
+            "count": 1,
+            "product": {
+              "id": 84387287
+            },
+            "unitPriceExcludingVatCurrency": 32600,
+            "vatType": {
+              "id": 3
+            }
+          }
+        ],
+        "orderDate": "2026-03-20",
+        "deliveryDate": "2026-03-20"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "orders": [
+          {
+            "id": 401961423
+          }
+        ],
+        "invoiceDate": "2026-03-20",
+        "invoiceDueDate": "2026-04-03"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147532264/:send",
+      "ok": true,
+      "params": {
+        "sendType": "EMAIL"
+      }
+    }
+  ]
+}

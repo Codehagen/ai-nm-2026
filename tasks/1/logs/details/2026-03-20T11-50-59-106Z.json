@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-03-20T11:50:59.106Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Vi har mottatt faktura FV-2026-445 fra leverandør SandboxSupplier AS (org.nr 887766554) på 25000 NOK inkl. mva. Beløpet gjelder kontortjenester (konto 7300). Registrer leverandørfakturaen med korrekt inngående mva (25%).",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 0,
+  "elapsedMs": 23260,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": true
+    }
+  ]
+}

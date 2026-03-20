@@ -1,0 +1,65 @@
+{
+  "timestamp": "2026-03-19T23:08:45.983Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "O cliente Estrela Lda (org. nº 975389642) tem uma fatura pendente de 47200 NOK sem IVA por \"Serviço de rede\". Registe o pagamento total desta fatura.",
+  "filesCount": 0,
+  "steps": 8,
+  "toolCalls": 11,
+  "apiCalls": 10,
+  "apiErrors": 1,
+  "elapsedMs": 78734,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/vatType",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/424554285",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/order/401950492",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147518321/:payment",
+      "ok": true
+    }
+  ]
+}

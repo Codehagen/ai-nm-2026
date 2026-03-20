@@ -1,0 +1,48 @@
+{
+  "timestamp": "2026-03-20T19:19:03.742Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Opprett en ansatt med navn Lars Berg, e-post lars@berg.no. Han skal være kontoadministrator.",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 3,
+  "apiCalls": 3,
+  "apiErrors": 0,
+  "elapsedMs": 16012,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "departmentNumber": "1",
+        "name": "Avdeling"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true,
+      "body": {
+        "email": "lars@berg.no",
+        "lastName": "Berg",
+        "department": {
+          "id": 30000011
+        },
+        "firstName": "Lars",
+        "dateOfBirth": "1990-01-15",
+        "userType": "STANDARD"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/employee/entitlement/:grantEntitlementsByTemplate",
+      "ok": true,
+      "params": {
+        "employeeId": "30000012",
+        "template": "ALL_PRIVILEGES"
+      },
+      "body": {}
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-03-19T20:10:52.374Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Wir haben einen neuen Mitarbeiter namens Elias Meyer, geboren am 17. June 1989. Bitte legen Sie ihn als Mitarbeiter mit der E-Mail elias.meyer@example.org und dem Startdatum 29. June 2026 an.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 5,
+  "apiCalls": 5,
+  "apiErrors": 2,
+  "elapsedMs": 32606,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": true
+    }
+  ]
+}

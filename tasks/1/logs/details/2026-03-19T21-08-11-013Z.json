@@ -1,0 +1,175 @@
+{
+  "timestamp": "2026-03-19T21:08:11.013Z",
+  "model": "anthropic/claude-opus-4.6",
+  "prompt": "Opprett produktet Skylagring med produktnummer 1478. Prisen er 32250 kr eksklusiv MVA, og standard MVA-sats på 25 % skal benyttes.",
+  "filesCount": 0,
+  "steps": 30,
+  "toolCalls": 30,
+  "apiCalls": 29,
+  "apiErrors": 16,
+  "elapsedMs": 142086,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/vatType",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/product/vatType",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/product/84381409",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/product/84381409",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/product/84381409",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/product/84381409",
+      "ok": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/product/84381409",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/company",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/company/settings/altinn",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/vatType",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/company/settings",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/company",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/company/with/me",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/resultbudget/company",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/company/salesmodules",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/company/settings/vat",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/vatSettings",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/product/84381413",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/company/with/me",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/company/withLoginAccess",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/token/session/whoAmI",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/token/session/>whoAmI",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/company/108115792",
+      "ok": true
+    }
+  ]
+}

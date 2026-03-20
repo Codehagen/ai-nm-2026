@@ -1,0 +1,54 @@
+{
+  "timestamp": "2026-03-20T11:42:00.621Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Crie uma fatura para o cliente Porto Alegre Lda (org. nº 842889154) com o produto Consultoria de dados a 11200 NOK sem IVA (25% IVA). Data da fatura hoje, vencimento em 30 dias. Registre o pagamento completo da fatura hoje.",
+  "filesCount": 0,
+  "steps": 9,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 0,
+  "elapsedMs": 30284,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/30000001",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/30000009/:payment",
+      "ok": true
+    }
+  ]
+}

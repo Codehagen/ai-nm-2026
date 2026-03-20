@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-03-20T18:07:24.192Z",
+  "prompt": "Exécutez la paie de Sarah Moreau (sarah.moreau@example.org) pour ce mois. Le salaire de base est de 56900 NOK. Ajoutez une prime unique de 15800 NOK en plus du salaire de base.",
+  "filesCount": 0,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 270083,
+  "status": "timeout"
+}

@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-03-20T17:05:11.905Z",
+  "prompt": "Enregistrez 9 heures pour Chloé Moreau (chloe.moreau@example.org) sur l'activité \"Utvikling\" du projet \"Mise à niveau système\" pour Étoile SARL (nº org. 832109428). Taux horaire : 1900 NOK/h. Générez une facture de projet au client basée sur les heures enregistrées.",
+  "filesCount": 0,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 270147,
+  "status": "timeout"
+}

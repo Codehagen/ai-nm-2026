@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-03-19T22:13:08.892Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Opprett en faktura til kunden Fjelltopp AS (org.nr 776655443) for produktet Designtjenester, 1 stk à 5000 kr eks. mva (25% MVA). Fakturadato: 2026-03-19, forfallsdato: 2026-04-19. Registrer deretter full betaling på fakturaen med betalingsdato 2026-03-19.",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 1,
+  "elapsedMs": 47902,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/424554285",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147517804/:payment",
+      "ok": true
+    }
+  ]
+}

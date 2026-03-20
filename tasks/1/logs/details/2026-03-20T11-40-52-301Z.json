@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-03-20T11:40:52.301Z",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "prompt": "Opprett en kontaktperson for kunde Havblikk AS. Kontaktpersonen heter Per Hansen, e-post per@havblikk.no, mobil 91234567.",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 3,
+  "apiCalls": 3,
+  "apiErrors": 0,
+  "elapsedMs": 12719,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/contact",
+      "ok": true
+    }
+  ]
+}

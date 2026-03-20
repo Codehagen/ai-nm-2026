@@ -1,0 +1,87 @@
+{
+  "timestamp": "2026-03-20T16:50:26.922Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Recebemos a fatura INV-2026-4811 do fornecedor Montanha Lda (org. nº 859712355) no valor de 33200 NOK com IVA incluído. O montante refere-se a serviços de escritório (conta 7300). Registe a fatura do fornecedor com o IVA dedutível correto (25 %).",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 0,
+  "elapsedMs": 20979,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true,
+      "body": {
+        "organizationNumber": "859712355",
+        "isSupplier": true,
+        "name": "Montanha Lda"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "number": "7300"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "number": "2400"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-04-19",
+        "invoiceNumber": "INV-2026-4811",
+        "voucher": {
+          "date": "2026-03-20",
+          "description": "Fatura INV-2026-4811 de Montanha Lda",
+          "postings": [
+            {
+              "row": 1,
+              "date": "2026-03-20",
+              "amountGross": 33200,
+              "amountGrossCurrency": 33200,
+              "account": {
+                "id": 354485195
+              },
+              "vatType": {
+                "id": 1
+              },
+              "description": "Serviços de escritório"
+            },
+            {
+              "description": "Montanha Lda",
+              "account": {
+                "id": 354484945
+              },
+              "amountGrossCurrency": -33200,
+              "amountGross": -33200,
+              "date": "2026-03-20",
+              "supplier": {
+                "id": 108249226
+              },
+              "row": 2
+            }
+          ]
+        },
+        "supplier": {
+          "id": 108249226
+        },
+        "invoiceDate": "2026-03-20"
+      }
+    }
+  ]
+}

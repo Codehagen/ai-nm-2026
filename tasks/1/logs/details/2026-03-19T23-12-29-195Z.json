@@ -1,0 +1,42 @@
+{
+  "timestamp": "2026-03-19T23:12:29.195Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Registrieren Sie den Lieferanten Sonnental GmbH mit der Organisationsnummer 957072445. E-Mail: faktura@sonnentalgmbh.no.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 5,
+  "apiCalls": 5,
+  "apiErrors": 3,
+  "elapsedMs": 50894,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/supplier",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true
+    }
+  ]
+}

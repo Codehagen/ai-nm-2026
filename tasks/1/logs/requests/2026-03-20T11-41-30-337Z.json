@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T11:41:30.337Z",
+  "prompt": "Crie uma fatura para o cliente Porto Alegre Lda (org. nº 842889154) com o produto Consultoria de dados a 11200 NOK sem IVA (25% IVA). Data da fatura hoje, vencimento em 30 dias. Registre o pagamento completo da fatura hoje.",
+  "files": [],
+  "base_url": "http://localhost:19057",
+  "raw_files": []
+}

@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-03-20T16:10:31.719Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt": "Create the product \"Orange Juice\" with product number 1043. The price is 40400 NOK excluding VAT, using the 15% food and beverage VAT rate.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 8890,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "number": "1043",
+        "name": "Orange Juice",
+        "vatType": {
+          "id": 31
+        },
+        "priceExcludingVatCurrency": 40400
+      }
+    }
+  ]
+}

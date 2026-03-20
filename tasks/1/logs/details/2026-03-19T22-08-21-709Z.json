@@ -1,0 +1,107 @@
+{
+  "timestamp": "2026-03-19T22:08:21.709Z",
+  "model": "google/gemini-3.1-pro-preview",
+  "prompt": "Opprett et produkt med navn Konsulenttjenester, pris 1500 kr eks. mva (25% MVA).",
+  "filesCount": 0,
+  "steps": 18,
+  "toolCalls": 17,
+  "apiCalls": 17,
+  "apiErrors": 8,
+  "elapsedMs": 203671,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/vatType",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/company",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/company/settings",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": false,
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/token/session",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/company/108115792",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/settings",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/vatSettings",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/vatSettings/528408",
+      "ok": false,
+      "status": 404
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/vatSettings",
+      "ok": false,
+      "status": 422
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/vatSettings",
+      "ok": true
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/product/84381625",
+      "ok": true
+    }
+  ]
+}
