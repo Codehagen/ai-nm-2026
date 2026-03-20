@@ -81,4 +81,7 @@ d9973fd	91.76	0.0	2	discard	pure XGBoost 1.0 (R4=96.16 R5=91.76 — R4 drops)	R4
 a8f5731	89.49	0.0	51	keep	R4-era tables + blend=0.25 + agent L7 (LORO avg=89.49!)	-
 56ee060	89.68	0.0	1	keep	blend=0.30 (LORO avg=89.68, agent-validated best)	-
 25c998d	90.87	0.0	2	keep	p=0.80 f=0.90 s=0.80 (R4=96.17 R5=90.87 avg=93.52!)
-fa5e61c	89.219609	0.0	0	keep	LORO baseline: blend=0.35 L7=[1.20,0.80,0.44,0.80,1.30,0]	-	-
+fa5e61c	89.219609	0.0	0	keep	LORO baseline: blend=0.35 L7=[1.20,0.80,0.44,0.80,1.30,0]	-
+1858383	89.201662	0.0	23	discard	stacking: heuristic preds as XGB features (36 features)	no improvement
+8c0ecb1	0.000000	0.0	28	crash	multi:softprob classifier	non-contiguous class labels
+03b5dc8	89.028527	0.0	28	discard	residual learning: XGB predicts GT-heuristic corrections	worse than direct prediction
