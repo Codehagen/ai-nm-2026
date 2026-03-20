@@ -80,6 +80,7 @@ ROUNDS = {
     5: "fd3c92ff-3178-4dc9-8d9b-acf389b3982b",
     6: "ae78003a-4efe-425a-881a-d16a39bca0ad",
     7: "36e581f1-73f8-453f-ab98-cbe3052b701b",
+    8: "c5cdf100-a876-4fb7-b5d8-757162c97989",
 }
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -179,8 +180,8 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=No
 
 
 def evaluate_loro():
-    """Run full 6-fold LORO and return (avg, per_round_dict)."""
-    test_rounds = [1, 2, 4, 5, 6, 7]
+    """Run full 7-fold LORO and return (avg, per_round_dict)."""
+    test_rounds = [1, 2, 4, 5, 6, 7, 8]
     results = {}
 
     for held_out in test_rounds:
@@ -243,7 +244,10 @@ def evaluate_loro():
                             if obs_cls[c] < L7_MIN_OBS[c]:
                                 strengths[c] = 0.0
                         adj = 1.0 + strengths * (ratio - 1.0)
-                        adj = np.clip(adj, L7_ADJ_MIN, L7_ADJ_MAX)
+                        # Per-class clamp: wider for settlement (handles extreme rounds)
+                        adj_min = np.array([0.80, 0.60, 1.00, 1.00, 0.80, 1.00])
+                        adj_max = np.array([1.25, 1.30, 1.00, 1.00, 1.25, 1.00])
+                        adj = np.clip(adj, adj_min, adj_max)
                         for y in range(h):
                             for x in range(w):
                                 if grid[y][x] in {10, 5}:
@@ -282,7 +286,7 @@ if __name__ == "__main__":
         print(f"round_{r}_score: {s:.4f}")
 
     # Weighted average (competition metric: 1.05^(round-1))
-    weights = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6}
+    weights = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7}
     w_avg = sum(per_round[r] * weights[r] for r in per_round) / sum(weights[r] for r in per_round)
     print(f"weighted_avg: {w_avg:.4f}")
 
