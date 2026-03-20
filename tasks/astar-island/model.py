@@ -873,8 +873,10 @@ def build_prediction(
             if m_count > 0:
                 model_avg /= m_count
                 ratio = obs_freq / np.maximum(model_avg, 1e-6)
-                # Apply correction with strength 0.5 (cross-round validated)
-                adj = 1.0 + 0.5 * (ratio - 1.0)
+                # Per-class correction strengths (cross-round validated):
+                # Weak for empty/port (stable), stronger for settlement/ruin (variable)
+                cls_strength = np.array([0.2, 0.6, 0.2, 0.6, 0.4, 0.0])
+                adj = 1.0 + cls_strength * (ratio - 1.0)
                 for y in range(h):
                     for x in range(w):
                         if initial_grid[y][x] in {10, 5}:
