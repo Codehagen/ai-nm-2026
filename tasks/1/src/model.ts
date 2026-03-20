@@ -1,16 +1,30 @@
 import { generateText, tool, stepCountIs } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 import type { SolveRequest, SolveResponse } from "./dtos.js";
 import { TripletexClient, type TxResult } from "./tripletex.js";
-import { SYSTEM_PROMPT } from "./system-prompt.js";
+import { classifyTask } from "./task-classifier.js";
+import { buildSystemPrompt } from "./prompt-builder.js";
 import { logSolve } from "./logger.js";
 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_API_KEY,
 });
 
+const anthropic = createAnthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
+
 const MODEL_ID = process.env.MODEL_ID || "gemini-3.1-pro-preview";
+
+/** Select the right provider based on model ID */
+function getModel(modelId: string) {
+  if (modelId.startsWith("claude-") || modelId.startsWith("anthropic/")) {
+    return anthropic(modelId);
+  }
+  return google(modelId);
+}
 
 /** Oslo timezone date (avoids UTC midnight drift) */
 function getOsloDate(): string {
@@ -81,6 +95,26 @@ function getErrorHint(
     return 'Division requires ALL of: name, startDate, municipalityDate, organizationNumber, municipality. Use: {"name": "Hovedenhet", "startDate": "2026-01-01", "municipalityDate": "2026-01-01", "organizationNumber": "000000000", "municipality": {"id": <mun_id>}}. GET /municipality?count=1&fields=id first.';
   }
 
+  // Travel expense cost — missing required fields
+  if (method === "POST" && path.includes("travelExpense/cost")) {
+    return 'Travel expense cost requires: travelExpense.id, costCategory.id, paymentType.id, date, amountCurrencyIncVat. GET /travelExpense/costCategory and /travelExpense/paymentType first to find valid IDs.';
+  }
+
+  // Supplier invoice — voucher posting row numbering
+  if (method === "POST" && path.includes("supplierInvoice")) {
+    return 'Voucher posting rows MUST start at 1 (not 0). Row 0 is system-reserved. amountGrossCurrency MUST equal amountGross. Expense row is POSITIVE, supplier row is NEGATIVE. MUST pass params: {"sendToLedger": "true"}.';
+  }
+
+  // Salary specification — employment required
+  if (method === "POST" && path.includes("salary/specification")) {
+    return 'Salary specification requires an active employment. POST /employee/employment first with employee.id, startDate, and division.id. Also check that year and month match the current payroll period.';
+  }
+
+  // Voucher postings don't balance
+  if (method === "POST" && path.includes("ledger/voucher") && vm?.some((v) => v.message.includes("balanse") || v.message.includes("balance"))) {
+    return 'Voucher postings MUST balance (sum of all amountGross = 0). Check that debit (positive) and credit (negative) amounts are equal.';
+  }
+
   return null;
 }
 
@@ -94,6 +128,50 @@ export function retryKey(path: string, body: Record<string, unknown>): string {
         ? String(body.name)
         : "";
   return `${norm}:${id}`;
+}
+
+/** Normalize API path — strips /v2/ prefix Gemini sometimes adds */
+export function normalizePath(path: string): string {
+  if (path.startsWith("/v2/")) path = path.slice(3);
+  if (!path.startsWith("/")) path = "/" + path;
+  return path;
+}
+
+/** Auto-inject required defaults on POST /employee body */
+export function applyEmployeeDefaults(body: Record<string, unknown>): void {
+  if (!body.userType) body.userType = "STANDARD";
+  if (!body.dateOfBirth) body.dateOfBirth = "1990-01-15";
+}
+
+/** Auto-inject vatType on POST /product body */
+export function applyProductDefaults(body: Record<string, unknown>): void {
+  if (!body.vatType) body.vatType = { id: 3 };
+}
+
+/** Auto-inject date range params for GET endpoints that require them */
+export function applyDateRangeDefaults(
+  path: string,
+  params: Record<string, string> | undefined,
+): Record<string, string> | undefined {
+  const p = params ?? {};
+  let injected = false;
+  if (
+    path.includes("/invoice") &&
+    !path.includes("/paymentType") &&
+    !path.includes("/payment")
+  ) {
+    if (!p.invoiceDateFrom) { p.invoiceDateFrom = "2020-01-01"; injected = true; }
+    if (!p.invoiceDateTo) { p.invoiceDateTo = "2030-01-01"; injected = true; }
+  }
+  if (path.includes("/order") && !path.includes("/orderLine")) {
+    if (!p.orderDateFrom) { p.orderDateFrom = "2020-01-01"; injected = true; }
+    if (!p.orderDateTo) { p.orderDateTo = "2030-01-01"; injected = true; }
+  }
+  if (path.includes("/ledger/voucher") || path.includes("/ledger/posting")) {
+    if (!p.dateFrom) { p.dateFrom = "2020-01-01"; injected = true; }
+    if (!p.dateTo) { p.dateTo = "2030-01-01"; injected = true; }
+  }
+  return injected ? p : params;
 }
 
 /**
@@ -132,10 +210,13 @@ export async function solve(
 
   const today = getOsloDate();
 
+  // Phase 2: Composable prompt — classify task and build focused prompt
+  const taskType = classifyTask(request.prompt);
+
   const result = await generateText({
-    model: google(MODEL_ID),
+    model: getModel(MODEL_ID),
     temperature: 0, // Deterministic: reduces random errors on tool calls
-    system: SYSTEM_PROMPT + `\n\nToday's date: ${today}`,
+    system: buildSystemPrompt(taskType) + `\n\nToday's date: ${today}`,
     messages: [{ role: "user", content }],
     tools: {
       tripletex_request: tool({
@@ -161,7 +242,10 @@ export async function solve(
               "Query parameters, e.g. {fields: 'id,name', count: '100'}"
             ),
         }),
-        execute: async ({ method, body, path, params }) => {
+        execute: async ({ method, body, path: rawPath, params }) => {
+          // === Phase 1A: Path normalization (Gemini fix) ===
+          const path = normalizePath(rawPath);
+
           // Block retries that change prompt-derived fields (identity-aware)
           if (method === "POST" && body) {
             const key = retryKey(path, body as Record<string, unknown>);
@@ -181,6 +265,51 @@ export async function solve(
                 };
               }
             }
+          }
+
+          // === Phase 1B: Auto-inject defaults on POST /employee ===
+          if (
+            method === "POST" &&
+            /\/employee\b/.test(path) &&
+            !path.includes("/employment") &&
+            !path.includes("/entitlement") &&
+            body
+          ) {
+            applyEmployeeDefaults(body as Record<string, unknown>);
+          }
+
+          // === Phase 1C: Auto-inject vatType on POST /product ===
+          if (method === "POST" && /\/product\b/.test(path) && body) {
+            applyProductDefaults(body as Record<string, unknown>);
+          }
+
+          // === Phase 1D: Auto-fill PUT /ledger/account ===
+          if (method === "PUT" && path.includes("/ledger/account") && !path.includes("/:") && body) {
+            const b = body as Record<string, unknown>;
+            if (!b.bankAccountNumber) b.bankAccountNumber = "86011117947";
+            if (!b.id || !b.version) {
+              const match = path.match(/\/ledger\/account\/(\d+)/);
+              if (match) {
+                const getResult = await client.get(
+                  `/ledger/account/${match[1]}`,
+                  { fields: "id,version,name,bankAccountNumber" },
+                );
+                if (getResult.ok) {
+                  const val = (getResult.data as Record<string, unknown>)
+                    ?.value as Record<string, unknown> | undefined;
+                  if (val) {
+                    if (!b.id) b.id = val.id;
+                    if (!b.version) b.version = val.version;
+                    if (!b.name) b.name = val.name;
+                  }
+                }
+              }
+            }
+          }
+
+          // === Phase 1E: Auto-inject date ranges on GET ===
+          if (method === "GET") {
+            params = applyDateRangeDefaults(path, params);
           }
 
           let callResult: TxResult;
@@ -249,6 +378,7 @@ export async function solve(
   logSolve({
     timestamp: new Date().toISOString(),
     model: MODEL_ID,
+    taskType,
     prompt: request.prompt,
     filesCount: request.files.length,
     steps: result.steps.length,

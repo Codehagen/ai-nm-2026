@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-03-20T20:05:28.353Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "customer",
+  "prompt": "Opprett en kunde med navn Testfirma AS, e-post post@testfirma.no og organisasjonsnummer 123456789.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 2,
+  "elapsedMs": 13766,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 401,
+      "body": {
+        "name": "Testfirma AS",
+        "email": "post@testfirma.no",
+        "isCustomer": true,
+        "organizationNumber": "123456789"
+      },
+      "errorMessage": "Unauthorized"
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 401,
+      "body": {
+        "email": "post@testfirma.no",
+        "organizationNumber": "123456789",
+        "name": "Testfirma AS",
+        "isCustomer": true
+      },
+      "errorMessage": "Unauthorized"
+    }
+  ]
+}

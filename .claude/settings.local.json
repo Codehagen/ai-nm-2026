@@ -100,7 +100,27 @@
       "Bash(rm -f /Users/walgermo/Utvikling/ai-nm-2026/tasks/norgesgruppen/submission.zip)",
       "Bash(zip -r /Users/walgermo/Utvikling/ai-nm-2026/tasks/norgesgruppen/submission.zip . -x \".*\" \"__MACOSX/*\")",
       "Bash(__NEW_LINE_c435b8b4bf2ba7cf__ gcloud:*)",
-      "Bash(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -i ~/.ssh/google_compute_engine root@34.122.21.63 \"tail -12 /tmp/classifier.log 2>/dev/null; ps aux | grep python3 | grep -v grep | wc -l\")"
+      "Bash(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -i ~/.ssh/google_compute_engine root@34.122.21.63 \"tail -12 /tmp/classifier.log 2>/dev/null; ps aux | grep python3 | grep -v grep | wc -l\")",
+      "Bash(ssh:*)",
+      "Bash(python test_local.py --zip submission.zip --data data/yolo-3way)",
+      "Bash(grep -v '^$')",
+      "Bash(while read:*)",
+      "Bash(do if:*)",
+      "Bash(then ls:*)",
+      "Bash(grep -l \"\"ok\"\":false /Users/walgermo/Utvikling/ai-nm-2026/tasks/1/logs/details/*.json)",
+      "Read(//private/tmp/**)",
+      "Bash(rm -rf _twostage)",
+      "Bash(mkdir _twostage)",
+      "Bash(python test_local.py --zip submission_twostage.zip --data data/yolo-3way)",
+      "Bash(rm -f /Users/walgermo/Utvikling/ai-nm-2026/tasks/norgesgruppen/submission_twostage.zip)",
+      "Bash(zip -r /Users/walgermo/Utvikling/ai-nm-2026/tasks/norgesgruppen/submission_twostage.zip run.py best.pt classifier.pt)",
+      "Bash(python test_local.py --zip submission_twostage.zip --quick)",
+      "Bash(cd:*)",
+      "Bash(npx vitest:*)",
+      "Bash(npx tsc:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:9053/health)",
+      "Bash(curl:*)",
+      "Bash(log show:*)"
     ]
   }
 }
