@@ -940,7 +940,7 @@ def build_prediction(
                     if obs_cls[c] < min_obs[c]:
                         cls_strength[c] = 0.0
                 adj = 1.0 + cls_strength * (ratio - 1.0)
-                adj = np.clip(adj, 0.85, 1.20)  # hard safety clamp
+                adj = np.clip(adj, 0.80, 1.25)  # optimized safety clamp
                 for y in range(h):
                     for x in range(w):
                         if initial_grid[y][x] in {10, 5}:
