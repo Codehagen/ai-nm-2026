@@ -34,3 +34,5 @@ b92d8a7	92.835419	0.0	7	keep	recalibrate settlement priors with R1+R2 pooled	-
 9fba42d	93.101200	0.0	12	keep	add dist_port feature (23 features total)	-
 reverted	93.087600	0.0	3	discard	add n_ports global feature	no improvement
 bb88a9b	93.098082	0.0	-28	keep	remove redundant adj_settlement boosts (simplification)	-
+reverted	93.076600	0.0	20	discard	add ocean_r3/plains_r3 features	redundant with dist_ocean
+1179241	93.739716	0.0	36	keep	terrain-specific XGBoost (plains/forest/settlement specialists)	-

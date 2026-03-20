@@ -189,12 +189,15 @@ def gbt_predict(
     initial_grid: list[list[int]],
     settlements: list,
 ) -> Optional[np.ndarray]:
-    """Generate predictions using the pre-trained GBT ensemble.
+    """Generate predictions using pre-trained terrain-specific GBT ensembles.
+
+    Uses separate models for plains, forests, and settlements — specialist
+    models capture terrain-specific dynamics better than a single model.
 
     Returns H×W×6 tensor, or None if models not available.
     """
-    models = load_gbt_models()
-    if models is None:
+    models_dict = load_gbt_models()
+    if models_dict is None:
         return None
 
     h = len(initial_grid)
@@ -213,14 +216,37 @@ def gbt_predict(
             elif initial_grid[y][x] == 5:
                 tensor[y, x] = [0, 0, 0, 0, 0, 1]
 
-    # GBT predictions for dynamic cells
-    gbt_flat = np.zeros((len(coords), NUM_CLASSES))
-    for cls in range(NUM_CLASSES):
-        gbt_flat[:, cls] = models[cls].predict(features)
+    # Terrain-specific predictions
+    if isinstance(models_dict, dict):
+        # New format: terrain-specific models
+        for i, (y, x) in enumerate(coords):
+            code = initial_grid[y][x]
+            if code in {11, 0}:
+                ttype = "plains"
+            elif code == 4:
+                ttype = "forest"
+            elif code in {1, 2}:
+                ttype = "settl"
+            else:
+                ttype = "plains"  # fallback
 
-    for i, (y, x) in enumerate(coords):
-        tensor[y, x] = np.maximum(gbt_flat[i], PROB_FLOOR)
-        tensor[y, x] /= tensor[y, x].sum()
+            models = models_dict.get(ttype)
+            if models is None:
+                continue
+
+            pred_v = np.zeros(NUM_CLASSES)
+            for cls in range(NUM_CLASSES):
+                pred_v[cls] = models[cls].predict(features[i:i + 1])[0]
+            tensor[y, x] = np.maximum(pred_v, PROB_FLOOR)
+            tensor[y, x] /= tensor[y, x].sum()
+    else:
+        # Legacy format: single model for all cells
+        gbt_flat = np.zeros((len(coords), NUM_CLASSES))
+        for cls in range(NUM_CLASSES):
+            gbt_flat[:, cls] = models_dict[cls].predict(features)
+        for i, (y, x) in enumerate(coords):
+            tensor[y, x] = np.maximum(gbt_flat[i], PROB_FLOOR)
+            tensor[y, x] /= tensor[y, x].sum()
 
     return tensor
 
