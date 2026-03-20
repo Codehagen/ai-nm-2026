@@ -245,7 +245,7 @@ def evaluate_loro():
                                 strengths[c] = 0.0
                         adj = 1.0 + strengths * (ratio - 1.0)
                         # Per-class clamp: wider for settlement (handles extreme rounds)
-                        adj_min = np.array([0.80, 0.60, 1.00, 1.00, 0.80, 1.00])
+                        adj_min = np.array([0.80, 0.50, 1.00, 1.00, 0.80, 1.00])
                         adj_max = np.array([1.25, 1.30, 1.00, 1.00, 1.25, 1.00])
                         adj = np.clip(adj, adj_min, adj_max)
                         for y in range(h):
