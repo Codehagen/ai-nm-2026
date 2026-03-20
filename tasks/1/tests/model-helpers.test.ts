@@ -486,6 +486,41 @@ describe("classifyTask", () => {
     expect(classifyTask("Opprett ein tilsett med namn Håkon Eide")).toBe("employee");
   });
 
+  // --- Regression: email masking prevents false positives
+  it("does not trigger supplier-invoice when 'faktura' is only in an email address", () => {
+    expect(classifyTask("Enregistrez le fournisseur Océan SARL (nº org. 912345678). E-mail: faktura@oceansarl.no")).toBe("supplier");
+  });
+
+  it("does not trigger supplier-invoice for supplier registration with faktura@ email", () => {
+    expect(classifyTask("Registrer leverandøren Nordlys AS. E-post: faktura@nordlys.no, org.nr 887766554")).toBe("supplier");
+  });
+
+  // --- Regression: word-boundary matching for short tokens
+  it("does not trigger travel-expense-full for 'format' containing 'mat'", () => {
+    expect(classifyTask("Create a travel expense report. Please format the title correctly.")).not.toBe("travel-expense-full");
+  });
+
+  it("does not trigger travel-expense-full for 'training' containing 'train'", () => {
+    expect(classifyTask("Register a travel expense for the training seminar in Bergen")).not.toBe("travel-expense-full");
+  });
+
+  it("does not trigger travel-expense-full for 'together' containing 'tog'", () => {
+    expect(classifyTask("Create a travel expense. We traveled together to the conference.")).not.toBe("travel-expense-full");
+  });
+
+  // --- Supplier registration (new task type)
+  it("classifies pure supplier registration (nb)", () => {
+    expect(classifyTask("Registrer leverandøren Fjellservice AS med org.nr 887766554")).toBe("supplier");
+  });
+
+  it("classifies pure supplier registration (en)", () => {
+    expect(classifyTask("Register the supplier Mountain Services Ltd with org number 887766554")).toBe("supplier");
+  });
+
+  it("classifies pure supplier registration (fr)", () => {
+    expect(classifyTask("Enregistrez le fournisseur Océan SARL avec numéro d'organisation 912345678")).toBe("supplier");
+  });
+
   // Edge cases
   it("returns unknown for unrecognizable prompts", () => {
     expect(classifyTask("Hello, how are you?")).toBe("unknown");
@@ -585,6 +620,20 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("supplierInvoice");
     expect(prompt).toContain("sendToLedger");
   });
+
+  it("includes supplier recipe for supplier task", () => {
+    const prompt = buildSystemPrompt("supplier");
+    expect(prompt).toContain("POST /supplier");
+    expect(prompt).toContain("organizationNumber");
+  });
+
+  it("includes invoice recipe in project task for milestone invoicing", () => {
+    const prompt = buildSystemPrompt("project");
+    expect(prompt).toContain("POST /project");
+    expect(prompt).toContain("POST /invoice");
+    expect(prompt).toContain("POST /order");
+    expect(prompt).toContain("fixedprice");
+  });
 });
 
 // ─── Classifier validates against all benchmark prompts ──────────────────
@@ -635,9 +684,7 @@ describe("classifyTask against benchmark prompts", () => {
       }
     }
 
-    if (misclassified.length > 0) {
-      // Allow up to 3 misclassifications (they fall back to monolith safely)
-      expect(misclassified.length).toBeLessThanOrEqual(3);
-    }
+    // Zero tolerance — all benchmark prompts must classify correctly
+    expect(misclassified).toEqual([]);
   });
 });

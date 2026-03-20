@@ -1,9 +1,9 @@
 # VM Fleet Overview — NorgesGruppen Autoresearch
 
-**Last updated:** 2026-03-20 15:15 UTC
+**Last updated:** 2026-03-20 22:20 UTC
 **Compute:** Sponsored (AI Championship) — free runs
-**Best competition score:** 0.9007 (val mAP50=0.7316, single model + multi-scale WBF + TTA)
-**Fleet:** 16 GPUs (5x A100 40GB + 11x L4 24GB), all on full-dataset training
+**Best competition score:** 0.9221 (single-stage, multi-scale WBF + TTA)
+**Fleet:** 17 GPUs (5x A100 40GB + 12x L4 24GB)
 
 ## Current Status
 
@@ -37,11 +37,24 @@ All 16 GPUs training YOLOv8l on full dataset (248 images, up from 199). Differen
 
 ## Competition Submissions
 
-| # | Model | Val mAP50 | Score | Date |
-|---|-------|-----------|-------|------|
-| 1 | YOLOv8m 100ep (199 imgs) | 0.53 | 0.6894 | Mar 19 |
-| 2 | YOLOv8l finetune-cos (199 imgs) | 0.7224 | 0.8966 | Mar 20 |
-| 3 | YOLOv8l SGD finetune (199 imgs) | 0.7316 | **0.9007** | Mar 20 |
+| # | Model | Val mAP50 | Score | Date | Notes |
+|---|-------|-----------|-------|------|-------|
+| 1 | YOLOv8m 100ep (199 imgs) | 0.53 | 0.6894 | Mar 19 | First baseline |
+| 2 | YOLOv8l finetune-cos (199 imgs) | 0.7224 | 0.8966 | Mar 20 | Cosine LR finetune |
+| 3 | YOLOv8l SGD finetune (199 imgs) | 0.7316 | 0.9007 | Mar 20 | SGD + cosine LR |
+| 4 | YOLOv8l full-dataset 235ep | inflated | 0.9040 | Mar 20 | Full 248 imgs |
+| 5 | YOLOv8l full-dataset 300ep (a100-6) | inflated | 0.9055 | Mar 20 | 300ep complete |
+| 6 | YOLOv8l full-dataset 300ep (a100-2) | inflated | **0.9221** | Mar 20 | **BEST** |
+| 7 | Fast two-stage (YOLO + ConvNeXt) | - | 0.8941 | Mar 20 | Classifier HURT score |
+
+## Key Lessons
+
+1. **Single-stage YOLO > Two-stage**: ConvNeXt classifier (98.8% val) actually lowered competition score by 3%
+2. **Full dataset training is the #1 improvement**: 199→248 images gave biggest competition score gains
+3. **Multi-scale WBF + TTA matters**: The 3-pass inference (960+1280+1280TTA) is critical
+4. **Val mAP50 is inflated on full-dataset**: Val images are in training set, can't trust val_metric
+5. **More epochs helps but plateaus**: 200→300ep gave diminishing returns
+6. **Classifier trained on same crops as YOLO**: It can't improve what YOLO already knows — needs truly new signal (embedding fallback, shelf context)
 
 ## Key Findings
 

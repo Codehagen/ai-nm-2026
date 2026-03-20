@@ -124,7 +124,9 @@
       "Bash(rm -rf _fast2s)",
       "Bash(mkdir _fast2s)",
       "Bash(python test_local.py --zip submission_fast2stage.zip --quick)",
-      "Bash(python test_local.py --zip submission_fast2stage.zip --data data/yolo-3way)"
+      "Bash(python test_local.py --zip submission_fast2stage.zip --data data/yolo-3way)",
+      "Bash(jq -r \"[.taskType, .prompt, \\([.toolCallDetails[].path] | join\\(\"\"|\"\"\\)\\)] | join\\(\"\"|||\"\"\\)\")",
+      "Bash(npx tsx:*)"
     ]
   }
 }

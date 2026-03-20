@@ -78,7 +78,8 @@ const RECIPE_EMPLOYEE = `## Creating an Employee (TESTED RECIPE)
 const RECIPE_EMPLOYEE_ADMIN = `## Employee + Admin Entitlements (TESTED RECIPE)
 \`\`\`
 1. POST /department  {"name": "Avdeling", "departmentNumber": "1"}  → dept id
-2. POST /employee    {"firstName": "X", "lastName": "Y", "email": "x@y.com", "userType": "STANDARD", "department": {"id": <dept_id>}}  → emp id
+2. POST /employee    {"firstName": "X", "lastName": "Y", "email": "x@y.com", "userType": "EXTENDED", "department": {"id": <dept_id>}}  → emp id
+   NOTE: Use "EXTENDED" (not "STANDARD") so the employee can receive full entitlements.
 3. PUT /employee/entitlement/:grantEntitlementsByTemplate
    params: { "employeeId": "<emp_id>", "template": "ALL_PRIVILEGES" }
    body: {} (empty)
@@ -219,7 +220,7 @@ const RECIPE_PROJECT = `## Creating a Project (TESTED RECIPE)
 \`\`\`
 CRITICAL: Use the ADMIN employee from step 1 as projectManager — NOT the newly created employee. New employees lack project manager permissions. The named employee is created for scoring only.
 - \`startDate\` is REQUIRED. Always include it.
-- If the task sets a fixed price: after creating the project, PUT /project/{id} with {"id": <id>, "version": <version>, "fixedPrice": <amount>} (camelCase "fixedPrice", not "fixedprice").
+- If the task sets a fixed price: after creating the project, PUT /project/{id} with {"id": <id>, "version": <version>, "isFixedPrice": true, "fixedprice": <amount>}. CRITICAL: the field is \`fixedprice\` (all lowercase) — NOT \`fixedPrice\` (camelCase). Using camelCase = 422 "Feltet eksisterer ikke".
 - ALWAYS create a new project with POST — do NOT reuse an existing one.`;
 
 const RECIPE_SALARY = `## Salary / Payroll (TESTED RECIPE)
@@ -248,6 +249,20 @@ const RECIPE_SALARY = `## Salary / Payroll (TESTED RECIPE)
 - Employment MUST exist before creating salary specifications.
 - Division is REQUIRED on the employment.
 - IGNORE any hints about "manual vouchers" or "alternative methods" in the prompt — ALWAYS use the salary/specification API. The salary API works.`;
+
+const RECIPE_SUPPLIER = `## Creating a Supplier
+POST /supplier. Required: name. The server auto-sets \`isSupplier: true\`.
+\`\`\`json
+{
+  "name": "Supplier Name",
+  "organizationNumber": "987654321",
+  "email": "post@supplier.no",
+  "phoneNumber": "12345678"
+}
+\`\`\`
+- If the prompt includes an organization number, set \`organizationNumber\`.
+- If the prompt includes an address, include as \`postalAddress\` (NOT \`address\`).
+- If POST returns 422 (duplicate), GET /supplier?organizationNumber=<org_nr>&fields=id,name or GET /supplier?email=<email>&fields=id,name to find the existing one.`;
 
 const RECIPE_SUPPLIER_INVOICE = `## Supplier Invoice (TESTED RECIPE)
 \`\`\`
@@ -386,6 +401,8 @@ Fix ALL issues, then retry ONCE. Common codes: 400 (malformed), 404 (not found),
 Some tasks include PDF/image attachments. Extract ALL relevant data (names, amounts, dates, currencies, line items, org numbers) and use it for the correct API calls.`;
 
 // ─── TASK TYPE → RECIPE MAPPING ─────────────────────────────────────────
+// NOTE: Adding a new TaskType requires a matching entry here.
+// Missing entries fall back to the full monolith prompt.
 
 const TASK_RECIPES: Record<Exclude<TaskType, "unknown">, string[]> = {
   customer: [RECIPE_CUSTOMER],
@@ -397,11 +414,12 @@ const TASK_RECIPES: Record<Exclude<TaskType, "unknown">, string[]> = {
   "invoice-payment": [RECIPE_CUSTOMER, RECIPE_PRODUCT, RECIPE_INVOICE, RECIPE_PROJECT],
   "invoice-send": [RECIPE_CUSTOMER, RECIPE_PRODUCT, RECIPE_INVOICE],
   "credit-note": [RECIPE_CUSTOMER, RECIPE_PRODUCT, RECIPE_CREDIT_NOTE, RECIPE_INVOICE],
-  project: [RECIPE_EMPLOYEE, RECIPE_CUSTOMER, RECIPE_PROJECT],
+  project: [RECIPE_EMPLOYEE, RECIPE_CUSTOMER, RECIPE_PROJECT, RECIPE_PRODUCT, RECIPE_INVOICE],
   "travel-expense": [RECIPE_EMPLOYEE, RECIPE_TRAVEL_EXPENSE],
   "travel-expense-full": [RECIPE_EMPLOYEE, RECIPE_TRAVEL_EXPENSE],
   salary: [RECIPE_EMPLOYEE, RECIPE_SALARY],
   "supplier-invoice": [RECIPE_SUPPLIER_INVOICE],
+  supplier: [RECIPE_SUPPLIER],
   contact: [RECIPE_CUSTOMER, RECIPE_CONTACT],
   "delete-travel": [RECIPE_TRAVEL_EXPENSE, RECIPE_DELETE],
   "delete-voucher": [RECIPE_VOUCHER, RECIPE_DELETE],

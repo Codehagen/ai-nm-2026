@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-03-20T21:04:40.194Z",
+  "prompt": "Legen Sie einen Festpreis von 454650 NOK für das Projekt \"Digitale Transformation\" für Windkraft GmbH (Org.-Nr. 830575871) fest. Projektleiter ist Emma Schmidt (emma.schmidt@example.org). Stellen Sie dem Kunden 75 % des Festpreises als Meilensteinzahlung in Rechnung.",
+  "filesCount": 0,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 128613,
+  "status": "timeout"
+}

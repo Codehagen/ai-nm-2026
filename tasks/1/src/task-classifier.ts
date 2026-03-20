@@ -17,6 +17,7 @@ export type TaskType =
   | "travel-expense-full"
   | "salary"
   | "supplier-invoice"
+  | "supplier"
   | "contact"
   | "delete-travel"
   | "delete-voucher"
@@ -32,12 +33,18 @@ export type TaskType =
 const has = (text: string, ...patterns: string[]) =>
   patterns.some((p) => text.includes(p));
 
+/** Word-boundary match for short tokens that collide as substrings (e.g. "mat" in "format") */
+const hasWord = (text: string, ...patterns: string[]) =>
+  patterns.some((p) => new RegExp(`(?:^|[\\s,;.!?()"/])${p}(?:$|[\\s,;.!?()"/])`, "i").test(text));
+
 /**
  * Classify a Tripletex task prompt into one of ~20 task types.
  * Order matters: more specific patterns are checked first.
  */
 export function classifyTask(prompt: string): TaskType {
-  const t = prompt.toLowerCase();
+  // Strip email addresses to prevent tokens like "faktura@" from triggering rules
+  const stripped = prompt.replace(/\S+@\S+\.\S+/g, "<EMAIL>");
+  const t = stripped.toLowerCase();
 
   // --- Salary / Payroll (check early — mentions "employee" but is salary task)
   if (
@@ -75,6 +82,14 @@ export function classifyTask(prompt: string): TaskType {
       has(t, "faktura", "invoice", "factura", "fatura", "rechnung", "facture"))
   ) {
     return "supplier-invoice";
+  }
+
+  // --- Supplier registration (no invoice)
+  if (
+    has(t, "leverandør", "supplier", "proveedor", "fornecedor", "fournisseur", "lieferant") &&
+    !has(t, "faktura", "invoice", "factura", "fatura", "rechnung", "facture")
+  ) {
+    return "supplier";
   }
 
   // --- Credit note
@@ -126,20 +141,14 @@ export function classifyTask(prompt: string): TaskType {
   // --- Travel expense full (with costs/per diem)
   if (
     has(t, "reise", "travel", "viaje", "viagem", "voyage", "frais de voyage") &&
-    has(
+    (has(
       t,
       "utgift",
-      "cost",
-      "diett",
       "per diem",
       "flybillett",
       "flight",
-      "taxi",
-      "tog",
-      "train",
       "hotell",
       "hotel",
-      "mat",
       "dagsats",
       "daily rate",
       "gasto",
@@ -147,7 +156,9 @@ export function classifyTask(prompt: string): TaskType {
       "ausgabe",
       "dépense",
       "taux journalier",
-    )
+      "diett",
+    ) ||
+    hasWord(t, "cost", "taxi", "tog", "train", "mat"))
   ) {
     return "travel-expense-full";
   }
@@ -169,7 +180,7 @@ export function classifyTask(prompt: string): TaskType {
     return "travel-expense";
   }
 
-  // --- Invoice + payment
+  // --- Invoice + payment (but not when project is the primary entity)
   if (
     has(t, "faktura", "invoice", "factura", "fatura", "rechnung", "facture") &&
     has(
@@ -186,7 +197,8 @@ export function classifyTask(prompt: string): TaskType {
       "registre el pago",
       "registre o pagamento",
       "registrieren sie die zahlung",
-    )
+    ) &&
+    !has(t, "prosjekt", "project", "proyecto", "projeto", "projekt", "projet")
   ) {
     return "invoice-payment";
   }
