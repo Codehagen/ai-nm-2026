@@ -517,18 +517,18 @@ def fill_unobserved_dynamic(
             adj_forests = _count_adjacent_forests(initial_grid, y, x)
             dist = _distance_to_nearest_settlement(initial_grid, y, x, settlements)
 
-            if code == 1:  # Settlement — pooled from all 5 seeds GT
+            if code == 1:  # Settlement — R1+R2 pooled
                 if exposed_coastal:
-                    # Coastal settlements can become ports (n=11, clear signal)
-                    tensor[y, x] = [0.335, 0.370, 0.110, 0.031, 0.154, 0.000]
+                    # Coastal settlements can become ports
+                    tensor[y, x] = [0.355, 0.140, 0.328, 0.025, 0.151, 0.000]
                 elif adj_forests == 0:
-                    tensor[y, x] = [0.415, 0.356, 0.000, 0.029, 0.199, 0.000]
+                    tensor[y, x] = [0.415, 0.365, 0.000, 0.033, 0.187, 0.000]
                 elif adj_forests == 1:
-                    tensor[y, x] = [0.384, 0.403, 0.000, 0.029, 0.184, 0.000]
+                    tensor[y, x] = [0.386, 0.407, 0.000, 0.031, 0.176, 0.000]
                 elif adj_forests == 2:
-                    tensor[y, x] = [0.366, 0.419, 0.000, 0.030, 0.185, 0.000]
+                    tensor[y, x] = [0.372, 0.422, 0.000, 0.033, 0.173, 0.000]
                 else:  # 3+
-                    tensor[y, x] = [0.354, 0.438, 0.000, 0.034, 0.173, 0.000]
+                    tensor[y, x] = [0.362, 0.436, 0.000, 0.034, 0.168, 0.000]
 
             elif code == 2:  # Port — limited samples, use empirical
                 tensor[y, x] = [0.320, 0.130, 0.310, 0.020, 0.220, 0.000]
