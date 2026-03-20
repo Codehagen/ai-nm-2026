@@ -95,3 +95,12 @@ cc48576	84.440518	0.0	3	discard	XGBoost 400 trees + lr=0.05 (249s)	no improvemen
 5d70fe7	84.442242	0.0	149	discard	recalibrated tables + Layer 3 (R5=85.93 R7=66.59 but R1/R2 drop)	wash
 0c4cf8d	82.576861	0.0	4	discard	skip Layer 3 with calibrated tables	R6 drops to 74.68
 8b5f981	84.441600	0.0	1	discard	settlement XGBoost depth=5	negligible change
+---	-	-	-	-	--- R7 POST-MORTEM RESEARCH (6-fold LORO incl R7) ---	-
+safe-l7	84.252887	0.0	6	keep	safe L7: zero port/ruin + clamp [0.85,1.20] + obs gating	-
+recalib	-	0.0	45	keep	recalibrate all tables from R1-R7 GT (30 maps, 3x data)	-
+obs-l7	84.440000	0.0	0	discard	observation-aware L7 (obs region only)	100% coverage, zero diff
+ensemble	84.440000	0.0	0	discard	ensemble no-L7 + safe-L7	-0.52 avg, L7 too valuable on R4/R6
+sim-fit	47.77-71.57	0.0	0	discard	simulator with obs-fitted params	far worse than heuristic+GBT
+lgbm	84.118673	0.0	49	discard	LightGBM leaf-wise	R5 drops
+stats37	84.940000	0.0	35	keep	settlement stats as 7 XGB features (37 total): R6+3.62 R7+1.86	-
+ff19dfa	-	0.0	127	keep	PRODUCTION: stats+recalib+safeL7 combined	-
