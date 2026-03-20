@@ -51,11 +51,16 @@ def _extract_cell_features(
     w = len(initial_grid[0]) if h > 0 else 0
 
     settl_pos = []
+    port_pos = []
     for s in settlements:
         if isinstance(s, dict):
             settl_pos.append((s.get("x", 0), s.get("y", 0)))
+            if s.get("has_port"):
+                port_pos.append((s.get("x", 0), s.get("y", 0)))
         else:
             settl_pos.append((s.x, s.y))
+            if getattr(s, "has_port", False):
+                port_pos.append((s.x, s.y))
 
     features = []
     coords = []
@@ -145,6 +150,11 @@ def _extract_cell_features(
                 if 5 <= abs(y - sy) + abs(x - sx) <= 7
             )
 
+            # Distance to nearest initial port
+            dist_port = min(
+                (abs(y - py) + abs(x - px) for px, py in port_pos), default=99
+            )
+
             features.append([
                 code, dist, adj_ocean, adj_forest, adj_settl, adj_mountain,
                 int(code == 11), int(code == 4), int(code == 1), int(code == 2),
@@ -153,10 +163,11 @@ def _extract_cell_features(
                 dist_ocean, dist_mountain, forests_r2,
                 y, x,  # map position (captures fjord/border effects)
                 settlements_r3, settl_r12, settl_r57,
+                dist_port,
             ])
             coords.append((y, x))
 
-    return np.array(features) if features else np.empty((0, 22)), coords
+    return np.array(features) if features else np.empty((0, 23)), coords
 
 
 def load_gbt_models() -> Optional[list]:
