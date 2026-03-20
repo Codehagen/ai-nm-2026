@@ -1,8 +1,8 @@
 """Grid search calibration: find optimal (expansion_rate, winter_severity) per round.
 
 Two-phase search:
-  1. Coarse grid (step=0.02) with n_sims=30 to identify promising region
-  2. Fine grid (step=0.005) around the best coarse result with n_sims=50
+  1. Coarse grid (step=0.03) with n_sims=20 to identify promising region
+  2. Fine grid (step=0.01) around the best coarse result with n_sims=30
 
 Writes results to data/sim_calibration.json for use by fit_hidden_params().
 """
@@ -11,6 +11,8 @@ import json
 import os
 import sys
 import time
+
+sys.stdout.reconfigure(line_buffering=True)
 
 import numpy as np
 
@@ -43,7 +45,7 @@ def compute_obs_rates(round_id):
     for obs in observations:
         for row in obs.get("grid", []):
             for code in row:
-                if code not in {10, 5}:  # skip ocean and mountain
+                if code not in {10, 5}:
                     cls = TERRAIN_TO_CLASS.get(code, 0)
                     obs_cls[cls] += 1
                     obs_total += 1
@@ -52,15 +54,13 @@ def compute_obs_rates(round_id):
         return None, None
 
     obs_freq = obs_cls / obs_total
-    obs_settl_rate = obs_freq[1] + obs_freq[2]  # settlements + ports
+    obs_settl_rate = obs_freq[1] + obs_freq[2]
     obs_ruin_rate = obs_freq[3]
     return float(obs_settl_rate), float(obs_ruin_rate)
 
 
 def compute_gt_rates(gt):
     """Compute settlement and ruin rates from ground truth."""
-    # gt is H x W x 6 probability tensor
-    # Sum over all cells, excluding those that are mostly static
     settl_mass = gt[:, :, 1].sum() + gt[:, :, 2].sum()
     ruin_mass = gt[:, :, 3].sum()
     total_mass = gt.sum()
@@ -70,10 +70,10 @@ def compute_gt_rates(gt):
 
 
 def grid_search_round(round_num, grid, settlements, gt, er_range, ws_range, n_sims, seed=42):
-    """Run grid search for a single round. Returns (best_er, best_ws, best_score, all_results)."""
+    """Run grid search for a single round."""
     best_score = -1.0
-    best_er = er_range[0]
-    best_ws = ws_range[0]
+    best_er = float(er_range[0])
+    best_ws = float(ws_range[0])
     all_results = []
     total = len(er_range) * len(ws_range)
     done = 0
@@ -97,8 +97,8 @@ def grid_search_round(round_num, grid, settlements, gt, er_range, ws_range, n_si
                 best_er = float(er)
                 best_ws = float(ws)
 
-            if done % 20 == 0 or done == total:
-                print(f"    [{done}/{total}] best so far: er={best_er:.3f} ws={best_ws:.3f} score={best_score:.2f}")
+            if done % 10 == 0 or done == total:
+                print(f"    [{done}/{total}] best: er={best_er:.3f} ws={best_ws:.3f} score={best_score:.2f}")
 
     return best_er, best_ws, best_score, all_results
 
@@ -129,38 +129,38 @@ def main():
         print(f"  GT  rates: settl={gt_settl_rate:.4f}, ruin={gt_ruin_rate:.4f}")
 
         # Phase 1: Coarse grid search
-        print(f"\n  Phase 1: Coarse grid search (step=0.02, n_sims=30)")
+        print(f"\n  Phase 1: Coarse search (step=0.03, n_sims=20)")
         t0 = time.time()
-        er_coarse = np.arange(0.04, 0.18, 0.02)
-        ws_coarse = np.arange(0.03, 0.20, 0.02)
+        er_coarse = np.arange(0.04, 0.19, 0.03)
+        ws_coarse = np.arange(0.03, 0.21, 0.03)
         print(f"    Grid: {len(er_coarse)} x {len(ws_coarse)} = {len(er_coarse)*len(ws_coarse)} combos")
 
         best_er, best_ws, best_score, _ = grid_search_round(
             round_num, grid, settlements, gt,
-            er_coarse, ws_coarse, n_sims=30, seed=42,
+            er_coarse, ws_coarse, n_sims=20, seed=42,
         )
         t1 = time.time()
         print(f"  Phase 1 done in {t1-t0:.0f}s: er={best_er:.3f} ws={best_ws:.3f} score={best_score:.2f}")
 
         # Phase 2: Fine grid search around best coarse result
-        print(f"\n  Phase 2: Fine grid search (step=0.005, n_sims=50)")
-        er_lo = max(0.02, best_er - 0.02)
-        er_hi = min(0.20, best_er + 0.025)
-        ws_lo = max(0.01, best_ws - 0.02)
-        ws_hi = min(0.25, best_ws + 0.025)
-        er_fine = np.arange(er_lo, er_hi, 0.005)
-        ws_fine = np.arange(ws_lo, ws_hi, 0.005)
+        print(f"\n  Phase 2: Fine search (step=0.01, n_sims=30)")
+        er_lo = max(0.02, best_er - 0.03)
+        er_hi = min(0.22, best_er + 0.035)
+        ws_lo = max(0.01, best_ws - 0.03)
+        ws_hi = min(0.25, best_ws + 0.035)
+        er_fine = np.arange(er_lo, er_hi, 0.01)
+        ws_fine = np.arange(ws_lo, ws_hi, 0.01)
         print(f"    Grid: {len(er_fine)} x {len(ws_fine)} = {len(er_fine)*len(ws_fine)} combos")
         print(f"    ER range: [{er_lo:.3f}, {er_hi:.3f}), WS range: [{ws_lo:.3f}, {ws_hi:.3f})")
 
         best_er2, best_ws2, best_score2, _ = grid_search_round(
             round_num, grid, settlements, gt,
-            er_fine, ws_fine, n_sims=50, seed=42,
+            er_fine, ws_fine, n_sims=30, seed=42,
         )
         t2 = time.time()
         print(f"  Phase 2 done in {t2-t1:.0f}s: er={best_er2:.3f} ws={best_ws2:.3f} score={best_score2:.2f}")
 
-        # Use fine result if better, else coarse
+        # Use fine result if better
         if best_score2 >= best_score:
             final_er, final_ws, final_score = best_er2, best_ws2, best_score2
         else:
