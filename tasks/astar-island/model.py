@@ -875,9 +875,12 @@ def build_prediction(
             if m_count > 0:
                 model_avg /= m_count
                 ratio = obs_freq / np.maximum(model_avg, 1e-6)
-                # Full correction strength (LOO validated: avg=92.24 vs 91.29 at current)
-                # Maximally adapts to each round's hidden expansion rate
-                cls_strength = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 0.0])
+                # Per-class correction strengths (4-round LOO cross-validated):
+                # Empty/Forest >1.0: high-volume classes carry strong expansion signal
+                # Settlement 0.90: key indicator but slight damping avoids overshoot
+                # Port 0.44, Ruin 0.61: rare classes, moderate correction
+                # Mountain 0.0: static, never changes
+                cls_strength = np.array([1.38, 0.90, 0.44, 0.61, 1.16, 0.0])
                 adj = 1.0 + cls_strength * (ratio - 1.0)
                 for y in range(h):
                     for x in range(w):
