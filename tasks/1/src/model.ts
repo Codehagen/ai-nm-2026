@@ -1,18 +1,16 @@
 import { generateText, tool, stepCountIs } from "ai";
-import { createGateway } from "@ai-sdk/gateway";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
 import type { SolveRequest, SolveResponse } from "./dtos.js";
 import { TripletexClient, type TxResult } from "./tripletex.js";
 import { SYSTEM_PROMPT } from "./system-prompt.js";
 import { logSolve } from "./logger.js";
 
-const gateway = createGateway({
-  apiKey: process.env.AI_GATEWAY_API_KEY,
-  baseURL:
-    process.env.AI_GATEWAY_BASE_URL || "https://ai-gateway.vercel.sh/v1/ai",
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_API_KEY,
 });
 
-const MODEL_ID = process.env.MODEL_ID || "anthropic/claude-opus-4-6";
+const MODEL_ID = process.env.MODEL_ID || "gemini-3.1-pro-preview";
 
 /** Oslo timezone date (avoids UTC midnight drift) */
 function getOsloDate(): string {
@@ -73,6 +71,11 @@ function getErrorHint(
     return "The email already exists. GET /employee?email=<the email> to find the existing employee and use their ID instead of creating a new one.";
   }
 
+  // Product number already in use
+  if (vm?.some((v) => v.field === "number" && v.message.includes("i bruk"))) {
+    return "The product number already exists. GET /product?number=<the number>&fields=id,name to find the existing product and use its ID.";
+  }
+
   return null;
 }
 
@@ -125,7 +128,7 @@ export async function solve(
   const today = getOsloDate();
 
   const result = await generateText({
-    model: gateway(MODEL_ID),
+    model: google(MODEL_ID),
     temperature: 0, // Deterministic: reduces random errors on tool calls
     system: SYSTEM_PROMPT + `\n\nToday's date: ${today}`,
     messages: [{ role: "user", content }],
