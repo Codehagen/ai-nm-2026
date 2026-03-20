@@ -247,15 +247,43 @@ def load_gbt_models() -> Optional[list]:
     return _gbt_models
 
 
+def compute_obs_stats(observations: list[dict]) -> np.ndarray:
+    """Compute 7 round-level settlement stats from observations."""
+    pops, foods, wealths, defenses = [], [], [], []
+    factions = set()
+    alive_count, total_count, port_count = 0, 0, 0
+    for obs in observations:
+        for s in obs.get("settlements", []):
+            total_count += 1
+            if s.get("alive", True):
+                alive_count += 1
+                pops.append(s.get("population", 0))
+                foods.append(s.get("food", 0))
+                wealths.append(s.get("wealth", 0))
+                defenses.append(s.get("defense", 0))
+                factions.add(s.get("owner_id", -1))
+                if s.get("has_port"):
+                    port_count += 1
+    n_queries = max(len(observations), 1)
+    return np.array([
+        np.mean(pops) if pops else 0.0,
+        np.mean(foods) if foods else 0.0,
+        np.mean(wealths) if wealths else 0.0,
+        np.mean(defenses) if defenses else 0.0,
+        alive_count / max(total_count, 1),
+        len(factions) / max(n_queries, 1),
+        port_count / max(alive_count, 1),
+    ])
+
+
 def gbt_predict(
     initial_grid: list[list[int]],
     settlements: list,
+    obs_stats: Optional[np.ndarray] = None,
 ) -> Optional[np.ndarray]:
     """Generate predictions using pre-trained terrain-specific GBT ensembles.
 
-    Uses separate models for plains, forests, and settlements — specialist
-    models capture terrain-specific dynamics better than a single model.
-
+    If obs_stats (7 values) is provided, appends to each cell's features (37 total).
     Returns H×W×6 tensor, or None if models not available.
     """
     models_dict = load_gbt_models()
@@ -268,6 +296,11 @@ def gbt_predict(
 
     if len(features) == 0:
         return None
+
+    # Append round-level observation stats to each cell's features
+    if obs_stats is not None and len(obs_stats) == 7:
+        stats_tile = np.tile(obs_stats, (len(features), 1))
+        features = np.hstack([features, stats_tile])
 
     tensor = np.zeros((h, w, NUM_CLASSES))
     # Static cells
@@ -313,73 +346,63 @@ def gbt_predict(
     return tensor
 
 
-# Empirical transition probabilities computed from Round 1 observations
-# (50 queries across 5 seeds, pooled). Format: init_code → [P(class 0..5)]
-# Calibrated from Round 1 GROUND TRUTH (not stochastic observations)
+# Empirical transitions pooled from R1+R2+R4+R5+R6+R7 GT (30 maps)
 EMPIRICAL_TRANSITIONS = {
-    1:  [0.3773, 0.4099, 0.0064, 0.0327, 0.1737, 0.0000],  # Settlement (n=430, R1+R2)
-    2:  [0.3764, 0.1208, 0.2997, 0.0294, 0.1736, 0.0000],  # Port (n=18)
-    4:  [0.0890, 0.1770, 0.0135, 0.0154, 0.7051, 0.0000],  # Forest (n=3338)
+    1:  [0.4045, 0.3699, 0.0047, 0.0317, 0.1893, 0.0000],  # Settlement (n=1377)
+    2:  [0.4287, 0.1126, 0.2214, 0.0268, 0.2104, 0.0000],  # Port (n=60)
+    4:  [0.0898, 0.1653, 0.0116, 0.0166, 0.7168, 0.0000],  # Forest (n=10168)
     5:  [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 1.0000],  # Mountain
     10: [1.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],  # Ocean
-    11: [0.7559, 0.1729, 0.0147, 0.0155, 0.0410, 0.0000],  # Plains (n=9812)
+    11: [0.7755, 0.1569, 0.0120, 0.0158, 0.0397, 0.0000],  # Plains (n=29223)
 }
 
-# Distance-based transition for INLAND Plains (code 11, not coastal)
-# Calibrated from Round 1 GROUND TRUTH — all 5 seeds pooled
-# KEY: Inland cells NEVER become ports (P(port) = 0.0)
+# Distance tables calibrated from R1-R7 GT pooled (30 maps, 3x data)
 PLAINS_INLAND_BY_DISTANCE = {
-    1:  [0.700, 0.232, 0.001, 0.018, 0.050, 0.000],  # n=1199 (R1+R2)
-    2:  [0.707, 0.221, 0.000, 0.019, 0.052, 0.000],  # n=1918
-    3:  [0.718, 0.208, 0.001, 0.019, 0.054, 0.000],  # n=1876
-    4:  [0.738, 0.196, 0.001, 0.017, 0.048, 0.000],  # n=1357
-    5:  [0.807, 0.151, 0.000, 0.014, 0.028, 0.000],  # n=851
-    6:  [0.862, 0.111, 0.000, 0.010, 0.017, 0.000],  # n=462
-    7:  [0.908, 0.076, 0.000, 0.006, 0.009, 0.000],  # n=280
-    8:  [0.966, 0.029, 0.000, 0.002, 0.003, 0.000],  # n=341
-    99: [0.990, 0.008, 0.000, 0.001, 0.001, 0.000],
+    1:  [0.660, 0.256, 0.001, 0.022, 0.062, 0.000],  # n=3804
+    2:  [0.705, 0.219, 0.000, 0.020, 0.055, 0.000],  # n=6012
+    3:  [0.769, 0.171, 0.000, 0.017, 0.043, 0.000],  # n=5824
+    4:  [0.810, 0.137, 0.000, 0.015, 0.038, 0.000],  # n=4197
+    5:  [0.869, 0.100, 0.000, 0.011, 0.020, 0.000],  # n=2460
+    6:  [0.892, 0.084, 0.000, 0.009, 0.015, 0.000],  # n=1233
+    7:  [0.925, 0.060, 0.000, 0.006, 0.009, 0.000],  # n=609
+    8:  [0.948, 0.045, 0.000, 0.003, 0.004, 0.000],  # n=300
+    99: [0.974, 0.023, 0.000, 0.001, 0.002, 0.000],  # n=276
 }
 
-# Distance-based transition for COASTAL Plains (code 11, adjacent to ocean)
-# KEY: Coastal cells CAN become ports — significant P(port) near settlements
 PLAINS_COASTAL_BY_DISTANCE = {
-    1:  [0.688, 0.114, 0.143, 0.015, 0.039, 0.000],  # n=85 (R1+R2)
-    2:  [0.689, 0.110, 0.145, 0.016, 0.039, 0.000],  # n=187
-    3:  [0.710, 0.105, 0.132, 0.015, 0.037, 0.000],  # n=263
-    4:  [0.739, 0.092, 0.118, 0.013, 0.038, 0.000],  # n=261
-    5:  [0.812, 0.080, 0.074, 0.009, 0.025, 0.000],  # n=231
-    6:  [0.857, 0.068, 0.052, 0.009, 0.014, 0.000],  # n=187
-    7:  [0.881, 0.058, 0.041, 0.007, 0.012, 0.000],  # n=120
-    8:  [0.952, 0.027, 0.015, 0.002, 0.004, 0.000],  # n=194
-    99: [0.985, 0.008, 0.005, 0.001, 0.001, 0.000],
+    1:  [0.656, 0.124, 0.149, 0.019, 0.053, 0.000],  # n=274
+    2:  [0.693, 0.102, 0.144, 0.019, 0.043, 0.000],  # n=613
+    3:  [0.765, 0.096, 0.094, 0.014, 0.031, 0.000],  # n=844
+    4:  [0.814, 0.068, 0.078, 0.011, 0.029, 0.000],  # n=838
+    5:  [0.870, 0.058, 0.048, 0.008, 0.016, 0.000],  # n=686
+    6:  [0.893, 0.050, 0.039, 0.007, 0.011, 0.000],  # n=505
+    7:  [0.908, 0.045, 0.031, 0.007, 0.010, 0.000],  # n=314
+    8:  [0.940, 0.033, 0.020, 0.003, 0.004, 0.000],  # n=188
+    99: [0.974, 0.016, 0.007, 0.002, 0.001, 0.000],  # n=246
 }
 
-# Distance-based transition for INLAND Forests (code 4, not coastal)
-# Forests near settlements get colonized; far forests stay forest
 FOREST_INLAND_BY_DISTANCE = {
-    1:  [0.113, 0.239, 0.001, 0.019, 0.629, 0.000],  # n=408 (R1+R2)
-    2:  [0.115, 0.226, 0.001, 0.019, 0.639, 0.000],  # n=670
-    3:  [0.114, 0.207, 0.000, 0.019, 0.660, 0.000],  # n=628
-    4:  [0.103, 0.199, 0.000, 0.017, 0.681, 0.000],  # n=488
-    5:  [0.063, 0.152, 0.001, 0.012, 0.773, 0.000],  # n=284
-    6:  [0.038, 0.118, 0.000, 0.010, 0.834, 0.000],  # n=180
-    7:  [0.017, 0.077, 0.000, 0.006, 0.899, 0.000],  # n=85
-    8:  [0.009, 0.036, 0.000, 0.003, 0.951, 0.000],  # n=147
-    99: [0.005, 0.015, 0.000, 0.001, 0.979, 0.000],
+    1:  [0.143, 0.267, 0.001, 0.023, 0.567, 0.000],  # n=1343
+    2:  [0.121, 0.229, 0.001, 0.021, 0.627, 0.000],  # n=2197
+    3:  [0.094, 0.173, 0.000, 0.018, 0.715, 0.000],  # n=2064
+    4:  [0.083, 0.140, 0.000, 0.015, 0.761, 0.000],  # n=1498
+    5:  [0.046, 0.105, 0.000, 0.011, 0.837, 0.000],  # n=817
+    6:  [0.032, 0.088, 0.000, 0.009, 0.871, 0.000],  # n=423
+    7:  [0.022, 0.072, 0.000, 0.007, 0.900, 0.000],  # n=199
+    8:  [0.013, 0.051, 0.000, 0.004, 0.932, 0.000],  # n=122
+    99: [0.003, 0.023, 0.000, 0.002, 0.971, 0.000],  # n=102
 }
 
-# Distance-based transition for COASTAL Forests (code 4, adjacent to ocean)
-# Coastal forests can become ports
 FOREST_COASTAL_BY_DISTANCE = {
-    1:  [0.083, 0.122, 0.165, 0.014, 0.617, 0.000],  # n=30 (R1+R2)
-    2:  [0.076, 0.122, 0.158, 0.015, 0.630, 0.000],  # n=47
-    3:  [0.079, 0.113, 0.143, 0.016, 0.649, 0.000],  # n=79
-    4:  [0.086, 0.094, 0.120, 0.014, 0.685, 0.000],  # n=76
-    5:  [0.048, 0.087, 0.082, 0.009, 0.774, 0.000],  # n=77
-    6:  [0.021, 0.069, 0.053, 0.005, 0.852, 0.000],  # n=37
-    7:  [0.020, 0.054, 0.046, 0.005, 0.875, 0.000],  # n=41
-    8:  [0.008, 0.022, 0.013, 0.003, 0.954, 0.000],  # n=61
-    99: [0.004, 0.010, 0.006, 0.002, 0.978, 0.000],
+    1:  [0.128, 0.149, 0.175, 0.022, 0.527, 0.000],  # n=95
+    2:  [0.098, 0.111, 0.160, 0.020, 0.612, 0.000],  # n=199
+    3:  [0.068, 0.098, 0.096, 0.014, 0.723, 0.000],  # n=270
+    4:  [0.064, 0.065, 0.076, 0.012, 0.783, 0.000],  # n=253
+    5:  [0.033, 0.060, 0.054, 0.009, 0.844, 0.000],  # n=189
+    6:  [0.021, 0.045, 0.035, 0.006, 0.892, 0.000],  # n=133
+    7:  [0.017, 0.041, 0.032, 0.005, 0.905, 0.000],  # n=120
+    8:  [0.015, 0.028, 0.019, 0.004, 0.934, 0.000],  # n=58
+    99: [0.003, 0.014, 0.006, 0.001, 0.976, 0.000],  # n=86
 }
 
 
@@ -856,7 +879,9 @@ def build_prediction(
     # tensor = apply_calibration(tensor, initial_grid, calibration)
 
     # Layer 6: GBT blend — captures feature interactions the tables miss
-    gbt_pred = gbt_predict(initial_grid, settlements)
+    # Pass observation stats so XGBoost can adapt to round's hidden parameters
+    obs_stats = compute_obs_stats(all_observations) if all_observations else None
+    gbt_pred = gbt_predict(initial_grid, settlements, obs_stats=obs_stats)
     if gbt_pred is not None:
         tensor = (1 - GBT_BLEND_WEIGHT) * tensor + GBT_BLEND_WEIGHT * gbt_pred
 
