@@ -110,3 +110,4 @@ f809175	84.565888	0.0	1	keep	widen L7 settlement lower clamp 0.50 (R8=86.47 +2.5
 eb62f29	86.569806	0.0	10	keep	weight XGB training by round weight (+0.038)
 a60eac7	86.659267	0.0	1	keep	GBT blend p=0.35 f=0.45 s=0.55 (+0.089)
 f2649f6	86.738029	0.0	1	keep	GBT blend p=0.40 f=0.50 s=0.60 (+0.079)
+3d0a2b7	86.806097	0.0	1	keep	GBT blend p=0.45 f=0.55 s=0.65 (+0.068)
