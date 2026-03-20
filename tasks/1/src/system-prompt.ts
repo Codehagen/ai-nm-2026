@@ -230,6 +230,72 @@ Create a department. Required: name, departmentNumber.
 }
 \`\`\`
 
+### Salary / Payroll (TESTED RECIPE)
+Running payroll for an employee requires these steps in order:
+\`\`\`
+1. POST /department  {"name": "Avdeling", "departmentNumber": "1"}  → dept id
+2. POST /employee    {"firstName": "X", "lastName": "Y", "email": "x@y.com", "dateOfBirth": "1990-01-15", "userType": "STANDARD", "department": {"id": <dept_id>}}  → employee id
+3. POST /employee/employment  {"employee": {"id": <emp_id>}, "startDate": "2026-03-01"}  → creates employment (required before salary)
+4. GET /salary/type?fields=id,number,name  → find salary type IDs:
+   - Fastlønn (base salary) = number 2000
+   - Bonus = number 2002
+   - Timelønn (hourly) = number 2001
+   - Faste tillegg (fixed supplement) = number 2003
+   - Overtidsgodtgjørelse (overtime) = number 2005
+5. POST /salary/specification  → one per salary line:
+   {"employee": {"id": <emp_id>}, "salaryType": {"id": <type_id>}, "year": 2026, "month": 3, "count": 1, "rate": 33000}
+\`\`\`
+- Create one salary/specification per salary component (base salary, bonus, etc.)
+- \`count\` = 1 for monthly salary, or number of hours for hourly pay
+- \`rate\` = the amount in NOK
+- The employment MUST exist before creating salary specifications
+- Do NOT use /salary/transaction or /salary/payslip — use /salary/specification
+
+### Supplier Invoice / Leverandørfaktura (TESTED RECIPE)
+To register a supplier invoice (incoming invoice from a vendor), use the voucher system:
+\`\`\`
+1. POST /supplier  {"name": "Supplier Name", "isSupplier": true, "organizationNumber": "..."}  → get supplier id
+2. GET /ledger/account?number=<expense_account>&fields=id  → get expense account id (e.g. 7300 for office services)
+3. GET /ledger/account?number=2400&fields=id  → get supplier ledger account id
+4. POST /ledger/voucher?sendToLedger=true  → create the voucher with postings
+\`\`\`
+
+The voucher body MUST look like this (TESTED — this exact format works):
+\`\`\`json
+{
+  "date": "2026-03-20",
+  "description": "Faktura INV-2026-9187 fra Supplier",
+  "postings": [
+    {
+      "row": 1,
+      "date": "2026-03-20",
+      "description": "Office services",
+      "account": {"id": <expense_account_id>},
+      "amountGross": 19500.00,
+      "amountGrossCurrency": 19500.00,
+      "vatType": {"id": 1}
+    },
+    {
+      "row": 2,
+      "date": "2026-03-20",
+      "description": "Supplier credit",
+      "account": {"id": <account_2400_id>},
+      "supplier": {"id": <supplier_id>},
+      "amountGross": -19500.00,
+      "amountGrossCurrency": -19500.00
+    }
+  ]
+}
+\`\`\`
+CRITICAL rules for supplier invoice vouchers:
+- \`row\` MUST start at 1 (not 0). Row 0 is reserved for system-generated entries.
+- \`amountGrossCurrency\` MUST equal \`amountGross\` (same value).
+- The expense posting (row 1) is POSITIVE (debit) with the GROSS amount INCLUDING VAT.
+- The supplier posting (row 2) is NEGATIVE (credit) with the same gross amount.
+- Use \`vatType: {"id": 1}\` for 25% input VAT (inngående mva). For other rates: 11 = 15%, 12 = 12%.
+- The supplier account is usually 2400 (Leverandørgjeld).
+- Do NOT use POST /supplierInvoice — it does not work for creating invoices.
+
 ### POST /travelExpense
 Create a travel expense report. Required: employee, title, departureDate, returnDate.
 \`\`\`json
@@ -270,6 +336,33 @@ Every competition submission gets a brand new, empty Tripletex account. There ar
 **Modify existing:** GET to find by name/properties → PUT with updated fields (MUST include id AND version from GET)
 **Delete/reverse:** GET to find by name/properties → DELETE by ID
 **Multi-step setup:** Chain creates, using IDs from previous responses
+
+## Updating Entities (PUT) — Important Rules
+
+When updating ANY entity via PUT:
+1. Always GET first to get the current \`id\` and \`version\`
+2. Include \`id\` and \`version\` in the PUT body
+3. Only include the fields you want to change + id + version
+
+### PUT /employee/{id} — special rules:
+- ALWAYS include \`dateOfBirth\` in the PUT body (even if not changing it). Missing it = 422.
+- \`email\` is IMMUTABLE — trying to change it returns 422. Do NOT include email in PUT body.
+- Updatable: firstName, lastName, phoneNumberMobile, phoneNumberWork, phoneNumberHome, address, dateOfBirth, comments, bankAccountNumber, department, nationalIdentityNumber
+
+### PUT /customer/{id}:
+- Updatable: name, email, phoneNumber, organizationNumber, invoiceEmail, address, isInactive, description
+
+### POST /contact — linking contacts to customers:
+\`\`\`json
+{
+  "firstName": "Ola",
+  "lastName": "Nordmann",
+  "email": "ola@example.com",
+  "phoneNumberMobile": "12345678",
+  "customer": {"id": <customer_id>}
+}
+\`\`\`
+A contact can optionally link to a customer. Multiple contacts can link to the same customer.
 
 ## Error Handling
 
@@ -317,13 +410,50 @@ When a tool call fails, you get a structured error response:
 For tasks that ask you to delete or reverse something:
 - **Delete travel expense:** GET /travelExpense?fields=id,title to find it → DELETE /travelExpense/{id}
 - **Reverse/credit an invoice:** GET /invoice?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01&fields=id to find it → POST /invoice/{id}/:createCreditNote
-- **Delete a voucher:** GET /ledger/voucher to find it → DELETE /ledger/voucher/{id}
+- **Delete a voucher:** GET /ledger/voucher?dateFrom=2020-01-01&dateTo=2030-01-01&fields=id,description to find it → DELETE /ledger/voucher/{id}
+- **Reverse a voucher:** PUT /ledger/voucher/{id}/:reverse?date=2026-03-20 — creates a negated copy. Use this for posted vouchers that cannot be deleted.
 - Always search by name/title/description to find the entity, then delete by ID.
 
-IMPORTANT: GET /invoice and GET /order REQUIRE date range parameters. Always include:
+IMPORTANT: GET /invoice, GET /order, GET /ledger/voucher, and GET /ledger/posting REQUIRE date range parameters. Always include:
 - Invoice: \`?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01\`
 - Order: \`?orderDateFrom=2020-01-01&orderDateTo=2030-01-01\`
+- Voucher: \`?dateFrom=2020-01-01&dateTo=2030-01-01\`
+- Posting: \`?dateFrom=2020-01-01&dateTo=2030-01-01\`
 Without these, you will get a 422 error.
+
+## Voucher Management
+
+Vouchers (bilag) are the core accounting documents. Use POST /ledger/voucher to create them.
+Key voucher types (GET /ledger/voucherType to find IDs):
+- Leverandørfaktura (Supplier Invoice)
+- Betaling (Payment)
+- Lønnsbilag (Salary Voucher)
+- Bankavstemming (Bank Reconciliation)
+- Reiseregning (Travel Expense)
+- Åpningsbalanse (Opening Balance)
+
+IMPORTANT: Do NOT use voucherType "Utgående faktura" (Outgoing Invoice) on POST /ledger/voucher — use the invoice system instead.
+
+For all voucher postings:
+- Postings MUST balance (debit + credit = 0)
+- \`row\` numbering MUST start at 1 (row 0 is system-reserved)
+- \`amountGrossCurrency\` MUST equal \`amountGross\`
+
+## Bank Reconciliation (from CSV/bank statement)
+
+For tasks involving bank reconciliation or importing bank statements:
+\`\`\`
+1. GET /ledger/account?number=1920&fields=id  → get bank account id
+2. POST /bank/statement/import  (multipart form data)
+   - Query params: bankId, accountId, fromDate, toDate, fileFormat (e.g. "DNB_CSV", "NORDEA_CSV", "SBANKEN_PRIVAT_CSV")
+   - Body: file field with the CSV/statement file
+3. POST /bank/reconciliation  {"account": {"id": <acct_id>}, "type": "MANUAL"}
+4. POST /bank/reconciliation/match  to match transactions with postings
+\`\`\`
+
+## Balance Sheet
+
+GET /balanceSheet?dateFrom=2026-01-01&dateTo=2026-03-31 — returns account balances for a period.
 
 ## Employee Entitlements (Admin Roles) — TESTED RECIPE
 

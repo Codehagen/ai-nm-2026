@@ -112,6 +112,46 @@ export function registerCustomRoutes(app: Hono, store: EntityStore): void {
     return c.json(wrapList(vatTypes));
   });
 
+  // ─── Employee Employment ────────────────────────────────────────────
+
+  /** GET /employee/employment — list employments */
+  app.get("/employee/employment", (c) => {
+    const employments = store.list("employment");
+    return c.json(wrapList(employments));
+  });
+
+  /** POST /employee/employment — create employment */
+  app.post("/employee/employment", async (c) => {
+    let body: Record<string, unknown>;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json(errorResponse(400, "Invalid JSON body"), 400);
+    }
+    const emp = body.employee as { id?: number } | undefined;
+    if (!emp?.id || !store.has("employee", emp.id)) {
+      return c.json(errorResponse(422, "Validering feilet.", [{ field: "employee", message: "Kan ikke være null." }]), 422);
+    }
+    if (!body.startDate) {
+      return c.json(errorResponse(422, "Validering feilet.", [{ field: "startDate", message: "Kan ikke være null." }]), 422);
+    }
+    const entity = store.create("employment", body);
+    return c.json(wrapValue(entity), 201);
+  });
+
+  // ─── Salary Types ───────────────────────────────────────────────────
+
+  /** GET /salary/type — list salary types */
+  app.get("/salary/type", (c) => {
+    const salaryTypes = store.list("salaryType");
+    return c.json(wrapList(salaryTypes));
+  });
+
+  /** GET /salary/settings — salary settings */
+  app.get("/salary/settings", (c) => {
+    return c.json(wrapValue({ municipality: { id: 262 }, payrollTaxCalcMethod: "AA" }));
+  });
+
   // ─── Employee Entitlements ─────────────────────────────────────────
 
   /** PUT /employee/entitlement/:grantEntitlementsByTemplate */

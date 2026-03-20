@@ -1,0 +1,149 @@
+{
+  "timestamp": "2026-03-20T11:04:17.669Z",
+  "parallel": 1,
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "errors": 0,
+    "totalCalls": 12,
+    "totalOptimal": 12,
+    "totalErrors": 0,
+    "totalTimeMs": 47131
+  },
+  "results": [
+    {
+      "id": "t2-salary-de",
+      "category": "salary-payroll",
+      "tier": 2,
+      "lang": "de",
+      "status": "pass",
+      "apiCalls": 6,
+      "apiErrors": 0,
+      "optimalCalls": 6,
+      "callEfficiency": "100%",
+      "elapsedMs": 23562,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Laura\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Schneider\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "employment exists",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "salarySpecification count = 2",
+          "pass": true,
+          "detail": "2"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee/employment",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/salary/type",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/salary/specification",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/salary/specification",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-salary-nb",
+      "category": "salary-payroll",
+      "tier": 2,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 6,
+      "apiErrors": 0,
+      "optimalCalls": 6,
+      "callEfficiency": "100%",
+      "elapsedMs": 23569,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Kari\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Olsen\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "employment exists",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "salarySpecification count = 2",
+          "pass": true,
+          "detail": "2"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee/employment",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/salary/type",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/salary/specification",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/salary/specification",
+          "ok": true
+        }
+      ]
+    }
+  ]
+}

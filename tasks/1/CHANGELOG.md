@@ -4,6 +4,20 @@ Each entry tracks a system prompt or mock fix, what caused it, and the benchmark
 
 ## 2026-03-20
 
+### Fix: Supplier invoice / leverandørfaktura (competition submission — 0/8 score)
+**Trigger**: Competition task — Spanish supplier invoice: register invoice from vendor Montaña SL for 19500 NOK incl VAT to account 7300. 19 calls, 15 errors, 0/4 checks.
+**Root cause**: No supplier invoice recipe. Agent tried POST /supplierInvoice (500), POST /ledger/voucher (422 — row 0 is system-reserved), POST /expense (403).
+**Fix (system-prompt.ts)**: Added complete supplier invoice recipe via voucher system: POST /supplier → GET accounts (7300 + 2400) → POST /ledger/voucher with row numbering starting at 1, amountGrossCurrency = amountGross, vatType id 1 for 25% input VAT.
+**Fix (mock)**: Added supplier entity config.
+**Benchmark**: Added `t2-supplier-invoice-es`. Result: 7 calls, 0 errors (was 19/15).
+
+### Fix: Salary/payroll task (competition submission — 0/8 score)
+**Trigger**: Competition task — German payroll: create employee, set base salary 33000 + bonus 17850. 30 calls, 14 errors, 0/4 checks.
+**Root cause**: No salary recipe in system prompt. Agent tried /salary/transaction (403), /salary/payslip (403), fell back to travel expenses and vouchers.
+**Fix (system-prompt.ts)**: Added complete salary recipe: POST employment → GET salary/type → POST salary/specification per component
+**Fix (mock)**: Added employment and salary/specification entities, salary type seed data, custom routes for /employee/employment and /salary/type
+**Benchmark**: Added `t2-salary-de` and `t2-salary-nb`. Result: 6/6 calls, 100% efficiency, 0 errors.
+
 ### Fix: Order → invoice → payment with product numbers (competition submission — 0/8 score)
 **Trigger**: Competition task — German order with 2 products (with product numbers in parens), convert to invoice, register payment. 12 calls, 4 errors, 0/8 checks.
 **Root cause**: Agent failed `POST /product` 4 times — likely missing `vatType` field (required by real API). Product numbers in parentheses confused the agent.

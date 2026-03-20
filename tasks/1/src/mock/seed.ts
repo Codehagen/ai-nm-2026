@@ -108,6 +108,13 @@ export function seedStore(store: EntityStore): void {
     parentType: null,
   });
 
+  // Salary types
+  store.seed("salaryType", 30000001, { number: 2000, name: "Fastlønn", description: "" });
+  store.seed("salaryType", 30000002, { number: 2001, name: "Timelønn", description: "" });
+  store.seed("salaryType", 30000003, { number: 2002, name: "Bonus", description: "" });
+  store.seed("salaryType", 30000004, { number: 2003, name: "Faste tillegg", description: "" });
+  store.seed("salaryType", 30000005, { number: 2005, name: "Overtidsgodtgjørelse", description: "" });
+
   // Payment types (matches real sandbox: "Kontant" and "Betalt til bank")
   store.seed("paymentType", 30000001, {
     description: "Kontant",

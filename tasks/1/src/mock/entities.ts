@@ -110,6 +110,13 @@ export const ENTITY_CONFIGS: EntityConfig[] = [
     deletable: true,
   },
   {
+    type: "supplier",
+    basePath: "/supplier",
+    requiredFields: ["name"],
+    searchFields: ["name", "organizationNumber", "supplierNumber"],
+    deletable: true,
+  },
+  {
     type: "contact",
     basePath: "/contact",
     requiredFields: ["firstName", "lastName"],
@@ -121,6 +128,14 @@ export const ENTITY_CONFIGS: EntityConfig[] = [
     basePath: "/activity",
     requiredFields: ["name"],
     searchFields: ["name", "number"],
+    deletable: true,
+  },
+  {
+    type: "salarySpecification",
+    basePath: "/salary/specification",
+    requiredFields: ["employee", "salaryType", "count", "rate"],
+    searchFields: [],
+    refValidation: { "employee.id": "employee" },
     deletable: true,
   },
 ];
