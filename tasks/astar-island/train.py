@@ -41,6 +41,8 @@ from dtos import TERRAIN_TO_CLASS, NUM_CLASSES, PROB_FLOOR
 
 # GBT blend weight: how much to trust XGBoost vs heuristic (0-1)
 BLEND_WEIGHT = 0.35
+# Per-terrain blend overrides (None = use BLEND_WEIGHT)
+BLEND_TERRAIN = {"plains": 0.30, "forest": 0.35, "settl": 0.45}
 
 # Smoothing: blend final prediction with uniform prior to reduce overconfidence
 # This helps on rounds where hidden params deviate most from training data
@@ -206,8 +208,11 @@ def evaluate_loro():
                 h, w, _ = tensor.shape
                 for y in range(h):
                     for x in range(w):
-                        if grid[y][x] not in {10, 5}:
-                            tensor[y, x] = (1 - BLEND_WEIGHT) * tensor[y, x] + BLEND_WEIGHT * gbt_pred[y, x]
+                        code = grid[y][x]
+                        if code not in {10, 5}:
+                            ttype = "plains" if code in {11, 0} else ("forest" if code == 4 else ("settl" if code in {1, 2} else "plains"))
+                            bw = BLEND_TERRAIN.get(ttype, BLEND_WEIGHT)
+                            tensor[y, x] = (1 - bw) * tensor[y, x] + bw * gbt_pred[y, x]
 
             # Layer 7: Observation ratio correction
             if all_observations:
