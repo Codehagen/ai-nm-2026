@@ -76,35 +76,78 @@ def run_inference(run_py, model_pt, input_dir, output_json):
 
 
 def evaluate(predictions_path, gt_path, val_image_dir):
-    """Score predictions using eval_local.py logic."""
+    """Score predictions using pycocotools (matches competition scoring)."""
     import numpy as np
+    import tempfile
+    import os
+    from pycocotools.coco import COCO
+    from pycocotools.cocoeval import COCOeval
 
     with open(predictions_path) as f:
         predictions = json.load(f)
     with open(gt_path) as f:
-        coco = json.load(f)
+        gt_data = json.load(f)
 
-    # Filter GT to val images only
-    val_ids = set()
+    # Filter to eval images only
+    eval_ids = set()
     for p in Path(val_image_dir).iterdir():
         if p.suffix.lower() in (".jpg", ".jpeg", ".png"):
-            val_ids.add(int(p.stem.split("_")[-1]))
+            eval_ids.add(int(p.stem.split("_")[-1]))
 
-    gt_list = [
-        {"image_id": a["image_id"], "category_id": a["category_id"], "bbox": a["bbox"]}
-        for a in coco["annotations"] if a["image_id"] in val_ids
+    predictions = [p for p in predictions if p["image_id"] in eval_ids]
+    eval_images = [img for img in gt_data["images"] if img["id"] in eval_ids]
+
+    # --- Detection mAP (category ignored → all category_id=1) ---
+    det_anns = [
+        {**ann, "category_id": 1}
+        for ann in gt_data["annotations"] if ann["image_id"] in eval_ids
     ]
+    det_gt = {
+        "images": eval_images,
+        "annotations": det_anns,
+        "categories": [{"id": 1, "name": "product"}],
+    }
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+        json.dump(det_gt, f)
+        det_gt_f = f.name
 
-    # Import eval functions
-    import sys
-    sys.path.insert(0, str(TASK_DIR))
-    from eval_local import evaluate_map
+    det_preds = [{**p, "category_id": 1} for p in predictions]
+    coco_gt = COCO(det_gt_f)
+    coco_dt = coco_gt.loadRes(det_preds)
+    e = COCOeval(coco_gt, coco_dt, "bbox")
+    e.params.iouThrs = np.array([0.5])
+    e.params.maxDets = [1, 10, 500]
+    e.evaluate()
+    e.accumulate()
+    det_map = float(np.mean(e.eval["precision"][0, :, :, 0, 2]))
+    os.unlink(det_gt_f)
 
-    det_map = evaluate_map(predictions, gt_list, iou_threshold=0.5, use_category=False)
-    cls_map = evaluate_map(predictions, gt_list, iou_threshold=0.5, use_category=True)
+    # --- Classification mAP (per-category, matches competition) ---
+    cls_anns = [ann for ann in gt_data["annotations"] if ann["image_id"] in eval_ids]
+    cls_gt = {
+        "images": eval_images,
+        "annotations": cls_anns,
+        "categories": gt_data["categories"],
+    }
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+        json.dump(cls_gt, f)
+        cls_gt_f = f.name
+
+    coco_gt2 = COCO(cls_gt_f)
+    coco_dt2 = coco_gt2.loadRes(predictions)
+    e2 = COCOeval(coco_gt2, coco_dt2, "bbox")
+    e2.params.iouThrs = np.array([0.5])
+    e2.params.maxDets = [1, 10, 500]
+    e2.evaluate()
+    e2.accumulate()
+    prec = e2.eval["precision"][0, :, :, 0, 2]
+    cls_map = float(np.mean(prec[prec > -1]))
+    os.unlink(cls_gt_f)
+
     combined = 0.7 * det_map + 0.3 * cls_map
+    n_gt = len(cls_anns)
 
-    return det_map, cls_map, combined, len(predictions), len(gt_list)
+    return det_map, cls_map, combined, len(predictions), n_gt
 
 
 def test_from_zip(zip_path, input_dir, output_json):
