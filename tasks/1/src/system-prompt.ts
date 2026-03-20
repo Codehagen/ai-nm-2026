@@ -213,13 +213,32 @@ PUT /invoice/{id}/:send?sendType=EMAIL
 \`\`\`
 Use params: \`{ "sendType": "EMAIL" }\`. No request body needed.
 
-### Creating a credit note (TESTED — this exact recipe works):
+### Creating a credit note / issuing a credit memo (TESTED — this exact recipe works):
+When the prompt says a customer complained, wants a refund, or asks you to credit/reverse an EXISTING invoice, you MUST search for the existing invoice — do NOT create a new invoice from scratch.
+
+**Scenario A: Credit note for an EXISTING invoice (complaint/refund/reversal):**
 \`\`\`
-1. GET /invoice?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01&fields=id,invoiceNumber,amount  → find the invoice
-2. PUT /invoice/{id}/:send?sendType=EMAIL  → invoice MUST be sent before credit note
-3. PUT /invoice/{id}/:createCreditNote  → creates the credit note (use PUT, not POST)
+1. If you need to find the customer first:
+   GET /customer?name=<customer name>&fields=id
+2. GET /invoice?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01&customerId=<customer_id>&fields=id,invoiceNumber,amount,customer
+   → Find the invoice to credit. If no customerId filter, search all invoices.
+3. PUT /invoice/{id}/:send?sendType=EMAIL  → invoice MUST be sent before credit note (skip if already sent)
+4. PUT /invoice/{id}/:createCreditNote?date=<today>  → creates the credit note
+   MUST pass date as query parameter: params: { "date": "2026-03-20" }
 \`\`\`
-CRITICAL: Use PUT (not POST) for :createCreditNote on the real API. The invoice must be sent first or you get 400.
+
+**Scenario B: Create a NEW invoice AND immediately credit it (full cycle):**
+\`\`\`
+1. Create customer → product → order → invoice (follow the invoice recipe)
+2. PUT /invoice/{id}/:send?sendType=EMAIL
+3. PUT /invoice/{id}/:createCreditNote?date=<today>
+\`\`\`
+
+CRITICAL rules for credit notes:
+- Use PUT (not POST) for :createCreditNote on the real API.
+- The \`date\` query parameter is REQUIRED. Pass it as params: { "date": "2026-03-20" }.
+- The invoice MUST be sent first or you get 400. Always send before crediting.
+- If the prompt mentions a customer complaint or existing invoice, ALWAYS search for the existing invoice with GET /invoice — do NOT create a new one.
 
 ### POST /project — REQUIRES EMPLOYEE + CUSTOMER + startDate
 A project needs a projectManager (employee), optionally a customer, and a \`startDate\`.
@@ -478,8 +497,8 @@ When a tool call fails, you get a structured error response:
 
 For tasks that ask you to delete or reverse something:
 - **Delete travel expense:** GET /travelExpense?fields=id,title to find it → DELETE /travelExpense/{id}
-- **Reverse/credit an invoice:** GET /invoice?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01&fields=id,invoiceNumber,amount to find it → PUT /invoice/{id}/:createCreditNote
-  If createCreditNote returns 400, the invoice may need to be sent first: PUT /invoice/{id}/:send?sendType=EMAIL, then retry createCreditNote.
+- **Reverse/credit an invoice:** GET /invoice?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01&fields=id,invoiceNumber,amount,customer to find it → PUT /invoice/{id}/:send?sendType=EMAIL (if not already sent) → PUT /invoice/{id}/:createCreditNote?date=<today>
+  The date query param is REQUIRED. If createCreditNote returns 400, the invoice needs to be sent first.
 - **Delete a voucher:** GET /ledger/voucher?dateFrom=2020-01-01&dateTo=2030-01-01&fields=id,description to find it → DELETE /ledger/voucher/{id}
 - **Reverse a voucher:** PUT /ledger/voucher/{id}/:reverse?date=2026-03-20 — creates a negated copy. Use this for posted vouchers that cannot be deleted.
 - Always search by name/title/description to find the entity, then delete by ID.
