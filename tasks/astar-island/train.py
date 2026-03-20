@@ -46,8 +46,8 @@ BLEND_WEIGHT = 0.35
 # Safe L7: zero for rare classes (port, ruin) — prevents catastrophic KL
 L7_STRENGTHS = np.array([1.20, 0.80, 0.0, 0.0, 1.30, 0.0])
 L7_MIN_OBS = np.array([200, 50, 30, 20, 100, 0])  # min obs count per class
-L7_ADJ_MIN = 0.85  # hard safety clamp
-L7_ADJ_MAX = 1.20
+L7_ADJ_MIN = 0.80  # hard safety clamp
+L7_ADJ_MAX = 1.25
 
 # Per-terrain XGBoost hyperparameters
 XGB_HPARAMS = {
