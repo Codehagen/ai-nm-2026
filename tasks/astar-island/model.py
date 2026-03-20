@@ -36,7 +36,7 @@ from utils import normalize_prediction, grid_to_class_array
 # GBT model support
 # ──────────────────────────────────────────────────────────────
 
-GBT_BLEND_WEIGHT = 0.3  # how much to weight GBT vs heuristic (4-round cross-round validated)
+GBT_BLEND_WEIGHT = 0.25  # how much to weight GBT vs heuristic (4-round LOO: R4=94.19)
 _gbt_models = None  # lazy-loaded
 
 
