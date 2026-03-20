@@ -94,3 +94,4 @@ d667b59	83.996817	0.0	24	discard	global features (settl_ratio, forest_ratio, n_s
 cc48576	84.440518	0.0	3	discard	XGBoost 400 trees + lr=0.05 (249s)	no improvement, 3x slower
 5d70fe7	84.442242	0.0	149	discard	recalibrated tables + Layer 3 (R5=85.93 R7=66.59 but R1/R2 drop)	wash
 0c4cf8d	82.576861	0.0	4	discard	skip Layer 3 with calibrated tables	R6 drops to 74.68
+8b5f981	84.441600	0.0	1	discard	settlement XGBoost depth=5	negligible change
