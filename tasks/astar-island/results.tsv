@@ -78,4 +78,5 @@ e4dd433	90.63	0.0	2	keep	p=0.75 f=0.90 s=0.75 (R4=96.12 R5=90.63 avg=93.38!)	-
 1e6fd6c	91.28	0.0	2	keep	uniform 0.90 (R4=96.21 R5=91.28 avg=93.75)	-
 bd32b58	91.54	0.0	2	keep	uniform 0.95 (R4=96.21 R5=91.54 avg=93.88!)	-
 d9973fd	91.76	0.0	2	discard	pure XGBoost 1.0 (R4=96.16 R5=91.76 — R4 drops)	R4 slightly worse
+a8f5731	89.49	0.0	51	keep	R4-era tables + blend=0.25 + agent L7 (LORO avg=89.49!)	-
 25c998d	90.87	0.0	2	keep	p=0.80 f=0.90 s=0.80 (R4=96.17 R5=90.87 avg=93.52!)	-

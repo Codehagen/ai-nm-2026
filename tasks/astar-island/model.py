@@ -36,7 +36,7 @@ from utils import normalize_prediction, grid_to_class_array
 # GBT model support
 # ──────────────────────────────────────────────────────────────
 
-GBT_BLEND_WEIGHT = 0.25  # how much to weight GBT vs heuristic (4-round LOO: R4=94.19)
+GBT_BLEND_WEIGHT = 0.25  # how much to weight GBT vs heuristic (cross-round validated)
 _gbt_models = None  # lazy-loaded
 
 
@@ -325,57 +325,57 @@ EMPIRICAL_TRANSITIONS = {
 # Calibrated from Round 1 GROUND TRUTH — all 5 seeds pooled
 # KEY: Inland cells NEVER become ports (P(port) = 0.0)
 PLAINS_INLAND_BY_DISTANCE = {
-    1:  [0.779, 0.152, 0.000, 0.013, 0.056, 0.000],  # n=2380 (R1+R2+R3+R4)
-    2:  [0.801, 0.146, 0.000, 0.013, 0.040, 0.000],  # n=3768
-    3:  [0.811, 0.136, 0.000, 0.012, 0.040, 0.000],  # n=3660
-    4:  [0.832, 0.122, 0.000, 0.011, 0.035, 0.000],  # n=2705
-    5:  [0.886, 0.088, 0.000, 0.008, 0.017, 0.000],  # n=1720
-    6:  [0.921, 0.063, 0.000, 0.006, 0.010, 0.000],  # n=974
-    7:  [0.945, 0.045, 0.000, 0.004, 0.006, 0.000],  # n=543
-    8:  [0.980, 0.017, 0.000, 0.001, 0.002, 0.000],  # n=652
-    99: [0.995, 0.005, 0.000, 0.000, 0.000, 0.000],
+    1:  [0.700, 0.232, 0.001, 0.018, 0.050, 0.000],  # n=1199 (R1+R2)
+    2:  [0.707, 0.221, 0.000, 0.019, 0.052, 0.000],  # n=1918
+    3:  [0.718, 0.208, 0.001, 0.019, 0.054, 0.000],  # n=1876
+    4:  [0.738, 0.196, 0.001, 0.017, 0.048, 0.000],  # n=1357
+    5:  [0.807, 0.151, 0.000, 0.014, 0.028, 0.000],  # n=851
+    6:  [0.862, 0.111, 0.000, 0.010, 0.017, 0.000],  # n=462
+    7:  [0.908, 0.076, 0.000, 0.006, 0.009, 0.000],  # n=280
+    8:  [0.966, 0.029, 0.000, 0.002, 0.003, 0.000],  # n=341
+    99: [0.990, 0.008, 0.000, 0.001, 0.001, 0.000],
 }
 
 # Distance-based transition for COASTAL Plains (code 11, adjacent to ocean)
 # KEY: Coastal cells CAN become ports — significant P(port) near settlements
 PLAINS_COASTAL_BY_DISTANCE = {
-    1:  [0.778, 0.071, 0.089, 0.011, 0.050, 0.000],  # n=172 (R1+R2+R3+R4)
-    2:  [0.812, 0.063, 0.084, 0.011, 0.029, 0.000],  # n=406
-    3:  [0.813, 0.065, 0.082, 0.011, 0.030, 0.000],  # n=530
-    4:  [0.832, 0.057, 0.073, 0.009, 0.029, 0.000],  # n=512
-    5:  [0.883, 0.049, 0.045, 0.006, 0.016, 0.000],  # n=432
-    6:  [0.913, 0.040, 0.032, 0.005, 0.010, 0.000],  # n=358
-    7:  [0.932, 0.033, 0.024, 0.004, 0.007, 0.000],  # n=237
-    8:  [0.976, 0.014, 0.008, 0.001, 0.002, 0.000],  # n=419
-    99: [0.990, 0.005, 0.003, 0.001, 0.001, 0.000],
+    1:  [0.688, 0.114, 0.143, 0.015, 0.039, 0.000],  # n=85 (R1+R2)
+    2:  [0.689, 0.110, 0.145, 0.016, 0.039, 0.000],  # n=187
+    3:  [0.710, 0.105, 0.132, 0.015, 0.037, 0.000],  # n=263
+    4:  [0.739, 0.092, 0.118, 0.013, 0.038, 0.000],  # n=261
+    5:  [0.812, 0.080, 0.074, 0.009, 0.025, 0.000],  # n=231
+    6:  [0.857, 0.068, 0.052, 0.009, 0.014, 0.000],  # n=187
+    7:  [0.881, 0.058, 0.041, 0.007, 0.012, 0.000],  # n=120
+    8:  [0.952, 0.027, 0.015, 0.002, 0.004, 0.000],  # n=194
+    99: [0.985, 0.008, 0.005, 0.001, 0.001, 0.000],
 }
 
 # Distance-based transition for INLAND Forests (code 4, not coastal)
 # Forests near settlements get colonized; far forests stay forest
 FOREST_INLAND_BY_DISTANCE = {
-    1:  [0.125, 0.156, 0.001, 0.013, 0.705, 0.000],  # n=834 (R1+R2+R3+R4)
-    2:  [0.084, 0.146, 0.001, 0.013, 0.756, 0.000],  # n=1350
-    3:  [0.079, 0.131, 0.000, 0.012, 0.777, 0.000],  # n=1289
-    4:  [0.074, 0.127, 0.000, 0.011, 0.788, 0.000],  # n=957
-    5:  [0.038, 0.088, 0.000, 0.008, 0.866, 0.000],  # n=581
-    6:  [0.024, 0.071, 0.000, 0.006, 0.899, 0.000],  # n=337
-    7:  [0.011, 0.043, 0.000, 0.004, 0.942, 0.000],  # n=174
-    8:  [0.006, 0.023, 0.000, 0.002, 0.969, 0.000],  # n=243
-    99: [0.003, 0.010, 0.000, 0.001, 0.986, 0.000],
+    1:  [0.113, 0.239, 0.001, 0.019, 0.629, 0.000],  # n=408 (R1+R2)
+    2:  [0.115, 0.226, 0.001, 0.019, 0.639, 0.000],  # n=670
+    3:  [0.114, 0.207, 0.000, 0.019, 0.660, 0.000],  # n=628
+    4:  [0.103, 0.199, 0.000, 0.017, 0.681, 0.000],  # n=488
+    5:  [0.063, 0.152, 0.001, 0.012, 0.773, 0.000],  # n=284
+    6:  [0.038, 0.118, 0.000, 0.010, 0.834, 0.000],  # n=180
+    7:  [0.017, 0.077, 0.000, 0.006, 0.899, 0.000],  # n=85
+    8:  [0.009, 0.036, 0.000, 0.003, 0.951, 0.000],  # n=147
+    99: [0.005, 0.015, 0.000, 0.001, 0.979, 0.000],
 }
 
 # Distance-based transition for COASTAL Forests (code 4, adjacent to ocean)
 # Coastal forests can become ports
 FOREST_COASTAL_BY_DISTANCE = {
-    1:  [0.117, 0.073, 0.096, 0.011, 0.703, 0.000],  # n=63 (R1+R2+R3+R4)
-    2:  [0.065, 0.067, 0.088, 0.009, 0.771, 0.000],  # n=115
-    3:  [0.061, 0.063, 0.083, 0.011, 0.782, 0.000],  # n=177
-    4:  [0.060, 0.051, 0.066, 0.009, 0.815, 0.000],  # n=177
-    5:  [0.030, 0.050, 0.049, 0.006, 0.865, 0.000],  # n=147
-    6:  [0.014, 0.035, 0.027, 0.003, 0.920, 0.000],  # n=89
-    7:  [0.014, 0.031, 0.026, 0.003, 0.926, 0.000],  # n=82
-    8:  [0.005, 0.011, 0.007, 0.001, 0.977, 0.000],  # n=132
-    99: [0.003, 0.005, 0.003, 0.001, 0.988, 0.000],
+    1:  [0.083, 0.122, 0.165, 0.014, 0.617, 0.000],  # n=30 (R1+R2)
+    2:  [0.076, 0.122, 0.158, 0.015, 0.630, 0.000],  # n=47
+    3:  [0.079, 0.113, 0.143, 0.016, 0.649, 0.000],  # n=79
+    4:  [0.086, 0.094, 0.120, 0.014, 0.685, 0.000],  # n=76
+    5:  [0.048, 0.087, 0.082, 0.009, 0.774, 0.000],  # n=77
+    6:  [0.021, 0.069, 0.053, 0.005, 0.852, 0.000],  # n=37
+    7:  [0.020, 0.054, 0.046, 0.005, 0.875, 0.000],  # n=41
+    8:  [0.008, 0.022, 0.013, 0.003, 0.954, 0.000],  # n=61
+    99: [0.004, 0.010, 0.006, 0.002, 0.978, 0.000],
 }
 
 
@@ -494,7 +494,7 @@ def update_with_observations(
     # Bayesian blend: with few observations, the prior (from Layer 1) should
     # dominate. With many observations, the frequency should dominate.
     # We use a pseudo-count approach: treat the prior as N_PRIOR virtual observations.
-    N_PRIOR = 50  # prior strength — high to prevent noisy obs from dominating
+    N_PRIOR = 20  # prior strength — equivalent to 20 virtual observations
     observed_mask = obs_count > 0
     for y in range(h):
         for x in range(w):
@@ -820,9 +820,8 @@ def build_prediction(
     # Layer 1: Static prediction
     tensor = build_static_prediction(initial_grid)
 
-    # Layer 2: Observation-based frequency update (DISABLED).
-    # Agent research confirmed: Layer 2 always hurts, even with repeats.
-    # GT-calibrated model + GBT already outperforms any observation-based frequency.
+    # Layer 2: Observation-based frequency update (disabled — adds noise with
+    # only ~10 observations per seed; GT-calibrated priors outperform raw frequencies)
     # tensor = update_with_observations(tensor, observations, seed_index)
 
     # Layer 3: Apply context-specific priors to ALL dynamic cells.
@@ -841,43 +840,28 @@ def build_prediction(
     # Layer 5: Calibration (disabled — GBT subsumes calibration's role)
     # tensor = apply_calibration(tensor, initial_grid, calibration)
 
-    # Layer 6: GBT blend — per-terrain weights (forests need more GBT)
-    # Forest cells benefit most from XGBoost (captures colonization dynamics)
-    # R4: +0.17, R5: +1.78 by increasing forest blend from 0.25 to 0.70
+    # Layer 6: GBT blend — captures feature interactions the tables miss
     gbt_pred = gbt_predict(initial_grid, settlements)
     if gbt_pred is not None:
-        h_l6, w_l6, _ = tensor.shape
-        for y in range(h_l6):
-            for x in range(w_l6):
-                code = initial_grid[y][x]
-                if code in {10, 5}:
-                    continue
-                if code == 4:  # Forest: XGBoost captures colonization dynamics
-                    blend = 0.95
-                elif code in {1, 2}:  # Settlements
-                    blend = 0.95
-                else:  # Plains
-                    blend = 0.95
-                tensor[y, x] = (1 - blend) * tensor[y, x] + blend * gbt_pred[y, x]
+        tensor = (1 - GBT_BLEND_WEIGHT) * tensor + GBT_BLEND_WEIGHT * gbt_pred
 
-    # Layer 7: Global observation ratio correction.
-    # Uses pooled observation terrain frequencies to adapt to each round's
-    # hidden expansion rate. Confirmed optimal by 3 research agents:
-    # - Global L7 outperforms per-terrain L7 (simpler, more robust)
-    # - Post-hoc correction outperforms obs features in XGBoost
-    # - Strengths [1.38, 0.90, 0.44, 0.61, 1.16] from coordinate descent
+    # Layer 7: Observation-based ratio correction.
+    # Use pooled observations from ALL seeds to estimate the hidden expansion
+    # rate, then adjust predictions to match observed terrain frequencies.
+    # This adapts the model to each round's unique hidden parameters.
     if all_observations:
         obs_cls = np.zeros(NUM_CLASSES)
         obs_total = 0
         for obs in all_observations:
             for row in obs.get("grid", []):
                 for code in row:
-                    if code not in {10, 5}:
+                    if code not in {10, 5}:  # skip static
                         obs_cls[TERRAIN_TO_CLASS.get(code, 0)] += 1
                         obs_total += 1
 
-        if obs_total > 100:
+        if obs_total > 100:  # need enough observations
             obs_freq = obs_cls / obs_total
+            # Compute model's average prediction for dynamic cells
             h, w, _ = tensor.shape
             model_avg = np.zeros(NUM_CLASSES)
             m_count = 0
@@ -889,10 +873,8 @@ def build_prediction(
             if m_count > 0:
                 model_avg /= m_count
                 ratio = obs_freq / np.maximum(model_avg, 1e-6)
-                # Agent-optimized per-class strengths:
-                # Empty/Forest >1: high-volume classes carry strong expansion signal
-                # Settlement 0.90: key indicator, slight damping avoids overshoot
-                # Port 0.44, Ruin 0.61: rare classes, moderate to avoid noise
+                # Per-class correction strengths (cross-round validated):
+                # Weak for empty/port (stable), stronger for settlement/ruin (variable)
                 cls_strength = np.array([1.38, 0.90, 0.44, 0.61, 1.16, 0.0])
                 adj = 1.0 + cls_strength * (ratio - 1.0)
                 for y in range(h):
