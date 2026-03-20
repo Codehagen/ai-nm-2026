@@ -324,18 +324,46 @@ def main():
                 title=f"Seed {seed_idx} Prediction",
             )
 
-    # Submit
+    # Submit first prediction (safe)
     if args.dry_run:
         logger.info("DRY RUN — not submitting predictions")
-        for seed_idx, pred in enumerate(predictions):
-            logger.info(
-                f"  Seed {seed_idx}: shape={pred.shape}, "
-                f"argmax distribution: {np.bincount(pred.argmax(axis=-1).ravel(), minlength=6)}"
-            )
     else:
-        logger.info("Submitting predictions...")
+        logger.info("Submitting predictions (pass 1 - safe)...")
         submit_all(client, round_id, predictions)
-        logger.info("All seeds submitted!")
+        logger.info("Safe prediction submitted!")
+
+    # ── PHASE 2+3: Use remaining budget for refinement ──
+    budget = client.get_budget()
+    remaining = budget.queries_max - budget.queries_used
+    if remaining > 0 and not args.dry_run:
+        logger.info(f"")
+        logger.info(f"{'='*50}")
+        logger.info(f"  REFINEMENT PHASE: {remaining} queries remaining")
+        logger.info(f"{'='*50}")
+
+        # Use depth strategy for remaining queries (repeat top viewports)
+        refine_plan = allocate_queries(
+            num_seeds=round_info.seeds_count,
+            viewport_placements=viewport_placements,
+            total_budget=remaining,
+            repeat_strategy="depth",
+        )
+        all_observations = execute_queries(client, round_id, refine_plan, all_observations)
+        logger.info(f"Total observations after refinement: {len(all_observations)}")
+
+        # Rebuild predictions with all data (cross-seed tables now have more data)
+        logger.info("Rebuilding predictions with full data...")
+        predictions = build_all_predictions(
+            round_info, all_observations, calibration,
+            use_ensemble=not args.no_ensemble,
+        )
+
+        # Resubmit improved predictions
+        logger.info("RESUBMITTING improved predictions (pass 2)...")
+        submit_all(client, round_id, predictions)
+        logger.info("Improved prediction submitted!")
+
+    logger.info(f"All phases complete! Total observations: {len(all_observations)}")
 
 
 if __name__ == "__main__":
