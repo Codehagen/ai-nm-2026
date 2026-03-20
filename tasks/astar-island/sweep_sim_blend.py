@@ -32,6 +32,7 @@ ROUNDS = {
     2: "76909e29-f664-4b2f-b16b-61b7507277e9",
     4: "8e839974-b13b-407b-a5e7-fc749d877195",
     5: "fd3c92ff-3178-4dc9-8d9b-acf389b3982b",
+    6: "ae78003a-4efe-425a-881a-d16a39bca0ad",
 }
 
 # L7 strengths (from current best model)
