@@ -15,9 +15,12 @@ Trained on Round 1 GT, validated with leave-one-seed-out CV.
 import json
 import os
 import pickle
+import warnings
 from typing import Optional
 
 import numpy as np
+
+warnings.filterwarnings("ignore", category=UserWarning)  # suppress xgboost warnings
 
 from dtos import (
     TERRAIN_TO_CLASS,
