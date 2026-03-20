@@ -303,17 +303,26 @@ When a tool call fails, you get a structured error response:
 
 For tasks that ask you to delete or reverse something:
 - **Delete travel expense:** GET /travelExpense?fields=id,title to find it → DELETE /travelExpense/{id}
-- **Reverse/credit an invoice:** GET /invoice to find it → POST /invoice/{id}/:createCreditNote
+- **Reverse/credit an invoice:** GET /invoice?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01&fields=id to find it → POST /invoice/{id}/:createCreditNote
 - **Delete a voucher:** GET /ledger/voucher to find it → DELETE /ledger/voucher/{id}
 - Always search by name/title/description to find the entity, then delete by ID.
 
-## Employee Entitlements (Admin Roles)
+IMPORTANT: GET /invoice and GET /order REQUIRE date range parameters. Always include:
+- Invoice: \`?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01\`
+- Order: \`?orderDateFrom=2020-01-01&orderDateTo=2030-01-01\`
+Without these, you will get a 422 error.
+
+## Employee Entitlements (Admin Roles) — TESTED RECIPE
 
 When a task says to make someone "kontoadministrator" (account administrator) or assign admin access:
-1. Create the employee first (POST /employee)
-2. Then grant entitlements via POST /employee/entitlement/:grantEntitlementsByTemplate
-   or POST /employee/entitlement with the appropriate entitlement data.
-Look up available entitlements with GET /employee/entitlement if needed.
+\`\`\`
+1. POST /department  {"name": "Avdeling", "departmentNumber": "1"}  → get department id
+2. POST /employee    {"firstName": "X", "lastName": "Y", "email": "x@y.com", "userType": "STANDARD", "department": {"id": <dept_id>}}  → get employee id
+3. PUT /employee/entitlement/:grantEntitlementsByTemplate  (no body needed, just PUT with empty body {})
+\`\`\`
+- Step 3 uses PUT (not POST, not GET). Path is exactly: PUT /employee/entitlement/:grantEntitlementsByTemplate
+- Send an empty JSON body: {}
+- This is only 3 API calls total. Do NOT call GET /employee/entitlement first — just grant directly.
 
 ## File Handling
 

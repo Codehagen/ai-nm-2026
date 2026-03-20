@@ -1,7 +1,10 @@
 # TODOs
 
-## Baseline versioning for test results
-**What:** Add model ID, system prompt hash, and git commit hash to each test-results.jsonl entry.
-**Why:** Without versioning, comparing test results across model/prompt changes is noise — you can't tell if a regression was caused by a prompt change or sandbox state.
-**Context:** Currently test-results.jsonl only tracks per-test metrics (calls, errors, time). Adding `modelId`, `gitCommit`, and optionally a hash of system-prompt.ts would make comparisons meaningful over time. ~5 lines of code in replay.ts.
-**Depends on:** Test runner (replay.ts rewrite) must be completed first.
+## ~~Baseline versioning for test results~~ Done
+Implemented in `scripts/replay.ts` — `getVersionInfo()` adds `modelId`, `gitCommit`, `promptHash`.
+
+## ~~Mock Tripletex API~~ Done
+44 unit tests + 8 conformance tests passing. Response shapes verified against real sandbox (2026-03-20). End-to-end tested with agent: customer, employee, invoice chain, project all work.
+
+## Conformance: refresh golden files periodically
+Run `SANDBOX_TOKEN=xxx pnpm test:conformance` to capture fresh responses from real sandbox. Golden files older than 7 days trigger a staleness warning. Last refreshed: 2026-03-20.

@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-03-20T08:11:54.460Z",
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "errors": 0,
+    "totalCalls": 3,
+    "totalOptimal": 3,
+    "totalErrors": 0,
+    "totalTimeMs": 13984
+  },
+  "results": [
+    {
+      "id": "t1-employee-admin-nb",
+      "category": "create-employee-admin",
+      "tier": 1,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 3,
+      "apiErrors": 0,
+      "optimalCalls": 3,
+      "callEfficiency": "100%",
+      "elapsedMs": 13984,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Lars\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Berg\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .email = \"lars@berg.no\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": []
+    }
+  ]
+}

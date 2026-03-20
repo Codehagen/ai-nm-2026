@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-03-20T08:12:11.732Z",
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "errors": 0,
+    "totalCalls": 2,
+    "totalOptimal": 2,
+    "totalErrors": 0,
+    "totalTimeMs": 16403
+  },
+  "results": [
+    {
+      "id": "t2-credit-note-nb",
+      "category": "create-credit-note",
+      "tier": 2,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 16403,
+      "checks": [
+        {
+          "check": "invoice with isCreditNote=true",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": []
+    }
+  ]
+}
