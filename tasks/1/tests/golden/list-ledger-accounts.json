@@ -1,0 +1,56 @@
+{
+  "capturedAt": "2026-03-20T07:30:03.386Z",
+  "source": "sandbox",
+  "request": {
+    "method": "GET",
+    "path": "/ledger/account"
+  },
+  "response": {
+    "status": 200,
+    "bodyKeys": [
+      "count",
+      "from",
+      "fullResultSize",
+      "values",
+      "versionDigest"
+    ],
+    "valuesCount": 529,
+    "valueKeys": [
+      "balanceGroup",
+      "bankAccountCountry",
+      "bankAccountIBAN",
+      "bankAccountNumber",
+      "bankAccountSWIFT",
+      "bankName",
+      "currency",
+      "department",
+      "description",
+      "displayName",
+      "groupingCode",
+      "id",
+      "invoicingDepartment",
+      "isApplicableForSupplierInvoice",
+      "isBankAccount",
+      "isCloseable",
+      "isInactive",
+      "isInvoiceAccount",
+      "isPostingsExist",
+      "ledgerType",
+      "legalVatTypes",
+      "name",
+      "number",
+      "numberPretty",
+      "quantityType1",
+      "quantityType2",
+      "requireReconciliation",
+      "requiresDepartment",
+      "requiresProject",
+      "saftCode",
+      "type",
+      "url",
+      "vatLocked",
+      "vatType",
+      "version"
+    ]
+  }
+}

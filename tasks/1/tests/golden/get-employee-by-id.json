@@ -1,0 +1,20 @@
+{
+  "capturedAt": "2026-03-20T07:14:01.984Z",
+  "source": "sandbox",
+  "request": {
+    "method": "GET",
+    "path": "/employee/30000001"
+  },
+  "response": {
+    "status": 404,
+    "bodyKeys": [
+      "code",
+      "developerMessage",
+      "link",
+      "message",
+      "requestId",
+      "status",
+      "validationMessages"
+    ]
+  }
+}

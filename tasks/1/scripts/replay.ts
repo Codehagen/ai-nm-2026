@@ -6,9 +6,12 @@
  *   pnpm replay --all-failed       # replay all prompts that had errors
  *   pnpm replay --prompt "text"    # replay a custom prompt
  *   pnpm replay --index 5          # replay prompt #5 from logs
+ *   pnpm replay --mock             # replay against mock server on :9054
  */
 
 import { readFileSync, readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { execSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,9 +20,39 @@ const LOG_DIR = join(__dirname, "..", "logs");
 const SOLVES_FILE = join(LOG_DIR, "solves.jsonl");
 const REQUESTS_DIR = join(LOG_DIR, "requests");
 
-const SANDBOX_BASE_URL = process.env.TRIPLETEX_BASE_URL || "https://kkpqfuj-amager.tripletex.dev/v2";
-const SANDBOX_TOKEN = process.env.TRIPLETEX_SESSION_TOKEN || "";
+// Parse args
+const args = process.argv.slice(2);
+const allFailed = args.includes("--all-failed");
+const useMock = args.includes("--mock");
+const customPrompt = args.includes("--prompt") ? args[args.indexOf("--prompt") + 1] : null;
+const indexArg = args.includes("--index") ? parseInt(args[args.indexOf("--index") + 1]) : null;
+
+// --mock flag redirects to local mock server
+const MOCK_BASE_URL = "http://localhost:9054";
+const MOCK_TOKEN = "mock-session-token";
+
+const SANDBOX_BASE_URL = useMock
+  ? MOCK_BASE_URL
+  : (process.env.TRIPLETEX_BASE_URL || "https://kkpqfuj-amager.tripletex.dev/v2");
+const SANDBOX_TOKEN = useMock
+  ? MOCK_TOKEN
+  : (process.env.TRIPLETEX_SESSION_TOKEN || "");
 const SERVER_URL = process.env.SERVER_URL || "http://localhost:9053";
+
+// Baseline versioning
+function getVersionInfo() {
+  const modelId = process.env.MODEL_ID || "unknown";
+  let gitCommit = "unknown";
+  try {
+    gitCommit = execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
+  } catch {}
+  let promptHash = "unknown";
+  try {
+    const promptContent = readFileSync(join(__dirname, "..", "src", "system-prompt.ts"), "utf-8");
+    promptHash = createHash("sha256").update(promptContent).digest("hex").slice(0, 8);
+  } catch {}
+  return { modelId, gitCommit, promptHash };
+}
 
 interface SolveEntry {
   timestamp: string;
@@ -30,16 +63,13 @@ interface SolveEntry {
   toolCallDetails?: Array<{ method: string; path: string; ok: boolean; status?: number }>;
 }
 
-// Parse args
-const args = process.argv.slice(2);
-const allFailed = args.includes("--all-failed");
-const customPrompt = args.includes("--prompt") ? args[args.indexOf("--prompt") + 1] : null;
-const indexArg = args.includes("--index") ? parseInt(args[args.indexOf("--index") + 1]) : null;
-
 async function replay(prompt: string, files: Array<{ filename: string; content_base64: string; mime_type: string }> = []) {
+  const version = getVersionInfo();
   console.log(`\n${"─".repeat(80)}`);
   console.log(`Prompt: ${prompt.slice(0, 100)}...`);
-  console.log(`Sending to ${SERVER_URL}/solve with sandbox credentials...`);
+  console.log(`Target: ${useMock ? "MOCK" : "SANDBOX"} (${SANDBOX_BASE_URL})`);
+  console.log(`Version: model=${version.modelId} commit=${version.gitCommit} prompt=${version.promptHash}`);
+  console.log(`Sending to ${SERVER_URL}/solve...`);
 
   const start = Date.now();
   try {
@@ -66,7 +96,9 @@ async function replay(prompt: string, files: Array<{ filename: string; content_b
 
 async function main() {
   if (!SANDBOX_TOKEN) {
-    console.error("Set TRIPLETEX_SESSION_TOKEN in .env.local");
+    console.error(useMock
+      ? "Mock mode requires the mock server running on :9054. Start with: pnpm mock:start"
+      : "Set TRIPLETEX_SESSION_TOKEN in .env.local");
     process.exit(1);
   }
 

@@ -1,0 +1,64 @@
+{
+  "capturedAt": "2026-03-20T07:30:03.593Z",
+  "source": "sandbox",
+  "request": {
+    "method": "POST",
+    "path": "/customer",
+    "body": {
+      "name": "Conformance Test AS",
+      "isCustomer": true
+    }
+  },
+  "response": {
+    "status": 201,
+    "bodyKeys": [
+      "value"
+    ],
+    "valueKeys": [
+      "accountManager",
+      "bankAccountPresentation",
+      "category1",
+      "category2",
+      "category3",
+      "currency",
+      "customerNumber",
+      "deliveryAddress",
+      "department",
+      "description",
+      "discountPercentage",
+      "displayName",
+      "email",
+      "emailAttachmentType",
+      "globalLocationNumber",
+      "id",
+      "invoiceEmail",
+      "invoiceSMSNotificationNumber",
+      "invoiceSendMethod",
+      "invoiceSendSMSNotification",
+      "invoicesDueIn",
+      "invoicesDueInType",
+      "isAutomaticNoticeOfDebtCollectionEnabled",
+      "isAutomaticReminderEnabled",
+      "isAutomaticSoftReminderEnabled",
+      "isCustomer",
+      "isFactoring",
+      "isInactive",
+      "isPrivateIndividual",
+      "isSupplier",
+      "language",
+      "ledgerAccount",
+      "name",
+      "organizationNumber",
+      "overdueNoticeEmail",
+      "phoneNumber",
+      "phoneNumberMobile",
+      "physicalAddress",
+      "postalAddress",
+      "singleCustomerInvoice",
+      "supplierNumber",
+      "url",
+      "version",
+      "website"
+    ]
+  }
+}
