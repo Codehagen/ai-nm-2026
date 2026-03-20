@@ -217,12 +217,12 @@ export function classifyTask(prompt: string): TaskType {
       "registrer timer",
       "timesheet",
       "register hours",
-      "registrar horas",
-      "registrar horas",
       "stunden registrieren",
       "enregistrer les heures",
       "tidregistrering",
-    )
+    ) ||
+    (has(t, "horas", "timer", "hours", "stunden", "heures") &&
+      has(t, "actividad", "activity", "aktivitet", "aktivität", "activité", "prosjekt", "project", "proyecto", "projeto", "projekt", "projet"))
   ) {
     return "timesheet";
   }
@@ -263,6 +263,15 @@ export function classifyTask(prompt: string): TaskType {
     return "update-customer";
   }
 
+  // --- Voucher / accounting dimensions (before customer — dimension values may contain "kunde")
+  if (
+    has(t, "dimension", "kostsenter", "kostnadsbærer", "pièce comptable",
+      "bilag", "voucher", "comprobante", "comprovante", "beleg",
+      "comptabilisez", "buchungsbeleg")
+  ) {
+    return "voucher";
+  }
+
   // --- Contact
   if (has(t, "kontaktperson", "contact person", "persona de contacto", "pessoa de contato")) {
     return "contact";
@@ -291,11 +300,6 @@ export function classifyTask(prompt: string): TaskType {
   // --- Department
   if (has(t, "avdeling", "department", "departamento", "abteilung", "département")) {
     return "department";
-  }
-
-  // --- Voucher
-  if (has(t, "bilag", "voucher", "comprobante", "comprovante", "beleg")) {
-    return "voucher";
   }
 
   return "unknown";

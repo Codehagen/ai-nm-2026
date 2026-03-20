@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-03-20T20:14:14.100Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "supplier-invoice",
+  "prompt": "Enregistrez le fournisseur Océan SARL avec le numéro d'organisation 975630749. E-mail : faktura@ocansarl.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 9318,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true,
+      "body": {
+        "email": "faktura@ocansarl.no",
+        "isSupplier": true,
+        "name": "Océan SARL",
+        "organizationNumber": "975630749"
+      }
+    }
+  ]
+}

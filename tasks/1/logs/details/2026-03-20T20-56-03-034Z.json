@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-03-20T20:56:03.034Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "customer",
+  "prompt": "Create the customer Oakwood Ltd with organization number 927790629. The address is Solveien 71, 5003 Bergen. Email: post@oakwood.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 12472,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "isCustomer": true,
+        "name": "Oakwood Ltd",
+        "organizationNumber": "927790629",
+        "email": "post@oakwood.no",
+        "postalAddress": {
+          "addressLine1": "Solveien 71",
+          "postalCode": "5003",
+          "city": "Bergen"
+        }
+      }
+    }
+  ]
+}

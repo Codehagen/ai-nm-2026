@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-03-20T20:26:16.211Z",
+  "prompt": "Créez une dimension comptable personnalisée \"Kostsenter\" avec les valeurs \"Kundeservice\" et \"Økonomi\". Puis comptabilisez une pièce sur le compte 7300 (services de bureau) de 23050 NOK avec la dimension \"Kundeservice\".",
+  "filesCount": 0,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 71052,
+  "status": "timeout"
+}

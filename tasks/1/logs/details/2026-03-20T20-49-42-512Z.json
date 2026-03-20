@@ -1,0 +1,50 @@
+{
+  "timestamp": "2026-03-20T20:49:42.512Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "employee",
+  "prompt": "Vi har en ny ansatt som heter Solveig Johansen, født 15. May 1993. Opprett vedkommende som ansatt med e-post solveig.johansen@example.org og startdato 18. January 2026.",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 3,
+  "apiCalls": 3,
+  "apiErrors": 0,
+  "elapsedMs": 31031,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "departmentNumber": "1",
+        "name": "Standard"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true,
+      "body": {
+        "department": {
+          "id": 912534
+        },
+        "lastName": "Johansen",
+        "dateOfBirth": "1993-05-15",
+        "userType": "STANDARD",
+        "email": "solveig.johansen@example.org",
+        "firstName": "Solveig"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": true,
+      "body": {
+        "employee": {
+          "id": 18580471
+        },
+        "startDate": "2026-01-18"
+      }
+    }
+  ]
+}

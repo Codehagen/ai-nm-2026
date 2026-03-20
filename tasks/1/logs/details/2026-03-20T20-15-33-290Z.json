@@ -1,0 +1,304 @@
+{
+  "timestamp": "2026-03-20T20:15:33.290Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "travel-expense-full",
+  "prompt": "Registrer en reiseregning for Sigurd Hansen (sigurd.hansen@example.org) for \"Kundebesøk Kristiansand\". Reisen varte 4 dager med diett (dagsats 800 kr). Utlegg: flybillett 3800 kr og taxi 200 kr.",
+  "filesCount": 0,
+  "steps": 15,
+  "toolCalls": 22,
+  "apiCalls": 22,
+  "apiErrors": 3,
+  "elapsedMs": 90541,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "departmentNumber": "1",
+        "name": "Avdeling"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "firstName": "Sigurd",
+        "department": {
+          "id": 911674
+        },
+        "email": "sigurd.hansen@example.org",
+        "dateOfBirth": "1990-01-15",
+        "userType": "STANDARD",
+        "lastName": "Hansen"
+      },
+      "errorMessage": "Validering feilet. The email already exists. GET /employee?email=<the email> to find the existing employee and use their ID instead of creating a new one.",
+      "validationMessages": [
+        {
+          "field": "email",
+          "message": "Det finnes allerede en bruker med denne e-postadressen.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "email": "sigurd.hansen@example.org",
+        "fields": "id,firstName,lastName"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": true,
+      "body": {
+        "title": "Kundebesøk Kristiansand",
+        "employee": {
+          "id": 18180550
+        },
+        "travelDetails": {
+          "returnDate": "2026-03-20",
+          "departureDate": "2026-03-17",
+          "departureFrom": "Oslo",
+          "destination": "Kristiansand",
+          "purpose": "Kundebesøk"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "count": "50",
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/paymentType",
+      "ok": true,
+      "params": {
+        "count": "10",
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rateCategory",
+      "ok": true,
+      "params": {
+        "fields": "id,name",
+        "type": "PER_DIEM",
+        "dateTo": "2026-03-20",
+        "count": "50",
+        "isValidDomestic": "true",
+        "dateFrom": "2026-03-17"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "count": "50",
+        "from": "0"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "count": "100",
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "description": "Fly",
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "description": "Taxi",
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rate",
+      "ok": true,
+      "params": {
+        "fields": "id,rate",
+        "rateCategoryId": "740"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rate",
+      "ok": true,
+      "params": {
+        "rateCategoryId": "738",
+        "fields": "id,rate"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rate",
+      "ok": true,
+      "params": {
+        "rateCategoryId": "739",
+        "fields": "id,rate"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rate",
+      "ok": true,
+      "params": {
+        "rateCategoryId": "741",
+        "fields": "id,rate"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rate",
+      "ok": true,
+      "params": {
+        "fields": "id,rate",
+        "rateCategoryId": "742"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": true,
+      "body": {
+        "costCategory": {
+          "id": 26467046
+        },
+        "comments": "Flybillett",
+        "date": "2026-03-17",
+        "amountCurrencyIncVat": 3800,
+        "paymentType": {
+          "id": 26467030
+        },
+        "travelExpense": {
+          "id": 11145377
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": false,
+      "status": 409,
+      "body": {
+        "paymentType": {
+          "id": 26467030
+        },
+        "travelExpense": {
+          "id": 11145377
+        },
+        "amountCurrencyIncVat": 200,
+        "date": "2026-03-17",
+        "comments": "Taxi",
+        "costCategory": {
+          "id": 26467061
+        }
+      },
+      "errorMessage": "RevisionException"
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/perDiemCompensation",
+      "ok": false,
+      "status": 500,
+      "body": {
+        "location": "Kristiansand",
+        "isDeductionForLunch": false,
+        "rateCategory": {
+          "id": 740
+        },
+        "isDeductionForDinner": false,
+        "overnightAccommodation": "HOTEL",
+        "count": 4,
+        "travelExpense": {
+          "id": 11145377
+        },
+        "rate": 800,
+        "isDeductionForBreakfast": false,
+        "rateType": {
+          "id": 25888
+        }
+      },
+      "errorMessage": "POST /travelExpense/perDiemCompensation → 500"
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": true,
+      "body": {
+        "paymentType": {
+          "id": 26467030
+        },
+        "amountCurrencyIncVat": 200,
+        "costCategory": {
+          "id": 26467061
+        },
+        "travelExpense": {
+          "id": 11145377
+        },
+        "date": "2026-03-17",
+        "comments": "Taxi"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/perDiemCompensation",
+      "ok": true,
+      "body": {
+        "rateCategory": {
+          "id": 740
+        },
+        "isDeductionForLunch": false,
+        "location": "Kristiansand",
+        "isDeductionForDinner": false,
+        "isDeductionForBreakfast": false,
+        "rateType": {
+          "id": 25888
+        },
+        "travelExpense": {
+          "id": 11145377
+        },
+        "rate": 800,
+        "overnightAccommodation": "HOTEL",
+        "count": 4
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/11145377",
+      "ok": true,
+      "params": {
+        "fields": "id,amount,costs,perDiemCompensations"
+      }
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "timestamp": "2026-03-20T20:08:23.465Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "salary",
+  "prompt": "Utfør lønnskjøring for ansatt Kari Olsen (kari.olsen@firma.no) for denne måneden. Fastlønn er 40000 NOK. Legg til en overtidsgodtgjørelse på 8500 NOK.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 9,
+  "apiCalls": 9,
+  "apiErrors": 2,
+  "elapsedMs": 27264,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "departmentNumber": "1",
+        "name": "Avdeling"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/division",
+      "ok": false,
+      "status": 404,
+      "params": {
+        "count": "1",
+        "fields": "id,name"
+      },
+      "errorMessage": "GET /division → 404"
+    },
+    {
+      "method": "GET",
+      "path": "/salary/type",
+      "ok": true,
+      "params": {
+        "fields": "id,number,name",
+        "count": "100"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true,
+      "body": {
+        "department": {
+          "id": 30000012
+        },
+        "lastName": "Olsen",
+        "email": "kari.olsen@firma.no",
+        "userType": "STANDARD",
+        "dateOfBirth": "1990-01-15",
+        "firstName": "Kari"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/municipality",
+      "ok": false,
+      "status": 404,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      },
+      "errorMessage": "GET /municipality → 404"
+    },
+    {
+      "method": "GET",
+      "path": "/employee/employment",
+      "ok": true,
+      "params": {
+        "employeeId": "30000013",
+        "fields": "id,division"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": true,
+      "body": {
+        "employee": {
+          "id": 30000013
+        },
+        "startDate": "2026-03-01"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": true,
+      "body": {
+        "rate": 40000,
+        "count": 1,
+        "year": 2026,
+        "month": 3,
+        "employee": {
+          "id": 30000013
+        },
+        "salaryType": {
+          "id": 30000001
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": true,
+      "body": {
+        "year": 2026,
+        "salaryType": {
+          "id": 30000005
+        },
+        "employee": {
+          "id": 30000013
+        },
+        "month": 3,
+        "rate": 8500,
+        "count": 1
+      }
+    }
+  ]
+}

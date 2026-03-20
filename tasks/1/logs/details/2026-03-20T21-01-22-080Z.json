@@ -1,0 +1,169 @@
+{
+  "timestamp": "2026-03-20T21:01:22.080Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice",
+  "prompt": "Create an invoice for the customer Windmill Ltd (org no. 994973150) with three product lines: System Development (6517) at 22950 NOK with 25% VAT, Maintenance (5339) at 8900 NOK with 15% VAT (food), and Consulting Hours (8246) at 10450 NOK with 0% VAT (exempt).",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 11,
+  "apiCalls": 11,
+  "apiErrors": 0,
+  "elapsedMs": 28826,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "organizationNumber": "994973150",
+        "name": "Windmill Ltd",
+        "isCustomer": true
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "6517",
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "5339"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "8246"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "name": "System Development",
+        "vatType": {
+          "id": 3
+        },
+        "number": "6517",
+        "priceExcludingVatCurrency": 22950
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "priceExcludingVatCurrency": 8900,
+        "name": "Maintenance",
+        "vatType": {
+          "id": 31
+        },
+        "number": "5339"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "name": "Consulting Hours",
+        "number": "8246",
+        "vatType": {
+          "id": 5
+        },
+        "priceExcludingVatCurrency": 10450
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1920",
+        "fields": "id,version,bankAccountNumber,name"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "orderDate": "2026-03-20",
+        "orderLines": [
+          {
+            "vatType": {
+              "id": 3
+            },
+            "unitPriceExcludingVatCurrency": 22950,
+            "count": 1,
+            "product": {
+              "id": 30000018
+            }
+          },
+          {
+            "product": {
+              "id": 30000019
+            },
+            "count": 1,
+            "vatType": {
+              "id": 31
+            },
+            "unitPriceExcludingVatCurrency": 8900
+          },
+          {
+            "product": {
+              "id": 30000020
+            },
+            "count": 1,
+            "unitPriceExcludingVatCurrency": 10450,
+            "vatType": {
+              "id": 5
+            }
+          }
+        ],
+        "customer": {
+          "id": 30000017
+        },
+        "deliveryDate": "2026-03-20"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/30000001",
+      "ok": true,
+      "body": {
+        "bankAccountNumber": "86011117947",
+        "name": "Bankinnskudd",
+        "version": 0,
+        "id": 30000001
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-04-03",
+        "invoiceDate": "2026-03-20",
+        "orders": [
+          {
+            "id": 30000021
+          }
+        ]
+      }
+    }
+  ]
+}

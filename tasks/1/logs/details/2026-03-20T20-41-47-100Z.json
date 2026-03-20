@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-03-20T20:41:47.100Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "customer",
+  "prompt": "Crie o cliente Rio Azul Lda com número de organização 865253443. O endereço é Havnegata 16, 4006 Stavanger. E-mail: post@rio.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 12162,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "organizationNumber": "865253443",
+        "postalAddress": {
+          "city": "Stavanger",
+          "postalCode": "4006",
+          "addressLine1": "Havnegata 16"
+        },
+        "name": "Rio Azul Lda",
+        "isCustomer": true,
+        "email": "post@rio.no"
+      }
+    }
+  ]
+}

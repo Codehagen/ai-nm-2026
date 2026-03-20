@@ -1,0 +1,118 @@
+{
+  "timestamp": "2026-03-20T20:49:48.073Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice-payment",
+  "prompt": "Crie um pedido para o cliente Solmar Lda (org. nº 867069526) com os produtos Sessão de formação (4466) a 35600 NOK e Licença de software (3717) a 3250 NOK. Converta o pedido em fatura e registe o pagamento total.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 0,
+  "elapsedMs": 42330,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Solmar Lda",
+        "isCustomer": true,
+        "organizationNumber": "867069526"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "4466",
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "3717",
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1920",
+        "fields": "id,version,bankAccountNumber,name"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "customer": {
+          "id": 108270746
+        },
+        "orderDate": "2026-03-20",
+        "deliveryDate": "2026-03-20",
+        "orderLines": [
+          {
+            "unitPriceExcludingVatCurrency": 35600,
+            "count": 1,
+            "vatType": {
+              "id": 3
+            },
+            "product": {
+              "id": 84380923
+            }
+          },
+          {
+            "vatType": {
+              "id": 3
+            },
+            "product": {
+              "id": 84380924
+            },
+            "unitPriceExcludingVatCurrency": 3250,
+            "count": 1
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDate": "2026-03-20",
+        "invoiceDueDate": "2026-04-03",
+        "orders": [
+          {
+            "id": 401970754
+          }
+        ]
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147545646/:payment",
+      "ok": true,
+      "params": {
+        "paymentDate": "2026-03-20",
+        "paidAmount": "48562.5",
+        "paymentTypeId": "26328941"
+      }
+    }
+  ]
+}

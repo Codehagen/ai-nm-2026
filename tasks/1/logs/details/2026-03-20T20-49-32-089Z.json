@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-03-20T20:49:32.089Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice-payment",
+  "prompt": "Crie um pedido para o cliente Cascata Lda (org. nº 927161524) com os produtos Consultoria de dados (8400) a 5700 NOK e Design web (2535) a 3850 NOK. Converta o pedido em fatura e registe o pagamento total.",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 4,
+  "elapsedMs": 26313,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      },
+      "errorMessage": "GET /ledger/account → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "number": "1920",
+        "fields": "id,version,bankAccountNumber,name"
+      },
+      "errorMessage": "GET /ledger/account → 403"
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "organizationNumber": "927161524",
+        "isCustomer": true,
+        "name": "Cascata Lda"
+      },
+      "errorMessage": "POST /customer → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": false,
+      "status": 403,
+      "errorMessage": "GET /employee → 403"
+    }
+  ]
+}

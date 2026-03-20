@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T20:49:08.949Z",
+  "prompt": "Run payroll for Charles Taylor (charles.taylor@example.org) for this month. The base salary is 36450 NOK. Add a one-time bonus of 10300 NOK on top of the base salary. If the salary API is unavailable, you can use manual vouchers on salary accounts (5000-series) to record the payroll expense.",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

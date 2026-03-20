@@ -338,8 +338,8 @@ export async function solve(
             }
           }
 
-          // Enrich unhelpful 422 errors with actionable hints
-          if (!callResult.ok && callResult.status === 422) {
+          // Enrich unhelpful errors with actionable hints
+          if (!callResult.ok && (callResult.status === 422 || callResult.status === 500)) {
             callResult = enrichError(callResult, method, path);
           }
 

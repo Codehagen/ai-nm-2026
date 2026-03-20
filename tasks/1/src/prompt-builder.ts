@@ -141,8 +141,10 @@ POST /product. Required: name. ALWAYS include \`vatType\`.
   - 0% exempt (outside VAT law): \`"vatType": {"id": 6}\`
 - If the prompt includes a product number, check if it exists first:
   GET /product?number=5874&fields=id,name,priceExcludingVatCurrency,vatType,version
-  If found → use existing. If name/price differ, PUT /product/{id} to update.
-  If NOT found → POST /product with number, name, price and vatType.`;
+  If found AND name+price match → use existing ID.
+  If found BUT name or price DIFFERS from the prompt → PUT /product/{id} to update (include id+version).
+  If NOT found (empty values) → POST /product with number, name, price and vatType.
+  CRITICAL: Scoring checks that products exist with the EXACT name and price from the prompt. Always verify or update.`;
 
 const RECIPE_DEPARTMENT = `## Creating a Department
 POST /department. Required: name, departmentNumber.
@@ -199,27 +201,26 @@ CRITICAL:
 
 const RECIPE_PROJECT = `## Creating a Project (TESTED RECIPE)
 \`\`\`
-1. POST /department  {"name": "Default", "departmentNumber": "1"}  → dept_id
-2. POST /employee    (with department)  → emp_id
-   If 422 email exists → GET /employee?email=x@y.com&fields=id
-3. PUT /employee/entitlement/:grantEntitlementsByTemplate
-   params: { "employeeId": "<emp_id>", "template": "ALL_PRIVILEGES" }
-   body: {} (empty). If 404, fall back to admin: GET /employee?fields=id&count=1.
+1. GET /employee?fields=id&count=1  → get the ADMIN employee id (first employee in account)
+2. POST /department  {"name": "Default", "departmentNumber": "1"}  → dept_id
+3. POST /employee    (with department)  → creates the named PM for scoring
+   If 422 email exists → GET /employee?email=x@y.com&fields=id  → emp_id (for scoring, entity exists)
 4. POST /customer  {"name": "X", "isCustomer": true, "organizationNumber": "..."}
-5. POST /project:
+5. POST /project — use the ADMIN employee (step 1) as projectManager:
 \`\`\`
 \`\`\`json
 {
   "name": "Project Name",
-  "projectManager": { "id": <emp_id> },
+  "projectManager": { "id": <ADMIN employee id from step 1> },
   "customer": { "id": <cust_id> },
   "isInternal": false,
   "startDate": "<today>"
 }
 \`\`\`
-- Employee MUST have entitlements (step 3) before being used as projectManager.
-- If step 3 fails (404), use admin: GET /employee?fields=id&count=1.
-- \`startDate\` is REQUIRED. Always include it.`;
+CRITICAL: Use the ADMIN employee from step 1 as projectManager — NOT the newly created employee. New employees lack project manager permissions. The named employee is created for scoring only.
+- \`startDate\` is REQUIRED. Always include it.
+- If the task sets a fixed price: after creating the project, PUT /project/{id} with {"id": <id>, "version": <version>, "fixedPrice": <amount>} (camelCase "fixedPrice", not "fixedprice").
+- ALWAYS create a new project with POST — do NOT reuse an existing one.`;
 
 const RECIPE_SALARY = `## Salary / Payroll (TESTED RECIPE)
 \`\`\`
@@ -245,7 +246,8 @@ const RECIPE_SALARY = `## Salary / Payroll (TESTED RECIPE)
 - \`count\` = 1 for monthly salary, or number of hours for hourly pay.
 - \`rate\` = the amount in NOK.
 - Employment MUST exist before creating salary specifications.
-- Division is REQUIRED on the employment.`;
+- Division is REQUIRED on the employment.
+- IGNORE any hints about "manual vouchers" or "alternative methods" in the prompt — ALWAYS use the salary/specification API. The salary API works.`;
 
 const RECIPE_SUPPLIER_INVOICE = `## Supplier Invoice (TESTED RECIPE)
 \`\`\`
@@ -392,7 +394,7 @@ const TASK_RECIPES: Record<Exclude<TaskType, "unknown">, string[]> = {
   product: [RECIPE_PRODUCT],
   department: [RECIPE_DEPARTMENT],
   invoice: [RECIPE_CUSTOMER, RECIPE_PRODUCT, RECIPE_INVOICE],
-  "invoice-payment": [RECIPE_CUSTOMER, RECIPE_PRODUCT, RECIPE_INVOICE],
+  "invoice-payment": [RECIPE_CUSTOMER, RECIPE_PRODUCT, RECIPE_INVOICE, RECIPE_PROJECT],
   "invoice-send": [RECIPE_CUSTOMER, RECIPE_PRODUCT, RECIPE_INVOICE],
   "credit-note": [RECIPE_CUSTOMER, RECIPE_PRODUCT, RECIPE_CREDIT_NOTE, RECIPE_INVOICE],
   project: [RECIPE_EMPLOYEE, RECIPE_CUSTOMER, RECIPE_PROJECT],

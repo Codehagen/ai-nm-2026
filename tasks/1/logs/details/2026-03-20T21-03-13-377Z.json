@@ -1,0 +1,118 @@
+{
+  "timestamp": "2026-03-20T21:03:13.377Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice-payment",
+  "prompt": "Opprett en ordre for kunden Snøhetta AS (org.nr 914443806) med produktene Datarådgivning (7906) til 34450 kr og Systemutvikling (9594) til 17800 kr. Konverter ordren til faktura og registrer full betaling.",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 0,
+  "elapsedMs": 41767,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "isCustomer": true,
+        "organizationNumber": "914443806",
+        "name": "Snøhetta AS"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "7906"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "9594"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "orderDate": "2026-03-20",
+        "customer": {
+          "id": 108271448
+        },
+        "orderLines": [
+          {
+            "count": 1,
+            "unitPriceExcludingVatCurrency": 34450,
+            "vatType": {
+              "id": 3
+            },
+            "product": {
+              "id": 84380996
+            }
+          },
+          {
+            "count": 1,
+            "product": {
+              "id": 84380998
+            },
+            "vatType": {
+              "id": 3
+            },
+            "unitPriceExcludingVatCurrency": 17800
+          }
+        ],
+        "deliveryDate": "2026-03-20"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "orders": [
+          {
+            "id": 401971300
+          }
+        ],
+        "invoiceDate": "2026-03-20",
+        "invoiceDueDate": "2026-04-03"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147546459/:payment",
+      "ok": true,
+      "params": {
+        "paymentTypeId": "26330754",
+        "paidAmount": "65312.5",
+        "paymentDate": "2026-03-20"
+      }
+    }
+  ]
+}

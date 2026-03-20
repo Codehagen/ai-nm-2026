@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-03-20T20:16:14.778Z",
+  "prompt": "Registre 26 horas para Lucía Martínez (lucia.martinez@example.org) en la actividad \"Utvikling\" del proyecto \"Desarrollo e-commerce\" para Montaña SL (org. nº 869049328). Tarifa por hora: 1100 NOK/h. Genere una factura de proyecto al cliente basada en las horas registradas.",
+  "filesCount": 0,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 131045,
+  "status": "timeout"
+}

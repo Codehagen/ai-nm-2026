@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T20:55:46.764Z",
+  "prompt": "Crea y envía una factura al cliente Luna SL (org. nº 931597922) por 5450 NOK sin IVA. La factura es por Sesión de formación.",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

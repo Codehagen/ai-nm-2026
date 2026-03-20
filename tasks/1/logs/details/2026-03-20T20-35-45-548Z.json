@@ -1,0 +1,530 @@
+{
+  "timestamp": "2026-03-20T20:35:45.548Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "salary",
+  "prompt": "Processe o salário de Maria Almeida (maria.almeida@example.org) para este mês. O salário base é de 33550 NOK. Adicione um bónus único de 14400 NOK além do salário base.",
+  "filesCount": 0,
+  "steps": 30,
+  "toolCalls": 36,
+  "apiCalls": 36,
+  "apiErrors": 17,
+  "elapsedMs": 241368,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "departmentNumber": "1",
+        "name": "Avdeling"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/division",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "id,name"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/salary/type",
+      "ok": true,
+      "params": {
+        "count": "1000",
+        "fields": "id,number,name"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "dateOfBirth": "1990-01-15",
+        "lastName": "Almeida",
+        "email": "maria.almeida@example.org",
+        "firstName": "Maria",
+        "userType": "STANDARD",
+        "department": {
+          "id": 912121
+        }
+      },
+      "errorMessage": "Validering feilet. The email already exists. GET /employee?email=<the email> to find the existing employee and use their ID instead of creating a new one.",
+      "validationMessages": [
+        {
+          "field": "email",
+          "message": "Det finnes allerede en bruker med denne e-postadressen.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/municipality",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/salary/type",
+      "ok": true,
+      "params": {
+        "number": "2002",
+        "fields": "id,number,name"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "email": "maria.almeida@example.org",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/division",
+      "ok": true,
+      "body": {
+        "organizationNumber": "000000000",
+        "municipalityDate": "2026-01-01",
+        "municipality": {
+          "id": 1
+        },
+        "name": "Hovedenhet",
+        "startDate": "2026-01-01"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "startDate": "2026-03-01",
+        "division": {
+          "id": 108269693
+        },
+        "employee": {
+          "id": 18177886
+        }
+      },
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "employee.dateOfBirth",
+          "message": "Feltet må fylles ut.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/employee/18177886",
+      "ok": true
+    },
+    {
+      "method": "PUT",
+      "path": "/employee/18177886",
+      "ok": true,
+      "body": {
+        "dateOfBirth": "1990-01-15",
+        "id": 18177886,
+        "version": 2
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": true,
+      "body": {
+        "division": {
+          "id": 108269693
+        },
+        "startDate": "2026-03-01",
+        "employee": {
+          "id": 18177886
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 500,
+      "body": {
+        "month": 3,
+        "count": 1,
+        "rate": 33550,
+        "year": 2026,
+        "salaryType": {
+          "id": 48817756
+        },
+        "employee": {
+          "id": 18177886
+        }
+      },
+      "errorMessage": "POST /salary/specification → 500"
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 500,
+      "body": {
+        "salaryType": {
+          "id": 48817789
+        },
+        "employee": {
+          "id": 18177886
+        },
+        "rate": 14400,
+        "year": 2026,
+        "count": 1,
+        "month": 3
+      },
+      "errorMessage": "POST /salary/specification → 500"
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 500,
+      "body": {
+        "count": 1,
+        "year": 2026,
+        "rate": 33550,
+        "salaryType": {
+          "id": 48817756
+        },
+        "employee": {
+          "id": 18177886
+        },
+        "month": 3
+      },
+      "errorMessage": "POST /salary/specification → 500"
+    },
+    {
+      "method": "GET",
+      "path": "/salary/type/48817756",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/employee/employment/2802081",
+      "ok": true
+    },
+    {
+      "method": "GET",
+      "path": "/employee/employment",
+      "ok": true,
+      "params": {
+        "employeeId": "18177886"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/employee/18177886",
+      "ok": true,
+      "body": {
+        "id": 18177886,
+        "userType": "STANDARD",
+        "version": 3,
+        "dateOfBirth": "1990-01-15"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "month": 3,
+        "count": 1,
+        "rate": 33550,
+        "year": 2026,
+        "salaryType": {
+          "id": 48817756
+        },
+        "date": "2026-03-20",
+        "employee": {
+          "id": 18177886
+        }
+      },
+      "errorMessage": "Request mapping failed Salary specification requires an active employment. POST /employee/employment first with employee.id, startDate, and division.id. Also check that year and month match the current payroll period.",
+      "validationMessages": [
+        {
+          "field": "date",
+          "message": "Feltet eksisterer ikke i objektet.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/employee/employment/2802081",
+      "ok": true,
+      "body": {
+        "startDate": "2026-01-01",
+        "version": 0,
+        "id": 2802081,
+        "division": {
+          "id": 108269693
+        },
+        "employee": {
+          "id": 18177886
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 500,
+      "body": {
+        "employee": {
+          "id": 18177886
+        },
+        "salaryType": {
+          "id": 48817756
+        },
+        "month": 3,
+        "rate": 33550,
+        "count": 1,
+        "year": 2026
+      },
+      "errorMessage": "POST /salary/specification → 500"
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 500,
+      "body": {
+        "year": 2026,
+        "employee": {
+          "id": 18177886
+        },
+        "count": 1,
+        "amount": 33550,
+        "salaryType": {
+          "id": 48817756
+        },
+        "month": 3,
+        "rate": 33550
+      },
+      "errorMessage": "POST /salary/specification → 500"
+    },
+    {
+      "method": "GET",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 500,
+      "params": {
+        "count": "1"
+      },
+      "errorMessage": "GET /salary/specification → 500"
+    },
+    {
+      "method": "GET",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 500,
+      "params": {
+        "employeeId": "18177886"
+      },
+      "errorMessage": "GET /salary/specification → 500"
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 500,
+      "body": {
+        "month": "3",
+        "count": 1,
+        "year": 2026,
+        "employee": {
+          "id": 18177886
+        },
+        "rate": 33550,
+        "salaryType": {
+          "id": 48817756
+        }
+      },
+      "errorMessage": "POST /salary/specification → 500"
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 500,
+      "body": {
+        "month": 3,
+        "description": "Base salary",
+        "count": 1,
+        "rate": 33550,
+        "salaryType": {
+          "id": 48817756
+        },
+        "year": 2026,
+        "employee": {
+          "id": 18177886
+        }
+      },
+      "errorMessage": "POST /salary/specification → 500"
+    },
+    {
+      "method": "PUT",
+      "path": "/employee/18177886",
+      "ok": true,
+      "body": {
+        "department": {
+          "id": 912121
+        },
+        "id": 18177886,
+        "dateOfBirth": "1990-01-15",
+        "version": 3
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 500,
+      "body": {
+        "employee": {
+          "id": 18177886
+        },
+        "salaryType": {
+          "id": 48817756
+        },
+        "count": 1,
+        "month": 3,
+        "year": 2026,
+        "rate": 33550
+      },
+      "errorMessage": "POST /salary/specification → 500"
+    },
+    {
+      "method": "PUT",
+      "path": "/employee/18177886",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "version": 4,
+        "nationalIdentityNumber": "15019012345",
+        "dateOfBirth": "1990-01-15",
+        "id": 18177886
+      },
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "nationalIdentityNumber",
+          "message": "Ugyldig format.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 500,
+      "body": {
+        "employee": {
+          "id": 18177886
+        },
+        "rate": 33550,
+        "salaryType": {
+          "id": 48817756
+        },
+        "year": "2026",
+        "count": 1,
+        "month": "3"
+      },
+      "errorMessage": "POST /salary/specification → 500"
+    },
+    {
+      "method": "GET",
+      "path": "/salary/type",
+      "ok": true,
+      "params": {
+        "number": "2000"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "email": "maria.almeida@example.org"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 500,
+      "body": {
+        "rate": 33550,
+        "year": 2026,
+        "month": 3,
+        "employee": {
+          "id": 18177886
+        },
+        "count": 1,
+        "salaryType": {
+          "id": 48817756
+        }
+      },
+      "errorMessage": "POST /salary/specification → 500"
+    },
+    {
+      "method": "POST",
+      "path": "/salary/specification",
+      "ok": false,
+      "status": 500,
+      "body": {
+        "year": 2026,
+        "month": 3,
+        "rate": 14400,
+        "employee": {
+          "id": 18177886
+        },
+        "count": 1,
+        "salaryType": {
+          "id": 48817789
+        }
+      },
+      "errorMessage": "POST /salary/specification → 500"
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true,
+      "body": {
+        "lastName": "Test",
+        "dateOfBirth": "1990-01-15",
+        "department": {
+          "id": 912121
+        },
+        "userType": "STANDARD",
+        "firstName": "Test",
+        "email": "test@example.org"
+      }
+    }
+  ]
+}

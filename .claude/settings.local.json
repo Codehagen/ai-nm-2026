@@ -120,7 +120,11 @@
       "Bash(npx tsc:*)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:9053/health)",
       "Bash(curl:*)",
-      "Bash(log show:*)"
+      "Bash(log show:*)",
+      "Bash(rm -rf _fast2s)",
+      "Bash(mkdir _fast2s)",
+      "Bash(python test_local.py --zip submission_fast2stage.zip --quick)",
+      "Bash(python test_local.py --zip submission_fast2stage.zip --data data/yolo-3way)"
     ]
   }
 }

@@ -1,0 +1,57 @@
+{
+  "timestamp": "2026-03-20T20:10:24.130Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "employee",
+  "prompt": "Me har ein ny tilsett som heiter Randi Brekke, fødd 22. October 1980. Opprett vedkomande som tilsett med e-post randi.brekke@example.org og startdato 28. July 2026.",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 0,
+  "elapsedMs": 28106,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true,
+      "params": {
+        "count": "1"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/division",
+      "ok": true,
+      "params": {
+        "count": "1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true,
+      "body": {
+        "dateOfBirth": "1980-10-22",
+        "email": "randi.brekke@example.org",
+        "department": {
+          "id": 713707
+        },
+        "lastName": "Brekke",
+        "userType": "STANDARD",
+        "firstName": "Randi"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": true,
+      "body": {
+        "employee": {
+          "id": 18579561
+        },
+        "startDate": "2026-07-28"
+      }
+    }
+  ]
+}

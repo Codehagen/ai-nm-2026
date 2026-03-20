@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-03-20T20:34:32.011Z",
+  "prompt": "Enregistrez 12 heures pour Louis Petit (louis.petit@example.org) sur l'activité \"Design\" du projet \"Configuration cloud\" pour Soleil SARL (nº org. 933986861). Taux horaire : 1450 NOK/h. Générez une facture de projet au client basée sur les heures enregistrées.",
+  "filesCount": 0,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 173315,
+  "status": "timeout"
+}
