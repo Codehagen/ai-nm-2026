@@ -4,6 +4,12 @@ Each entry tracks a system prompt or mock fix, what caused it, and the benchmark
 
 ## 2026-03-20
 
+### Fix: Customer creation with address (competition submission — 5/8, checks 5-7 failed)
+**Trigger**: Competition task — create customer Fjordkraft AS with address Fjordveien 129, 2317 Hamar. 4 calls, 1 error, address checks failed.
+**Root cause**: Agent used `address` field (wrong) → 422, then fell back to separate GET/PUT /address endpoint. Scoring checks `postalAddress` on the customer object.
+**Fix (system-prompt.ts)**: Added `postalAddress` as nested object in POST /customer example. Explicit warning: "The address field is `postalAddress` (NOT `address`). Using `address` will cause 422."
+**Benchmark**: Added `t1-customer-address-nb` and `t1-customer-address-en`. Verified on real sandbox: 1 call, 0 errors.
+
 ### Fix: Travel expense with costs & per diem (competition submission — 10/16 errors)
 **Trigger**: Competition task — English travel expense with flight, taxi, and per diem. 16 calls, 10 errors, agent couldn't add cost items or per diem.
 **Root cause**: System prompt had no recipe for travel expense sub-endpoints (POST /travelExpense/cost, POST /travelExpense/perDiemCompensation). Agent blindly tried endpoints and failed repeatedly.

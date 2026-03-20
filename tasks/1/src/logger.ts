@@ -29,6 +29,10 @@ export interface SolveLog {
     path: string;
     ok: boolean;
     status?: number;
+    params?: Record<string, string>;
+    body?: unknown;
+    errorMessage?: string;
+    validationMessages?: Array<{ field: string; message: string }>;
   }>;
 }
 

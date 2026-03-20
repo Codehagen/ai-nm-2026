@@ -98,6 +98,47 @@ export const BENCHMARK_PROMPTS: BenchmarkPrompt[] = [
     ],
   },
   {
+    id: "t1-customer-address-nb",
+    category: "create-customer-address",
+    tier: 1,
+    lang: "nb",
+    prompt:
+      "Opprett kunden Fjordkraft AS med organisasjonsnummer 843216285. Adressen er Fjordveien 129, 2317 Hamar. E-post: post@fjordkraft.no.",
+    optimalCalls: 1,
+    verify: [
+      {
+        entity: "customer",
+        find: { field: "name", value: "Fjordkraft AS" },
+        expectFields: {
+          organizationNumber: "843216285",
+          email: "post@fjordkraft.no",
+          isCustomer: true,
+        },
+      },
+    ],
+  },
+  {
+    id: "t1-customer-address-en",
+    category: "create-customer-address",
+    tier: 1,
+    lang: "en",
+    prompt:
+      "Create customer Northern Lights Ltd with organization number 998877112. Address: Harbour Road 45, 5003 Bergen. Email: info@northernlights.no.",
+    optimalCalls: 1,
+    verify: [
+      {
+        entity: "customer",
+        find: { field: "name", value: "Northern Lights Ltd" },
+        expectFields: {
+          organizationNumber: "998877112",
+          email: "info@northernlights.no",
+          isCustomer: true,
+        },
+      },
+    ],
+  },
+
+  {
     id: "t1-product-nb",
     category: "create-product",
     tier: 1,

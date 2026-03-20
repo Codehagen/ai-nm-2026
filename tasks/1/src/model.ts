@@ -108,6 +108,10 @@ export async function solve(
             path,
             ok: result.ok,
             status: result.ok ? undefined : result.status,
+            params: params || undefined,
+            body: body || undefined,
+            errorMessage: !result.ok ? result.message : undefined,
+            validationMessages: !result.ok ? result.validationMessages : undefined,
           });
           if (!result.ok) apiErrors++;
           return result;
