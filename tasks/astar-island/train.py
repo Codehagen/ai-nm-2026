@@ -43,7 +43,11 @@ BLEND_WEIGHT = 0.35
 
 # L7 observation-ratio correction strengths per class:
 # [empty, settlement, port, ruin, forest, mountain]
-L7_STRENGTHS = np.array([1.20, 0.80, 0.44, 0.80, 1.30, 0.0])
+# Safe L7: zero for rare classes (port, ruin) — prevents catastrophic KL
+L7_STRENGTHS = np.array([1.20, 0.80, 0.0, 0.0, 1.30, 0.0])
+L7_MIN_OBS = np.array([200, 50, 30, 20, 100, 0])  # min obs count per class
+L7_ADJ_MIN = 0.85  # hard safety clamp
+L7_ADJ_MAX = 1.20
 
 # Per-terrain XGBoost hyperparameters
 XGB_HPARAMS = {
@@ -68,6 +72,7 @@ ROUNDS = {
     4: "8e839974-b13b-407b-a5e7-fc749d877195",
     5: "fd3c92ff-3178-4dc9-8d9b-acf389b3982b",
     6: "ae78003a-4efe-425a-881a-d16a39bca0ad",
+    7: "36e581f1-73f8-453f-ab98-cbe3052b701b",
 }
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -160,8 +165,8 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements):
 
 
 def evaluate_loro():
-    """Run full 5-fold LORO and return (avg, per_round_dict)."""
-    test_rounds = [1, 2, 4, 5, 6]
+    """Run full 6-fold LORO and return (avg, per_round_dict)."""
+    test_rounds = [1, 2, 4, 5, 6, 7]
     results = {}
 
     for held_out in test_rounds:
@@ -214,7 +219,13 @@ def evaluate_loro():
                     if m_count > 0:
                         model_avg /= m_count
                         ratio = obs_freq / np.maximum(model_avg, 1e-6)
-                        adj = 1.0 + L7_STRENGTHS * (ratio - 1.0)
+                        # Safe L7: gate by observation count, clamp adjustments
+                        strengths = L7_STRENGTHS.copy()
+                        for c in range(NUM_CLASSES):
+                            if obs_cls[c] < L7_MIN_OBS[c]:
+                                strengths[c] = 0.0
+                        adj = 1.0 + strengths * (ratio - 1.0)
+                        adj = np.clip(adj, L7_ADJ_MIN, L7_ADJ_MAX)
                         for y in range(h):
                             for x in range(w):
                                 if grid[y][x] in {10, 5}:

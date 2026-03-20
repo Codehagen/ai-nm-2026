@@ -905,10 +905,17 @@ def build_prediction(
             if m_count > 0:
                 model_avg /= m_count
                 ratio = obs_freq / np.maximum(model_avg, 1e-6)
-                # Per-class correction strengths (cross-round validated):
-                # Weak for empty/port (stable), stronger for settlement/ruin (variable)
-                cls_strength = np.array([1.20, 0.80, 0.44, 0.80, 1.30, 0.0])
+                # Safe L7: zero strength for rare classes (port, ruin) to
+                # prevent catastrophic KL from observation under-sampling.
+                # KL is 60x more punishing for under-prediction than over-prediction.
+                cls_strength = np.array([1.20, 0.80, 0.0, 0.0, 1.30, 0.0])
+                # Gate: require minimum observations per class
+                min_obs = np.array([200, 50, 30, 20, 100, 0])
+                for c in range(NUM_CLASSES):
+                    if obs_cls[c] < min_obs[c]:
+                        cls_strength[c] = 0.0
                 adj = 1.0 + cls_strength * (ratio - 1.0)
+                adj = np.clip(adj, 0.85, 1.20)  # hard safety clamp
                 for y in range(h):
                     for x in range(w):
                         if initial_grid[y][x] in {10, 5}:
