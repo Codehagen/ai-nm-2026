@@ -45,3 +45,9 @@ retrain	93.253054	0.0	0	keep	XGBoost with subsample=0.9 colsample=0.9 (cross-rou
 9dc085a	93.286334	0.0	31	keep	add dist_to_edge/bfs_dist/passable_5x5 (28 features, R2=91.85)	-
 b5946e9	93.269900	0.0	10	keep	add land_ratio_r3 (29 features)	-
 5247c90	93.281400	0.0	2	keep	add land_r3/(1+bfs_dist) interaction (30 features)	-
+tested	-	-	-	discard	voronoi territory size	non-monotonic, no signal
+tested	-	-	-	discard	voronoi boundary detection	marginal P(ruin) +0.003
+tested	-	-	-	discard	residual prediction approach	worse than blend (91.39 vs 91.81)
+tested	-	-	-	discard	center of mass distance	near-zero correlation
+retrain	93.881761	0.0	0	keep	XGBoost mcw=3 + 30 features + 2-round (R1=93.88, cross-round R2=91.85)	-
+8ea34f3	93.761995	0.0	38	keep	observation ratio correction Layer 7 (cross-round R2=92.08!)	-

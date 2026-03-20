@@ -845,6 +845,44 @@ def build_prediction(
     if gbt_pred is not None:
         tensor = (1 - GBT_BLEND_WEIGHT) * tensor + GBT_BLEND_WEIGHT * gbt_pred
 
+    # Layer 7: Observation-based ratio correction.
+    # Use pooled observations from ALL seeds to estimate the hidden expansion
+    # rate, then adjust predictions to match observed terrain frequencies.
+    # This adapts the model to each round's unique hidden parameters.
+    if all_observations:
+        obs_cls = np.zeros(NUM_CLASSES)
+        obs_total = 0
+        for obs in all_observations:
+            for row in obs.get("grid", []):
+                for code in row:
+                    if code not in {10, 5}:  # skip static
+                        obs_cls[TERRAIN_TO_CLASS.get(code, 0)] += 1
+                        obs_total += 1
+
+        if obs_total > 100:  # need enough observations
+            obs_freq = obs_cls / obs_total
+            # Compute model's average prediction for dynamic cells
+            h, w, _ = tensor.shape
+            model_avg = np.zeros(NUM_CLASSES)
+            m_count = 0
+            for y in range(h):
+                for x in range(w):
+                    if initial_grid[y][x] not in {10, 5}:
+                        model_avg += tensor[y, x]
+                        m_count += 1
+            if m_count > 0:
+                model_avg /= m_count
+                ratio = obs_freq / np.maximum(model_avg, 1e-6)
+                # Apply correction with strength 0.5 (cross-round validated)
+                adj = 1.0 + 0.5 * (ratio - 1.0)
+                for y in range(h):
+                    for x in range(w):
+                        if initial_grid[y][x] in {10, 5}:
+                            continue
+                        tensor[y, x] *= adj
+                        tensor[y, x] = np.maximum(tensor[y, x], PROB_FLOOR)
+                        tensor[y, x] /= tensor[y, x].sum()
+
     # Final normalization — CRITICAL: enforce floor + renormalize
     tensor = normalize_prediction(tensor)
 
