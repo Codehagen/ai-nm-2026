@@ -64,10 +64,10 @@ XGB_HPARAMS = {
     "plains": dict(n_estimators=300, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
                    colsample_bytree=0.9, min_child_weight=3),
-    "forest": dict(n_estimators=300, max_depth=4, learning_rate=0.08,
+    "forest": dict(n_estimators=300, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
                    colsample_bytree=0.9, min_child_weight=3),
-    "settl":  dict(n_estimators=300, max_depth=4, learning_rate=0.08,
+    "settl":  dict(n_estimators=300, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
                    colsample_bytree=0.9, min_child_weight=3),
 }
