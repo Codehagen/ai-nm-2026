@@ -1,0 +1,84 @@
+{
+  "timestamp": "2026-03-20T23:51:21.860Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice-payment",
+  "prompt": "El pago de Montaña SL (org. nº 908725255) por la factura \"Licencia de software\" (11250 NOK sin IVA) fue devuelto por el banco. Revierta el pago para que la factura vuelva a mostrar el importe pendiente.",
+  "filesCount": 0,
+  "steps": 7,
+  "toolCalls": 7,
+  "apiCalls": 7,
+  "apiErrors": 0,
+  "elapsedMs": 42292,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": true,
+      "params": {
+        "invoiceDateTo": "2030-01-01",
+        "fields": "id,invoiceNumber,amount,amountOutstanding,customer(id,name)",
+        "invoiceDateFrom": "2020-01-01"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "isCustomer": true,
+        "name": "Montaña SL",
+        "organizationNumber": "908725255"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "priceExcludingVatCurrency": 11250,
+        "vatType": {
+          "id": 3
+        },
+        "name": "Licencia de software"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/2147556407",
+      "ok": true,
+      "params": {
+        "invoiceDateFrom": "2020-01-01",
+        "invoiceDateTo": "2030-01-01"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147556407/:payment",
+      "ok": true,
+      "params": {
+        "paidAmount": "-14062.5",
+        "paymentDate": "2026-03-21",
+        "paymentTypeId": "27297475"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/2147556407",
+      "ok": true,
+      "params": {
+        "invoiceDateTo": "2030-01-01",
+        "invoiceDateFrom": "2020-01-01",
+        "fields": "id,amountOutstanding"
+      }
+    }
+  ]
+}

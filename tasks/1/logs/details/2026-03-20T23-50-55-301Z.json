@@ -1,0 +1,158 @@
+{
+  "timestamp": "2026-03-20T23:50:55.301Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "project",
+  "prompt": "Sett fastpris 478900 kr på prosjektet \"Automatiseringsprosjekt\" for Strandvik AS (org.nr 858540402). Prosjektleiar er Bjørn Aasen (bjrn.aasen@example.org). Fakturer kunden for 25 % av fastprisen som ei delbetaling.",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 11,
+  "apiCalls": 11,
+  "apiErrors": 0,
+  "elapsedMs": 35405,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "name": "Avdeling",
+        "departmentNumber": "1"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "organizationNumber": "858540402",
+        "isCustomer": true,
+        "name": "Strandvik AS"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "priceExcludingVatCurrency": 119725,
+        "vatType": {
+          "id": 3
+        },
+        "name": "Delbetaling"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/461159863",
+      "ok": true,
+      "body": {
+        "bankAccountNumber": "86011117947",
+        "id": 461159863,
+        "name": "Bankinnskudd",
+        "version": 0
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true,
+      "body": {
+        "department": {
+          "id": 922397
+        },
+        "firstName": "Bjørn",
+        "email": "bjrn.aasen@example.org",
+        "userType": "STANDARD",
+        "lastName": "Aasen",
+        "dateOfBirth": "1990-01-15"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true,
+      "body": {
+        "isInternal": false,
+        "startDate": "2026-03-21",
+        "customer": {
+          "id": 108298792
+        },
+        "projectManager": {
+          "id": 18600212
+        },
+        "name": "Automatiseringsprosjekt"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/project/401978951",
+      "ok": true,
+      "body": {
+        "isFixedPrice": true,
+        "projectManager": {
+          "id": 18600216
+        },
+        "id": 401978951,
+        "version": 0,
+        "fixedprice": 478900
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "orderLines": [
+          {
+            "unitPriceExcludingVatCurrency": 119725,
+            "count": 1,
+            "product": {
+              "id": 84399077
+            },
+            "vatType": {
+              "id": 3
+            }
+          }
+        ],
+        "customer": {
+          "id": 108298792
+        },
+        "orderDate": "2026-03-21",
+        "deliveryDate": "2026-03-21"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "orders": [
+          {
+            "id": 401978954
+          }
+        ],
+        "invoiceDate": "2026-03-21",
+        "invoiceDueDate": "2026-04-04"
+      }
+    }
+  ]
+}

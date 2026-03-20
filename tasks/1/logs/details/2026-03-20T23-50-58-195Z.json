@@ -1,0 +1,65 @@
+{
+  "timestamp": "2026-03-20T23:50:58.195Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice-payment",
+  "prompt": "Kunden Strandvik AS (org.nr 827237108) har ein uteståande faktura på 30500 kr eksklusiv MVA for \"Skylagring\". Registrer full betaling på denne fakturaen.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 5,
+  "apiCalls": 5,
+  "apiErrors": 0,
+  "elapsedMs": 21007,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "isCustomer": true,
+        "organizationNumber": "827237108",
+        "name": "Strandvik AS"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "vatType": {
+          "id": 3
+        },
+        "priceExcludingVatCurrency": 30500,
+        "name": "Skylagring"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": true,
+      "params": {
+        "fields": "id,amount,amountIncVat,customer,isClosed",
+        "invoiceDateTo": "2030-01-01",
+        "invoiceDateFrom": "2020-01-01"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147539727/:payment",
+      "ok": true,
+      "params": {
+        "paymentDate": "2026-03-21",
+        "paidAmount": "38125",
+        "paymentTypeId": "27376855"
+      }
+    }
+  ]
+}

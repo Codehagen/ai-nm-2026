@@ -270,7 +270,7 @@ export function classifyTask(prompt: string): TaskType {
   // --- Update customer
   if (
     has(t, "oppdater", "update", "actualizar", "atualizar", "aktualisieren", "mettre à jour", "endre") &&
-    has(t, "kunde", "customer", "cliente", "client")
+    (hasWord(t, "kunde") || has(t, "kunden", "kunder", "customer", "cliente", "client"))
   ) {
     return "update-customer";
   }
@@ -304,8 +304,9 @@ export function classifyTask(prompt: string): TaskType {
     return "department";
   }
 
-  // --- Customer
-  if (has(t, "kunde", "customer", "cliente", "client", "klient")) {
+  // --- Customer (hasWord for "kunde" to avoid compound words like "Kundeservice";
+  //     "kunden"/"kunder" are safe as substring — they're inflected forms, not compound prefixes)
+  if (hasWord(t, "kunde") || has(t, "kunden", "kunder", "customer", "cliente", "client", "klient")) {
     return "customer";
   }
 

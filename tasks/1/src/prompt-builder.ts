@@ -167,6 +167,7 @@ CRITICAL ORDER — do these steps in EXACTLY this sequence:
 2. POST /customer  {"name": "X", "isCustomer": true, "organizationNumber": "..."}
 3. POST /product   {"name": "Y", "priceExcludingVatCurrency": 1000, "vatType": {"id": 3}}
 4. POST /order     {"customer": {"id": <cust_id>}, "deliveryDate": "<today>", "orderDate": "<today>", "orderLines": [{"product": {"id": <prod_id>}, "count": 1, "unitPriceExcludingVatCurrency": 1000, "vatType": {"id": 3}}]}
+   CRITICAL: \`deliveryDate\` is REQUIRED on orders. Missing it = 422.
 5. POST /invoice   {"invoiceDate": "<today>", "invoiceDueDate": "<due>", "orders": [{"id": <order_id>}]}
 
 ### PUT /invoice/{id}/:payment — USES QUERY PARAMS, NOT BODY!
@@ -182,7 +183,8 @@ Send invoice: params: { "sendType": "EMAIL" }. No body needed.
 1. POST /customer + POST /product (for scoring)
 2. GET /invoice?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01&fields=id,amount,customer
 3. GET /invoice/paymentType?fields=id,description
-4. PUT /invoice/{id}/:payment with params`;
+4. PUT /invoice/{id}/:payment with params
+**Do NOT GET the invoice again after payment/reversal to verify — it wastes an API call and hurts efficiency.**`;
 
 const RECIPE_CREDIT_NOTE = `## Credit Notes (TESTED RECIPE)
 
@@ -317,14 +319,15 @@ const RECIPE_TRAVEL_EXPENSE = `## Travel Expense (TESTED RECIPE)
 - Do NOT use \`departureDate\`/\`returnDate\` as top-level fields.
 
 ### Adding Costs:
-3. GET /travelExpense/costCategory?count=100&fields=id,description — call ONCE, scan the full list.
+3. GET /travelExpense/costCategory?count=100&fields=id,description — call EXACTLY ONCE, save ALL results.
    Common categories: "Fly/Flight" for flights, "Taxi" for taxi, "Hotell/Hotel" for hotels. Match by partial description.
-4. GET /travelExpense/paymentType?count=10&fields=id,description — call ONCE, use first result (usually "Egenfinansiert").
+   **DO NOT call this endpoint again. You already have the full list. Pick IDs from memory.**
+4. GET /travelExpense/paymentType?count=10&fields=id,description — call EXACTLY ONCE, use first result (usually "Egenfinansiert").
+   **DO NOT call this endpoint again.**
 5. POST /travelExpense/cost (one per expense):
    {"travelExpense": {"id": <travel_id>}, "costCategory": {"id": <cat_id>}, "paymentType": {"id": <pay_id>}, "date": "2026-03-19", "amountCurrencyIncVat": 7200, "comments": "Flight ticket"}
    - Costs use \`amountCurrencyIncVat\` (NOT \`amount\` or \`rate\`).
    - If you get 409 RevisionException, just retry the same POST once — it's a transient version conflict.
-   IMPORTANT: Do NOT call GET /travelExpense/costCategory multiple times. Get the full list once and pick from it.
 
 ### Adding Per Diem:
 6. GET /travelExpense/rateCategory?type=PER_DIEM&isValidDomestic=true&dateFrom=<dep>&dateTo=<ret>&count=50&fields=id,name
@@ -369,7 +372,10 @@ const RECIPE_TIMESHEET = `## Timesheet / Time Registration (TESTED RECIPE)
 - \`hours\` is decimal (7.5 for 7h30m).
 
 ### Timesheet + Project Invoice:
-5. POST /product + POST /order (with project) + POST /invoice
+5. **BEFORE creating any invoice:** Set up bank account:
+   GET /ledger/account?number=1920&fields=id,version,bankAccountNumber,name
+   If \`bankAccountNumber\` is empty: PUT /ledger/account/{id} with {"id":..,"version":..,"name":..,"bankAccountNumber":"86011117947"}
+6. POST /product + POST /order (with project, include \`deliveryDate\`) + POST /invoice
    Use hours as \`count\` and hourly rate as \`unitPriceExcludingVatCurrency\`.`;
 
 // ─── FOOTER: Golden rule, fresh account, error handling ──────────────────

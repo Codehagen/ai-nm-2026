@@ -1,4 +1,5 @@
 import { generateText, tool, stepCountIs } from "ai";
+import type { StopCondition, StepResult } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
@@ -140,6 +141,100 @@ export function retryKey(path: string, body: Record<string, unknown>): string {
   return `${norm}:${id}`;
 }
 
+/** Known-invalid fields that the model hallucinates in GET requests */
+export const INVALID_GET_FIELDS = new Set(["isClosed", "amountIncVat", "company", "address"]);
+
+/** Strip known-invalid fields from a GET fields parameter string */
+export function stripInvalidFields(fields: string): string {
+  return fields
+    .split(",")
+    .filter((f) => !INVALID_GET_FIELDS.has(f.trim()))
+    .join(",");
+}
+
+/** Custom stop condition: halt after error budget exceeded (saves API calls when bonus is already lost) */
+export function errorBudgetExceeded(threshold = 12): StopCondition<any> {
+  return ({ steps }: { steps: Array<StepResult<any>> }) => {
+    const errors = steps
+      .flatMap((s) => s.staticToolResults)
+      .filter((r) => {
+        const output = r?.output as TxResult | undefined;
+        return output && !output.ok;
+      }).length;
+    return errors >= threshold;
+  };
+}
+
+/**
+ * Build adaptive per-step guidance based on error patterns from previous steps.
+ * Returns system prompt override when corrective action is needed.
+ */
+export function buildAdaptiveGuidance(
+  steps: Array<StepResult<any>>,
+  stepNumber: number,
+  baseSystem: string,
+): { system?: string } {
+  if (steps.length === 0) return {};
+
+  const corrections: string[] = [];
+
+  // Detect bank account missing error → inject fix instructions
+  const hasBankError = steps.some((s) =>
+    s.staticToolResults.some((r) => {
+      const output = r?.output as TxResult | undefined;
+      if (!output || output.ok) return false;
+      return (
+        output.message?.includes("bankkontonummer") ||
+        output.validationMessages?.some((v: { message: string }) =>
+          v.message?.includes("bankkontonummer")
+        )
+      );
+    })
+  );
+  if (hasBankError) {
+    corrections.push(
+      'BANK ACCOUNT REQUIRED: You MUST set up the bank account BEFORE creating invoices. ' +
+      'Do: GET /ledger/account?number=1920&fields=id,version,bankAccountNumber,name → ' +
+      'PUT /ledger/account/{id} with {"id":..,"version":..,"name":..,"bankAccountNumber":"86011117947"} → then retry.'
+    );
+  }
+
+  // Detect 403 cascade: credentials are broken, no point continuing
+  const allResults = steps.flatMap((s) =>
+    s.staticToolResults.map((r) => r?.output as TxResult | undefined)
+  ).filter(Boolean) as TxResult[];
+  if (allResults.length >= 2 && allResults.every((r) => !r.ok && r.status === 403)) {
+    corrections.push(
+      'STOP IMMEDIATELY: All API calls returned 403 Forbidden. The credentials are invalid. ' +
+      'No further calls will succeed. Output your final answer now.'
+    );
+  }
+
+  // Detect thrashing: 3+ consecutive errors on the same endpoint
+  const recentResults = steps.slice(-3).flatMap((s) =>
+    s.staticToolCalls.map((tc, i) => ({
+      path: (tc.input as { path: string }).path,
+      ok: ((s.staticToolResults[i]?.output as TxResult | undefined)?.ok) ?? false,
+    }))
+  );
+  const recentErrors = recentResults.filter((r) => !r.ok);
+  if (recentErrors.length >= 3) {
+    const paths = [...new Set(recentErrors.map((r) => r.path))];
+    if (paths.length === 1) {
+      corrections.push(
+        `STOP THRASHING: You've failed 3+ times on ${paths[0]}. Read the error messages carefully. ` +
+        'Try a completely different approach or skip this step and move on.'
+      );
+    }
+  }
+
+  if (corrections.length === 0) return {};
+
+  return {
+    system: baseSystem + "\n\n## ADAPTIVE CORRECTIONS\n" + corrections.join("\n\n"),
+  };
+}
+
 /** Normalize API path — strips /v2/ prefix Gemini sometimes adds */
 export function normalizePath(path: string): string {
   if (path.startsWith("/v2/")) path = path.slice(3);
@@ -222,11 +317,12 @@ export async function solve(
 
   // Phase 2: Composable prompt — classify task and build focused prompt
   const taskType = classifyTask(request.prompt);
+  const baseSystem = buildSystemPrompt(taskType) + `\n\nToday's date: ${today}`;
 
   const result = await generateText({
     model: getModel(MODEL_ID),
     temperature: 0, // Deterministic: reduces random errors on tool calls
-    system: buildSystemPrompt(taskType) + `\n\nToday's date: ${today}`,
+    system: baseSystem,
     messages: [{ role: "user", content }],
     tools: {
       tripletex_request: tool({
@@ -322,11 +418,7 @@ export async function solve(
             params = applyDateRangeDefaults(path, params);
             // Strip known-invalid fields the model hallucinates
             if (params?.fields && typeof params.fields === "string") {
-              const invalid = ["isClosed", "amountIncVat", "company"];
-              const cleaned = params.fields
-                .split(",")
-                .filter((f: string) => !invalid.includes(f.trim()))
-                .join(",");
+              const cleaned = stripInvalidFields(params.fields);
               if (cleaned !== params.fields) params = { ...params, fields: cleaned };
             }
           }
@@ -453,7 +545,16 @@ export async function solve(
         },
       }),
     },
-    stopWhen: stepCountIs(30),
+    stopWhen: [stepCountIs(30), errorBudgetExceeded(12)],
+    prepareStep: ({ steps, stepNumber }) => {
+      return buildAdaptiveGuidance(steps, stepNumber, baseSystem);
+    },
+    onStepFinish: ({ stepNumber, toolCalls }) => {
+      for (const tc of toolCalls) {
+        const input = tc.input as { method: string; path: string };
+        console.log(`[step ${stepNumber}] ${input.method} ${input.path}`);
+      }
+    },
     timeout: { totalMs: 100_000, stepMs: 30_000 }, // 100s total, 30s per step (cloudflared timeout ~120s)
     abortSignal: signal,
   });

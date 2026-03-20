@@ -8,6 +8,10 @@ import {
   applyEmployeeDefaults,
   applyProductDefaults,
   applyDateRangeDefaults,
+  INVALID_GET_FIELDS,
+  stripInvalidFields,
+  errorBudgetExceeded,
+  buildAdaptiveGuidance,
 } from "../src/model.js";
 import { classifyTask } from "../src/task-classifier.js";
 import { buildSystemPrompt } from "../src/prompt-builder.js";
@@ -633,6 +637,190 @@ describe("buildSystemPrompt", () => {
     expect(prompt).toContain("POST /invoice");
     expect(prompt).toContain("POST /order");
     expect(prompt).toContain("fixedprice");
+  });
+});
+
+// ─── Phase 3: stripInvalidFields ────────────────────────────────────────
+
+describe("stripInvalidFields", () => {
+  it("removes isClosed from fields", () => {
+    expect(stripInvalidFields("id,name,isClosed,amount")).toBe("id,name,amount");
+  });
+
+  it("removes company from fields", () => {
+    expect(stripInvalidFields("id,company,name")).toBe("id,name");
+  });
+
+  it("removes address from fields", () => {
+    expect(stripInvalidFields("id,name,address")).toBe("id,name");
+  });
+
+  it("removes amountIncVat from fields", () => {
+    expect(stripInvalidFields("id,amountIncVat")).toBe("id");
+  });
+
+  it("removes multiple invalid fields at once", () => {
+    expect(stripInvalidFields("id,isClosed,company,address,name")).toBe("id,name");
+  });
+
+  it("passes through valid fields unchanged", () => {
+    expect(stripInvalidFields("id,name,email,amount")).toBe("id,name,email,amount");
+  });
+
+  it("handles single field", () => {
+    expect(stripInvalidFields("isClosed")).toBe("");
+  });
+});
+
+// ─── Phase 3: errorBudgetExceeded ──────────────────────────────────────
+
+describe("errorBudgetExceeded", () => {
+  function makeSteps(errorCount: number, successCount: number) {
+    const steps: Array<{ staticToolResults: Array<{ output: TxResult }> }> = [];
+    const results: Array<{ output: TxResult }> = [];
+    for (let i = 0; i < errorCount; i++) {
+      results.push({ output: { ok: false, status: 422, message: "error" } });
+    }
+    for (let i = 0; i < successCount; i++) {
+      results.push({ output: { ok: true, data: {} } });
+    }
+    steps.push({ staticToolResults: results });
+    return steps as any;
+  }
+
+  it("triggers at threshold (12 errors)", () => {
+    const stop = errorBudgetExceeded(12);
+    expect(stop({ steps: makeSteps(12, 0) })).toBe(true);
+  });
+
+  it("triggers above threshold", () => {
+    const stop = errorBudgetExceeded(12);
+    expect(stop({ steps: makeSteps(15, 5) })).toBe(true);
+  });
+
+  it("does not trigger below threshold (11 errors)", () => {
+    const stop = errorBudgetExceeded(12);
+    expect(stop({ steps: makeSteps(11, 5) })).toBe(false);
+  });
+
+  it("does not trigger with zero errors", () => {
+    const stop = errorBudgetExceeded(12);
+    expect(stop({ steps: makeSteps(0, 10) })).toBe(false);
+  });
+
+  it("respects custom threshold", () => {
+    const stop = errorBudgetExceeded(5);
+    expect(stop({ steps: makeSteps(5, 0) })).toBe(true);
+    expect(stop({ steps: makeSteps(4, 0) })).toBe(false);
+  });
+});
+
+// ─── Phase 3: buildAdaptiveGuidance ────────────────────────────────────
+
+describe("buildAdaptiveGuidance", () => {
+  const baseSystem = "You are a test agent.";
+
+  function makeStep(toolCalls: Array<{ path: string; method: string }>, results: Array<TxResult>) {
+    return {
+      staticToolCalls: toolCalls.map((tc) => ({ input: tc })),
+      staticToolResults: results.map((r) => ({ output: r })),
+    } as any;
+  }
+
+  it("returns empty when no steps", () => {
+    expect(buildAdaptiveGuidance([], 0, baseSystem)).toEqual({});
+  });
+
+  it("returns empty when no errors", () => {
+    const steps = [makeStep(
+      [{ path: "/customer", method: "POST" }],
+      [{ ok: true, data: { value: { id: 1 } } }],
+    )];
+    expect(buildAdaptiveGuidance(steps, 1, baseSystem)).toEqual({});
+  });
+
+  it("injects bank account hint when bankkontonummer error detected", () => {
+    const steps = [makeStep(
+      [{ path: "/invoice", method: "POST" }],
+      [{ ok: false, status: 422, message: "Konto mangler bankkontonummer", validationMessages: [] }],
+    )];
+    const result = buildAdaptiveGuidance(steps, 1, baseSystem);
+    expect(result.system).toContain("BANK ACCOUNT REQUIRED");
+    expect(result.system).toContain("86011117947");
+    expect(result.system).toContain(baseSystem);
+  });
+
+  it("injects bank hint from validationMessages", () => {
+    const steps = [makeStep(
+      [{ path: "/invoice", method: "POST" }],
+      [{ ok: false, status: 422, message: "Feil", validationMessages: [{ field: "account", message: "bankkontonummer mangler" }] }],
+    )];
+    const result = buildAdaptiveGuidance(steps, 1, baseSystem);
+    expect(result.system).toContain("BANK ACCOUNT REQUIRED");
+  });
+
+  it("injects thrashing hint after 3 consecutive errors on same path", () => {
+    const steps = [
+      makeStep([{ path: "/invoice", method: "POST" }], [{ ok: false, status: 422, message: "err1" }]),
+      makeStep([{ path: "/invoice", method: "POST" }], [{ ok: false, status: 422, message: "err2" }]),
+      makeStep([{ path: "/invoice", method: "POST" }], [{ ok: false, status: 422, message: "err3" }]),
+    ];
+    const result = buildAdaptiveGuidance(steps, 3, baseSystem);
+    expect(result.system).toContain("STOP THRASHING");
+    expect(result.system).toContain("/invoice");
+  });
+
+  it("does not inject thrashing hint for errors on different paths", () => {
+    const steps = [
+      makeStep([{ path: "/customer", method: "POST" }], [{ ok: false, status: 422, message: "err1" }]),
+      makeStep([{ path: "/invoice", method: "POST" }], [{ ok: false, status: 422, message: "err2" }]),
+      makeStep([{ path: "/product", method: "POST" }], [{ ok: false, status: 422, message: "err3" }]),
+    ];
+    const result = buildAdaptiveGuidance(steps, 3, baseSystem);
+    // No thrashing hint — errors are on different paths
+    expect(result.system ?? "").not.toContain("STOP THRASHING");
+  });
+
+  it("injects 403 cascade stop when all calls return 403", () => {
+    const steps = [
+      makeStep([{ path: "/customer", method: "POST" }], [{ ok: false, status: 403, message: "403" }]),
+      makeStep([{ path: "/product", method: "POST" }], [{ ok: false, status: 403, message: "403" }]),
+    ];
+    const result = buildAdaptiveGuidance(steps, 2, baseSystem);
+    expect(result.system).toContain("STOP IMMEDIATELY");
+    expect(result.system).toContain("403");
+  });
+
+  it("does not trigger 403 cascade when some calls succeed", () => {
+    const steps = [
+      makeStep([{ path: "/customer", method: "POST" }], [{ ok: true, data: {} }]),
+      makeStep([{ path: "/product", method: "POST" }], [{ ok: false, status: 403, message: "403" }]),
+    ];
+    const result = buildAdaptiveGuidance(steps, 2, baseSystem);
+    expect(result.system ?? "").not.toContain("STOP IMMEDIATELY");
+  });
+});
+
+// ─── Phase 3: Classifier regression tests ──────────────────────────────
+
+describe("classifyTask — department vs customer disambiguation", () => {
+  it("classifies 'Kundeservice' department as department, not customer", () => {
+    expect(classifyTask("Opprett tre avdelinger: Kundeservice, Salg, og Økonomi")).toBe("department");
+  });
+
+  it("classifies French department creation correctly", () => {
+    expect(classifyTask("Créez trois départements: Ventes, Marketing, Support")).toBe("department");
+  });
+
+  it("still classifies standalone 'kunde' as customer", () => {
+    expect(classifyTask("Opprett en kunde med navn Fjordlys AS")).toBe("customer");
+  });
+
+  it("does not match 'Kundeservice' as customer when no department keyword", () => {
+    // Without "avdeling"/"department", a prompt about "Kundeservice" as just a name
+    // should NOT become "customer" since "Kundeservice" != word "kunde"
+    const result = classifyTask("Create an entry for Kundeservice team");
+    expect(result).not.toBe("customer");
   });
 });
 
