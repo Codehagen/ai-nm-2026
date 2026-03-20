@@ -1,12 +1,12 @@
 {
-  "capturedAt": "2026-03-20T07:30:03.726Z",
+  "capturedAt": "2026-03-20T19:22:37.756Z",
   "source": "sandbox",
   "request": {
     "method": "POST",
     "path": "/department",
     "body": {
       "name": "Conformance Dept",
-      "departmentNumber": "801100"
+      "departmentNumber": "554470"
     }
   },
   "response": {

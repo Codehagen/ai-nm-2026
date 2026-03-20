@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-03-20T07:30:01.528Z",
+  "capturedAt": "2026-03-20T19:22:35.005Z",
   "source": "sandbox",
   "request": {
     "method": "GET",
@@ -14,7 +14,7 @@
       "values",
       "versionDigest"
     ],
-    "valuesCount": 22,
+    "valuesCount": 26,
     "valueKeys": [
       "address",
       "allowInformationRegistration",
