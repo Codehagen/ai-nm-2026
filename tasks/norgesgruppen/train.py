@@ -58,6 +58,20 @@ def train():
     parser.add_argument("--name", default="train",
                         help="Experiment name")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--lr0", type=float, default=0.01,
+                        help="Initial learning rate")
+    parser.add_argument("--lrf", type=float, default=0.01,
+                        help="Final LR factor (lr0 * lrf)")
+    parser.add_argument("--optimizer", default="auto",
+                        help="Optimizer: auto, SGD, Adam, AdamW")
+    parser.add_argument("--cos-lr", action="store_true",
+                        help="Use cosine LR scheduler")
+    parser.add_argument("--warmup-epochs", type=float, default=3.0,
+                        help="Warmup epochs")
+    parser.add_argument("--close-mosaic", type=int, default=10,
+                        help="Disable mosaic for last N epochs")
+    parser.add_argument("--freeze", type=int, default=None,
+                        help="Freeze first N layers")
     args = parser.parse_args()
 
     # Auto-detect data.yaml
@@ -77,10 +91,12 @@ def train():
     print(f"  Batch: {args.batch}")
     print(f"  Patience: {args.patience}")
     print(f"  Seed: {args.seed}")
+    print(f"  LR: {args.lr0} → {args.lrf}, cos={args.cos_lr}, warmup={args.warmup_epochs}")
+    print(f"  Optimizer: {args.optimizer}, freeze={args.freeze}")
 
     model = YOLO(args.model)
 
-    results = model.train(
+    train_kwargs = dict(
         data=args.data,
         imgsz=args.imgsz,
         epochs=args.epochs,
@@ -91,6 +107,13 @@ def train():
         name=args.name,
         exist_ok=True,
         seed=args.seed,
+        # LR and optimizer (configurable via CLI)
+        lr0=args.lr0,
+        lrf=args.lrf,
+        optimizer=args.optimizer,
+        cos_lr=args.cos_lr,
+        warmup_epochs=args.warmup_epochs,
+        close_mosaic=args.close_mosaic,
         # Augmentation defaults are good for small datasets
         mosaic=1.0,
         mixup=0.1,
@@ -112,6 +135,10 @@ def train():
         plots=True,
         verbose=True,
     )
+    if args.freeze is not None:
+        train_kwargs["freeze"] = args.freeze
+
+    results = model.train(**train_kwargs)
 
     # Extract mAP50 from results for autoresearch
     # results.results_dict has metrics from the last validation
