@@ -100,15 +100,20 @@ def load_round_data(round_num):
     return initial_states, gts
 
 
+ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8}
+
+
 def train_gbt_models(train_rounds):
     """Train terrain-specific XGBoost on given rounds (37 features: 30 cell + 7 obs stats)."""
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
+    W_data = {"plains": [], "forest": [], "settl": []}
 
     for rnum in train_rounds:
         initial_states, gts = load_round_data(rnum)
         all_obs = load_observations(ROUNDS[rnum])
         obs_stats = compute_obs_stats(all_obs) if all_obs else np.zeros(7)
+        rw = ROUND_WEIGHTS.get(rnum, 1.0)
         for seed in range(5):
             grid = initial_states[seed]["grid"]
             settlements = initial_states[seed]["settlements"]
@@ -122,17 +127,21 @@ def train_gbt_models(train_rounds):
                 if code in {11, 0}:
                     X_data["plains"].append(feats[i])
                     Y_data["plains"].append(targets[i])
+                    W_data["plains"].append(rw)
                 elif code == 4:
                     X_data["forest"].append(feats[i])
                     Y_data["forest"].append(targets[i])
+                    W_data["forest"].append(rw)
                 elif code in {1, 2}:
                     X_data["settl"].append(feats[i])
                     Y_data["settl"].append(targets[i])
+                    W_data["settl"].append(rw)
 
     models = {}
     for terrain_type in ["plains", "forest", "settl"]:
         X = np.array(X_data[terrain_type])
         Y = np.array(Y_data[terrain_type])
+        W = np.array(W_data[terrain_type])
         hp = XGB_HPARAMS[terrain_type]
         terrain_models = []
         for cls in range(6):
@@ -147,7 +156,7 @@ def train_gbt_models(train_rounds):
                 min_child_weight=hp["min_child_weight"],
                 random_state=42, verbosity=0,
             )
-            m.fit(X, Y[:, cls])
+            m.fit(X, Y[:, cls], sample_weight=W)
             terrain_models.append(m)
         models[terrain_type] = terrain_models
     return models
