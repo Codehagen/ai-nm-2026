@@ -1,0 +1,70 @@
+{
+  "timestamp": "2026-03-20T23:23:19.074Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice-payment",
+  "prompt": "Der Kunde Sonnental GmbH (Org.-Nr. 855482207) hat eine offene Rechnung über 33500 NOK ohne MwSt. für \"Wartung\". Registrieren Sie die vollständige Zahlung dieser Rechnung.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 5,
+  "apiCalls": 5,
+  "apiErrors": 5,
+  "elapsedMs": 16270,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "organizationNumber": "855482207",
+        "isCustomer": true,
+        "name": "Sonnental GmbH"
+      },
+      "errorMessage": "POST /customer → 403"
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "vatType": {
+          "id": 3
+        },
+        "name": "Wartung",
+        "priceExcludingVatCurrency": 33500
+      },
+      "errorMessage": "POST /product → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id,amount,amountExcludingVat,customer,isClosed",
+        "invoiceDateTo": "2030-01-01",
+        "invoiceDateFrom": "2020-01-01"
+      },
+      "errorMessage": "GET /invoice → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id,description"
+      },
+      "errorMessage": "GET /invoice/paymentType → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": false,
+      "status": 403,
+      "errorMessage": "GET /invoice/paymentType → 403"
+    }
+  ]
+}

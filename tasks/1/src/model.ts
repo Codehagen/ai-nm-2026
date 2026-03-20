@@ -82,7 +82,7 @@ function getErrorHint(
   // Email collision — employee already exists from a previous attempt
   const vm = result.validationMessages;
   if (vm?.some((v) => v.field === "email" && v.message.includes("allerede"))) {
-    return "The email already exists. GET /employee?email=<the email> to find the existing employee and use their ID instead of creating a new one.";
+    return "The email already exists. GET /employee?email=<the email>&fields=id,firstName,lastName,version,dateOfBirth to find them. If firstName or lastName differs from the prompt, PUT /employee/{id} with {id, version, firstName, lastName, dateOfBirth} to update. Email is IMMUTABLE — do NOT include email in PUT body.";
   }
 
   // Product number already in use
@@ -368,6 +368,56 @@ export async function solve(
                 case "PUT":
                   callResult = await client.put(path, body, params);
                   break;
+              }
+            }
+          }
+
+          // Auto-fix employee name after 422 email-exists
+          if (
+            method === "POST" &&
+            /\/employee\b/.test(path) &&
+            !path.includes("/employment") &&
+            !path.includes("/entitlement") &&
+            !callResult.ok &&
+            callResult.status === 422 &&
+            callResult.validationMessages?.some(
+              (v) => v.field === "email" && v.message.includes("allerede")
+            ) &&
+            body
+          ) {
+            const b = body as Record<string, unknown>;
+            const email = b.email as string | undefined;
+            const wantFirst = b.firstName as string | undefined;
+            const wantLast = b.lastName as string | undefined;
+            if (email && (wantFirst || wantLast)) {
+              const getRes = await client.get("/employee", {
+                email,
+                fields: "id,firstName,lastName,version,dateOfBirth",
+              });
+              if (getRes.ok) {
+                const values = (getRes.data as Record<string, unknown>)
+                  ?.values as Array<Record<string, unknown>> | undefined;
+                const existing = values?.[0];
+                if (existing) {
+                  const needsUpdate =
+                    (wantFirst && existing.firstName !== wantFirst) ||
+                    (wantLast && existing.lastName !== wantLast);
+                  if (needsUpdate) {
+                    const putBody: Record<string, unknown> = {
+                      id: existing.id,
+                      version: existing.version,
+                      firstName: wantFirst || existing.firstName,
+                      lastName: wantLast || existing.lastName,
+                      dateOfBirth: existing.dateOfBirth || "1990-01-15",
+                    };
+                    await client.put(`/employee/${existing.id}`, putBody);
+                  }
+                  // Return the existing employee as success so the model has the ID
+                  callResult = {
+                    ok: true,
+                    data: { value: existing },
+                  };
+                }
               }
             }
           }

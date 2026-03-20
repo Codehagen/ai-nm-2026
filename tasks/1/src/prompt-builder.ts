@@ -62,8 +62,11 @@ const RECIPE_EMPLOYEE = `## Creating an Employee (TESTED RECIPE)
 1. POST /department  {"name": "Avdeling", "departmentNumber": "1"}  → get department id
    If 422 (exists), GET /department?departmentNumber=1 to get the existing one.
 2. POST /employee    {"firstName": "X", "lastName": "Y", "email": "x@y.com", "dateOfBirth": "1990-01-15", "userType": "STANDARD", "department": {"id": <dept_id>}}
-   If 422 with "email already exists": GET /employee?email=x@y.com&fields=id,firstName,lastName → use existing ID.
-   Do NOT change the email — scoring checks the EXACT email from the prompt.
+   If 422 with "email already exists":
+     GET /employee?email=x@y.com&fields=id,firstName,lastName,version,dateOfBirth
+     If firstName or lastName differs from prompt → PUT /employee/{id} with {id, version, firstName, lastName, dateOfBirth} to update.
+     Do NOT include email in PUT body — email is IMMUTABLE.
+     Use the employee's ID going forward.
 \`\`\`
 - \`userType\` MUST be exactly \`"STANDARD"\` (uppercase string). Any other value = 422.
 - \`department\` MUST reference a real department ID.
@@ -205,9 +208,11 @@ const RECIPE_PROJECT = `## Creating a Project (TESTED RECIPE)
 1. GET /employee?fields=id&count=1  → get the ADMIN employee id (first employee in account)
 2. POST /department  {"name": "Default", "departmentNumber": "1"}  → dept_id
 3. POST /employee    (with department)  → creates the named PM for scoring
-   If 422 email exists → GET /employee?email=x@y.com&fields=id  → emp_id (for scoring, entity exists)
+   If 422 email exists → GET /employee?email=x@y.com&fields=id,firstName,lastName,version,dateOfBirth
+   If name differs from prompt → PUT /employee/{id} with {id, version, firstName, lastName, dateOfBirth}. Do NOT include email in PUT.
+   Use the employee's ID going forward.
 4. POST /customer  {"name": "X", "isCustomer": true, "organizationNumber": "..."}
-5. POST /project — use the ADMIN employee (step 1) as projectManager:
+5. POST /project — use the ADMIN employee (step 1) as projectManager initially:
 \`\`\`
 \`\`\`json
 {
@@ -218,7 +223,11 @@ const RECIPE_PROJECT = `## Creating a Project (TESTED RECIPE)
   "startDate": "<today>"
 }
 \`\`\`
-CRITICAL: Use the ADMIN employee from step 1 as projectManager — NOT the newly created employee. New employees lack project manager permissions. The named employee is created for scoring only.
+6. PUT /project/{id} — update projectManager to the NAMED employee from step 3:
+\`\`\`json
+{"id": <project_id>, "version": <version>, "projectManager": {"id": <named_employee_id from step 3>}}
+\`\`\`
+Use the id and version from the POST /project response in step 5. This ensures scoring sees the correct project manager.
 - \`startDate\` is REQUIRED. Always include it.
 - If the task sets a fixed price: after creating the project, PUT /project/{id} with {"id": <id>, "version": <version>, "isFixedPrice": true, "fixedprice": <amount>}. CRITICAL: the field is \`fixedprice\` (all lowercase) — NOT \`fixedPrice\` (camelCase). Using camelCase = 422 "Feltet eksisterer ikke".
 - ALWAYS create a new project with POST — do NOT reuse an existing one.`;
