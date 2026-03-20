@@ -852,10 +852,12 @@ def build_prediction(
                 code = initial_grid[y][x]
                 if code in {10, 5}:
                     continue
-                if code == 4:  # Forest: XGBoost is much better
+                if code == 4:  # Forest: XGBoost captures colonization dynamics
                     blend = 0.70
-                else:  # Plains, settlements: heuristic dominates
-                    blend = GBT_BLEND_WEIGHT
+                elif code in {1, 2}:  # Settlements: moderate blend
+                    blend = 0.30
+                else:  # Plains: moderate blend
+                    blend = 0.30
                 tensor[y, x] = (1 - blend) * tensor[y, x] + blend * gbt_pred[y, x]
 
     # Layer 7: Global observation ratio correction.
