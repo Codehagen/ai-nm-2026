@@ -41,6 +41,10 @@ from dtos import TERRAIN_TO_CLASS, NUM_CLASSES, PROB_FLOOR
 # GBT blend weight: how much to trust XGBoost vs heuristic (0-1)
 BLEND_WEIGHT = 0.35
 
+# Smoothing: blend final prediction with uniform prior to reduce overconfidence
+# This helps on rounds where hidden params deviate most from training data
+SMOOTH_WEIGHT = 0.02  # 2% uniform prior
+
 # L7 observation-ratio correction strengths per class:
 # [empty, settlement, port, ruin, forest, mountain]
 # Safe L7: zero for rare classes (port, ruin) — prevents catastrophic KL
@@ -233,6 +237,15 @@ def evaluate_loro():
                                 tensor[y, x] *= adj
                                 tensor[y, x] = np.maximum(tensor[y, x], PROB_FLOOR)
                                 tensor[y, x] /= tensor[y, x].sum()
+
+            # Smoothing: blend with uniform to reduce overconfidence
+            if SMOOTH_WEIGHT > 0:
+                uniform = np.full(NUM_CLASSES, 1.0 / NUM_CLASSES)
+                h, w, _ = tensor.shape
+                for y in range(h):
+                    for x in range(w):
+                        if grid[y][x] not in {10, 5}:
+                            tensor[y, x] = (1 - SMOOTH_WEIGHT) * tensor[y, x] + SMOOTH_WEIGHT * uniform
 
             tensor = normalize_prediction(tensor)
             score = compute_score(tensor, gt)
