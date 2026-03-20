@@ -62,3 +62,9 @@ aaa4bf0	91.434271	0.0	3	keep	L7 full correction=1.0 (LOO avg=92.24, best ever cr
 6c3fb4b	91.141385	0.0	95	keep	per-terrain L7 + revert Layer 2 + restore query alloc (agent findings)	-
 0d0390b	91.729444	0.0	-48	keep	revert to global L7 (simpler, better, confirmed by 3 agents)	-
 6722cd2	-	0.0	1	keep	blend=0.25 (R4 cross-round 94.19 vs 94.14 at 0.3)	-
+0d0390b	91.729444	0.0	-48	keep	revert to global L7 (confirmed by 3 agents)	-
+3bc435e	91.537670	0.0	6	keep	agent-optimized L7 [1.38,.90,.44,.61,1.16]	-
+1b67662	-	0.0	413	keep	initial simulator WIP (scores ~11, needs calibration)	-
+37baf98	86.46	0.0	14	keep	per-terrain GBT blend — forest=0.70 (R5 +1.78!)	-
+1819ba8	86.94	0.0	5	keep	per-terrain blend p=0.30 f=0.70 s=0.30	-
+d693784	88.98	0.0	5	keep	higher blend p=0.50 f=0.85 s=0.50 (R4=95.74 R5=88.98!)	-
