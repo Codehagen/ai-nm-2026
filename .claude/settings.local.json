@@ -133,7 +133,10 @@
       "Bash(mkdir _v3check)",
       "Bash(for f:*)",
       "Bash(do)",
-      "Bash(done)"
+      "Bash(done)",
+      "mcp__nmiai__search_docs",
+      "mcp__nmiai__list_docs",
+      "Bash(jq:*)"
     ]
   }
 }

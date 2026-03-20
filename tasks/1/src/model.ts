@@ -340,7 +340,7 @@ export async function solve(
 
           // Auto-retry 409 RevisionException (transient version conflict)
           if (!callResult.ok && callResult.status === 409) {
-            await new Promise((r) => setTimeout(r, 300));
+            await new Promise((r) => setTimeout(r, 800));
             switch (method) {
               case "POST":
                 callResult = await client.post(path, body, params);
@@ -348,6 +348,18 @@ export async function solve(
               case "PUT":
                 callResult = await client.put(path, body, params);
                 break;
+            }
+            // Second retry if still failing
+            if (!callResult.ok && (callResult.status === 409 || callResult.status === 500)) {
+              await new Promise((r) => setTimeout(r, 1200));
+              switch (method) {
+                case "POST":
+                  callResult = await client.post(path, body, params);
+                  break;
+                case "PUT":
+                  callResult = await client.put(path, body, params);
+                  break;
+              }
             }
           }
 

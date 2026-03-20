@@ -1,0 +1,91 @@
+{
+  "timestamp": "2026-03-20T22:16:07.094Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "supplier-invoice",
+  "prompt": "Me har motteke faktura INV-2026-8662 frå leverandøren Elvdal AS (org.nr 889157917) på 39750 kr inklusiv MVA. Beløpet gjeld kontortenester (konto 6500). Registrer leverandørfakturaen med korrekt inngåande MVA (25 %).",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 0,
+  "elapsedMs": 22116,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true,
+      "body": {
+        "isSupplier": true,
+        "name": "Elvdal AS",
+        "organizationNumber": "889157917"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "6500",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "number": "2400"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": true,
+      "params": {
+        "sendToLedger": "true"
+      },
+      "body": {
+        "invoiceDate": "2026-03-20",
+        "voucher": {
+          "postings": [
+            {
+              "vatType": {
+                "id": 1
+              },
+              "amountGrossCurrency": 39750,
+              "description": "Kontortenester",
+              "row": 1,
+              "amountGross": 39750,
+              "account": {
+                "id": 363961658
+              },
+              "date": "2026-03-20"
+            },
+            {
+              "supplier": {
+                "id": 108280873
+              },
+              "date": "2026-03-20",
+              "amountGross": -39750,
+              "account": {
+                "id": 363961451
+              },
+              "row": 2,
+              "description": "Leverandørgjeld",
+              "amountGrossCurrency": -39750
+            }
+          ],
+          "date": "2026-03-20",
+          "description": "Faktura INV-2026-8662 fra Elvdal AS"
+        },
+        "invoiceNumber": "INV-2026-8662",
+        "invoiceDueDate": "2026-04-03",
+        "supplier": {
+          "id": 108280873
+        }
+      }
+    }
+  ]
+}

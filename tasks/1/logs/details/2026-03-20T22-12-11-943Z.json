@@ -1,0 +1,118 @@
+{
+  "timestamp": "2026-03-20T22:12:11.943Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice-payment",
+  "prompt": "Crie um pedido para o cliente Floresta Lda (org. nº 912426440) com os produtos Relatório de análise (4537) a 9300 NOK e Manutenção (8310) a 18550 NOK. Converta o pedido em fatura e registe o pagamento total.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 0,
+  "elapsedMs": 26525,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "isCustomer": true,
+        "organizationNumber": "912426440",
+        "name": "Floresta Lda"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "4537",
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "8310"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "customer": {
+          "id": 108280214
+        },
+        "orderLines": [
+          {
+            "vatType": {
+              "id": 3
+            },
+            "product": {
+              "id": 84393478
+            },
+            "unitPriceExcludingVatCurrency": 9300,
+            "count": 1
+          },
+          {
+            "vatType": {
+              "id": 3
+            },
+            "unitPriceExcludingVatCurrency": 18550,
+            "product": {
+              "id": 84393479
+            },
+            "count": 1
+          }
+        ],
+        "deliveryDate": "2026-03-20",
+        "orderDate": "2026-03-20"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-04-03",
+        "orders": [
+          {
+            "id": 401974451
+          }
+        ],
+        "invoiceDate": "2026-03-20"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147550476/:payment",
+      "ok": true,
+      "params": {
+        "paymentDate": "2026-03-20",
+        "paidAmount": "34812.5",
+        "paymentTypeId": "35975033"
+      }
+    }
+  ]
+}

@@ -1,0 +1,251 @@
+{
+  "timestamp": "2026-03-20T22:09:26.964Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "travel-expense-full",
+  "prompt": "Registrer ei reiserekning for Marit Vik (marit.vik@example.org) for \"Konferanse Kristiansand\". Reisa varte 4 dagar med diett (dagssats 800 kr). Utlegg: flybillett 7600 kr og taxi 600 kr.",
+  "filesCount": 0,
+  "steps": 9,
+  "toolCalls": 16,
+  "apiCalls": 16,
+  "apiErrors": 3,
+  "elapsedMs": 49003,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "name": "Avdeling",
+        "departmentNumber": "1"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "count": "100",
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "count": "10"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rateCategory",
+      "ok": true,
+      "params": {
+        "type": "PER_DIEM",
+        "count": "50",
+        "dateTo": "2026-03-19",
+        "fields": "id,name",
+        "dateFrom": "2026-03-16",
+        "isValidDomestic": "true"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "email": "marit.vik@example.org",
+        "firstName": "Marit",
+        "dateOfBirth": "1990-01-15",
+        "department": {
+          "id": 915577
+        },
+        "lastName": "Vik",
+        "userType": "STANDARD"
+      },
+      "errorMessage": "Validering feilet. The email already exists. GET /employee?email=<the email> to find the existing employee and use their ID instead of creating a new one.",
+      "validationMessages": [
+        {
+          "field": "email",
+          "message": "Det finnes allerede en bruker med denne e-postadressen.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "count": "10",
+        "query": "Fly"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "query": "Taxi",
+        "count": "10",
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rate",
+      "ok": true,
+      "params": {
+        "fields": "id,rate",
+        "rateCategoryId": "740"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "email": "marit.vik@example.org",
+        "fields": "id,firstName,lastName"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": true,
+      "body": {
+        "employee": {
+          "id": 18586409
+        },
+        "travelDetails": {
+          "departureDate": "2026-03-16",
+          "purpose": "Konferanse",
+          "departureFrom": "Hjem",
+          "destination": "Kristiansand",
+          "returnDate": "2026-03-19"
+        },
+        "title": "Konferanse Kristiansand"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": true,
+      "body": {
+        "paymentType": {
+          "id": 35965779
+        },
+        "comments": "Flybillett",
+        "travelExpense": {
+          "id": 11145919
+        },
+        "costCategory": {
+          "id": 35965795
+        },
+        "amountCurrencyIncVat": 7600,
+        "date": "2026-03-16"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": false,
+      "status": 500,
+      "body": {
+        "travelExpense": {
+          "id": 11145919
+        },
+        "costCategory": {
+          "id": 35965810
+        },
+        "amountCurrencyIncVat": 600,
+        "date": "2026-03-16",
+        "paymentType": {
+          "id": 35965779
+        },
+        "comments": "Taxi"
+      },
+      "errorMessage": "POST /travelExpense/cost → 500 Travel expense cost requires: travelExpense.id, costCategory.id, paymentType.id, date, amountCurrencyIncVat. GET /travelExpense/costCategory and /travelExpense/paymentType first to find valid IDs."
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/perDiemCompensation",
+      "ok": false,
+      "status": 500,
+      "body": {
+        "isDeductionForDinner": false,
+        "location": "Kristiansand",
+        "isDeductionForLunch": false,
+        "rateType": {
+          "id": 25888
+        },
+        "count": 4,
+        "rate": 800,
+        "isDeductionForBreakfast": false,
+        "travelExpense": {
+          "id": 11145919
+        },
+        "rateCategory": {
+          "id": 740
+        },
+        "overnightAccommodation": "HOTEL"
+      },
+      "errorMessage": "POST /travelExpense/perDiemCompensation → 500"
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": true,
+      "body": {
+        "paymentType": {
+          "id": 35965779
+        },
+        "costCategory": {
+          "id": 35965810
+        },
+        "amountCurrencyIncVat": 600,
+        "travelExpense": {
+          "id": 11145919
+        },
+        "date": "2026-03-16",
+        "comments": "Taxi"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/perDiemCompensation",
+      "ok": true,
+      "body": {
+        "isDeductionForLunch": false,
+        "travelExpense": {
+          "id": 11145919
+        },
+        "rate": 800,
+        "isDeductionForDinner": false,
+        "location": "Kristiansand",
+        "isDeductionForBreakfast": false,
+        "count": 4,
+        "rateType": {
+          "id": 25888
+        },
+        "rateCategory": {
+          "id": 740
+        },
+        "overnightAccommodation": "HOTEL"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/11145919",
+      "ok": true,
+      "params": {
+        "fields": "id,amount,costs,perDiemCompensations"
+      }
+    }
+  ]
+}

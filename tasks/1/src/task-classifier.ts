@@ -299,6 +299,11 @@ export function classifyTask(prompt: string): TaskType {
     return "employee";
   }
 
+  // --- Department (before customer — dept names like "Kundeservice" contain "kunde")
+  if (has(t, "avdeling", "department", "departamento", "abteilung", "département")) {
+    return "department";
+  }
+
   // --- Customer
   if (has(t, "kunde", "customer", "cliente", "client", "klient")) {
     return "customer";
@@ -307,11 +312,6 @@ export function classifyTask(prompt: string): TaskType {
   // --- Product
   if (has(t, "produkt", "product", "producto", "produto", "produit")) {
     return "product";
-  }
-
-  // --- Department
-  if (has(t, "avdeling", "department", "departamento", "abteilung", "département")) {
-    return "department";
   }
 
   return "unknown";

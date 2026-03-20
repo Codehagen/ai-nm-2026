@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T22:11:45.418Z",
+  "prompt": "Crie um pedido para o cliente Floresta Lda (org. nº 912426440) com os produtos Relatório de análise (4537) a 9300 NOK e Manutenção (8310) a 18550 NOK. Converta o pedido em fatura e registe o pagamento total.",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

@@ -1,0 +1,125 @@
+{
+  "timestamp": "2026-03-20T22:01:01.729Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice-payment",
+  "prompt": "Betalingen fra Havbris AS (org.nr 998536561) for fakturaen \"Programvarelisens\" (32350 kr ekskl. MVA) ble returnert av banken. Reverser betalingen slik at fakturaen igjen viser utestående beløp.",
+  "filesCount": 0,
+  "steps": 8,
+  "toolCalls": 11,
+  "apiCalls": 11,
+  "apiErrors": 1,
+  "elapsedMs": 62429,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "isCustomer": true,
+        "organizationNumber": "998536561",
+        "name": "Havbris AS"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "priceExcludingVatCurrency": 32350,
+        "name": "Programvarelisens",
+        "vatType": {
+          "id": 3
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": true,
+      "params": {
+        "invoiceDateTo": "2030-01-01",
+        "fields": "*",
+        "invoiceDateFrom": "2020-01-01"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/posting/3844999982",
+      "ok": true,
+      "params": {
+        "fields": "*",
+        "dateFrom": "2020-01-01",
+        "dateTo": "2030-01-01"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/posting/3845000042",
+      "ok": true,
+      "params": {
+        "fields": "*",
+        "dateFrom": "2020-01-01",
+        "dateTo": "2030-01-01"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "*"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/voucher/608856550",
+      "ok": true,
+      "params": {
+        "fields": "*",
+        "dateFrom": "2020-01-01",
+        "dateTo": "2030-01-01"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/voucher/608856550/:reverse",
+      "ok": true,
+      "params": {
+        "date": "2026-03-20"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/2147547468",
+      "ok": false,
+      "status": 400,
+      "params": {
+        "invoiceDateTo": "2030-01-01",
+        "invoiceDateFrom": "2020-01-01",
+        "fields": "id,amountOutstanding,isClosed"
+      },
+      "errorMessage": "Illegal field in fields filter: isClosed. isClosed does not match a field in the model: InvoiceDTO"
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/2147547468",
+      "ok": true,
+      "params": {
+        "invoiceDateTo": "2030-01-01",
+        "invoiceDateFrom": "2020-01-01",
+        "fields": "id,amountOutstanding"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/2147547468",
+      "ok": true,
+      "params": {
+        "invoiceDateTo": "2030-01-01",
+        "fields": "id,amountOutstanding",
+        "invoiceDateFrom": "2020-01-01"
+      }
+    }
+  ]
+}

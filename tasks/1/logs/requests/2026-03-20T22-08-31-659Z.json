@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T22:08:31.659Z",
+  "prompt": "Vi har mottatt faktura INV-2026-2388 fra leverandøren Brattli AS (org.nr 877841456) på 25650 kr inklusiv MVA. Beløpet gjelder kontortjenester (konto 6540). Registrer leverandørfakturaen med korrekt inngående MVA (25 %).",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

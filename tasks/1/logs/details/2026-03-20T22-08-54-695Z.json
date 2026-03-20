@@ -1,0 +1,91 @@
+{
+  "timestamp": "2026-03-20T22:08:54.695Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "supplier-invoice",
+  "prompt": "Vi har mottatt faktura INV-2026-2388 fra leverandøren Brattli AS (org.nr 877841456) på 25650 kr inklusiv MVA. Beløpet gjelder kontortjenester (konto 6540). Registrer leverandørfakturaen med korrekt inngående MVA (25 %).",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 0,
+  "elapsedMs": 23035,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true,
+      "body": {
+        "name": "Brattli AS",
+        "organizationNumber": "877841456",
+        "isSupplier": true
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "6540",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "2400",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": true,
+      "params": {
+        "sendToLedger": "true"
+      },
+      "body": {
+        "supplier": {
+          "id": 108279551
+        },
+        "invoiceNumber": "INV-2026-2388",
+        "invoiceDate": "2026-03-20",
+        "voucher": {
+          "postings": [
+            {
+              "vatType": {
+                "id": 1
+              },
+              "amountGross": 25650,
+              "account": {
+                "id": 458219550
+              },
+              "row": 1,
+              "description": "Kontortjenester",
+              "amountGrossCurrency": 25650,
+              "date": "2026-03-20"
+            },
+            {
+              "row": 2,
+              "account": {
+                "id": 458219339
+              },
+              "amountGross": -25650,
+              "description": "Leverandørgjeld",
+              "supplier": {
+                "id": 108279551
+              },
+              "date": "2026-03-20",
+              "amountGrossCurrency": -25650
+            }
+          ],
+          "description": "Faktura INV-2026-2388 fra Brattli AS",
+          "date": "2026-03-20"
+        },
+        "invoiceDueDate": "2026-04-03"
+      }
+    }
+  ]
+}
