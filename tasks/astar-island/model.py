@@ -1019,7 +1019,23 @@ def build_prediction(
     obs_stats = compute_obs_stats(all_observations) if all_observations else None
     gbt_pred = gbt_predict(initial_grid, settlements, obs_stats=obs_stats)
     if gbt_pred is not None:
-        tensor = (1 - GBT_BLEND_WEIGHT) * tensor + GBT_BLEND_WEIGHT * gbt_pred
+        # Per-terrain blend weights (autoresearch optimized)
+        BLEND_TERRAIN = {"plains": 0.55, "forest": 0.65, "settl": 0.75}
+        h, w, _ = tensor.shape
+        for y in range(h):
+            for x in range(w):
+                code = initial_grid[y][x]
+                if code in {10, 5}:
+                    continue
+                if code in {11, 0}:
+                    bw = BLEND_TERRAIN["plains"]
+                elif code == 4:
+                    bw = BLEND_TERRAIN["forest"]
+                elif code in {1, 2}:
+                    bw = BLEND_TERRAIN["settl"]
+                else:
+                    bw = GBT_BLEND_WEIGHT
+                tensor[y, x] = (1 - bw) * tensor[y, x] + bw * gbt_pred[y, x]
 
     # Layer 6.5: Simulator ensemble — Monte Carlo simulation blended with
     # XGBoost+heuristic predictions. Only applied to dynamic cells.
@@ -1057,7 +1073,7 @@ def build_prediction(
 
     if round_empirical_tables:
         h, w, _ = tensor.shape
-        EMPIRICAL_BLEND_WEIGHT = 0.45  # weight for round empirical tables (autoresearch optimized)
+        EMPIRICAL_BLEND_WEIGHT = 0.40  # weight for round empirical tables (autoresearch optimized)
         MIN_BUCKET_OBS = 20  # minimum obs in bucket to trust empirical
 
         # Pre-compute settlement positions for this seed
