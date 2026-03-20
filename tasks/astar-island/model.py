@@ -494,7 +494,7 @@ def update_with_observations(
     # Bayesian blend: with few observations, the prior (from Layer 1) should
     # dominate. With many observations, the frequency should dominate.
     # We use a pseudo-count approach: treat the prior as N_PRIOR virtual observations.
-    N_PRIOR = 20  # prior strength — equivalent to 20 virtual observations
+    N_PRIOR = 50  # prior strength — high to prevent noisy obs from dominating
     observed_mask = obs_count > 0
     for y in range(h):
         for x in range(w):
@@ -820,9 +820,11 @@ def build_prediction(
     # Layer 1: Static prediction
     tensor = build_static_prediction(initial_grid)
 
-    # Layer 2: Observation-based frequency update (disabled — adds noise with
-    # only ~10 observations per seed; GT-calibrated priors outperform raw frequencies)
-    # tensor = update_with_observations(tensor, observations, seed_index)
+    # Layer 2: Observation-based frequency update.
+    # Re-enabled with high N_PRIOR — only useful with repeated viewports (2+ obs/cell).
+    # With the new query strategy (5 vps × 2 reps), observed cells get 2+ observations
+    # which is enough for a mild Bayesian update.
+    tensor = update_with_observations(tensor, observations, seed_index)
 
     # Layer 3: Apply context-specific priors to ALL dynamic cells.
     # With Layer 2 disabled, Layer 3's priors (adj_forests, coastal) are better
