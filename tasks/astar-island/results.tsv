@@ -36,3 +36,5 @@ reverted	93.087600	0.0	3	discard	add n_ports global feature	no improvement
 bb88a9b	93.098082	0.0	-28	keep	remove redundant adj_settlement boosts (simplification)	-
 reverted	93.076600	0.0	20	discard	add ocean_r3/plains_r3 features	redundant with dist_ocean
 1179241	93.739716	0.0	36	keep	terrain-specific XGBoost (plains/forest/settlement specialists)	-
+reverted	93.754645	0.0	12	discard	add dx/dy direction to nearest settlement	marginal +0.015 not worth complexity
+26d5412	93.131509	0.0	1	keep	reduce blend 0.5→0.4 for terrain-specific (cross-round R2=91.47 vs 91.08)	-
