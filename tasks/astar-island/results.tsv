@@ -54,3 +54,4 @@ retrain	93.881761	0.0	0	keep	XGBoost mcw=3 + 30 features + 2-round (R1=93.88, cr
 3c900cc	93.797047	0.0	4	keep	per-class correction strengths (cross-round R2=92.14!)	-
 2acc285	92.730000	0.0	3	keep	uniform 0.7 obs correction (R4 would be 93.84 vs 91.80 submitted!)	-
 a797f68	92.369840	0.0	36	keep	recalibrate all tables with 4 rounds GT (more robust avg)	-
+c8ef8a0	92.336447	0.0	2	keep	LORO-optimal correction [.4,.9,.5,.9,.6] (LORO avg=91.67!)	-
