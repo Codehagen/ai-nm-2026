@@ -54,7 +54,7 @@ SMOOTH_WEIGHT = 0.0  # disabled — hurts score
 # L7 observation-ratio correction strengths per class:
 # [empty, settlement, port, ruin, forest, mountain]
 # Safe L7: zero for rare classes (port, ruin) — prevents catastrophic KL
-L7_STRENGTHS = np.array([1.20, 0.80, 0.0, 0.0, 1.30, 0.0])
+L7_STRENGTHS = np.array([1.40, 1.00, 0.0, 0.0, 1.50, 0.0])
 L7_MIN_OBS = np.array([200, 50, 30, 20, 100, 0])  # min obs count per class
 L7_ADJ_MIN = 0.80  # hard safety clamp
 L7_ADJ_MAX = 1.25
@@ -273,8 +273,8 @@ def evaluate_loro():
                                 strengths[c] = 0.0
                         adj = 1.0 + strengths * (ratio - 1.0)
                         # Per-class clamp: wider for settlement (handles extreme rounds)
-                        adj_min = np.array([0.80, 0.40, 1.00, 1.00, 0.80, 1.00])
-                        adj_max = np.array([1.25, 1.30, 1.00, 1.00, 1.25, 1.00])
+                        adj_min = np.array([0.75, 0.35, 1.00, 1.00, 0.75, 1.00])
+                        adj_max = np.array([1.30, 1.35, 1.00, 1.00, 1.30, 1.00])
                         adj = np.clip(adj, adj_min, adj_max)
                         for y in range(h):
                             for x in range(w):
