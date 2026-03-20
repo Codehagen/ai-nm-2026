@@ -84,6 +84,7 @@ ROUNDS = {
     6: "ae78003a-4efe-425a-881a-d16a39bca0ad",
     7: "36e581f1-73f8-453f-ab98-cbe3052b701b",
     8: "c5cdf100-a876-4fb7-b5d8-757162c97989",
+    9: "2a341ace-0f57-4309-9b89-e59fe0f09179",
 }
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -184,7 +185,7 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=No
 
 def evaluate_loro():
     """Run full 7-fold LORO and return (avg, per_round_dict)."""
-    test_rounds = [1, 2, 4, 5, 6, 7, 8]
+    test_rounds = [1, 2, 4, 5, 6, 7, 8, 9]
     results = {}
 
     for held_out in test_rounds:
@@ -337,7 +338,7 @@ if __name__ == "__main__":
         print(f"round_{r}_score: {s:.4f}")
 
     # Weighted average (competition metric: 1.05^(round-1))
-    weights = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7}
+    weights = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8}
     w_avg = sum(per_round[r] * weights[r] for r in per_round) / sum(weights[r] for r in per_round)
     print(f"weighted_avg: {w_avg:.4f}")
 
