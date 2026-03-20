@@ -1048,7 +1048,7 @@ def build_prediction(
 
     if round_empirical_tables:
         h, w, _ = tensor.shape
-        EMPIRICAL_BLEND_WEIGHT = 0.20  # weight for round empirical tables
+        EMPIRICAL_BLEND_WEIGHT = 0.40  # weight for round empirical tables (swept: higher = better)
         MIN_BUCKET_OBS = 20  # minimum obs in bucket to trust empirical
 
         # Pre-compute settlement positions for this seed
