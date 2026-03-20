@@ -1,0 +1,632 @@
+{
+  "timestamp": "2026-03-20T08:58:38.923Z",
+  "parallel": 4,
+  "summary": {
+    "passed": 16,
+    "failed": 0,
+    "errors": 0,
+    "totalCalls": 24,
+    "totalOptimal": 24,
+    "totalErrors": 0,
+    "totalTimeMs": 133361
+  },
+  "results": [
+    {
+      "id": "t1-customer-nb",
+      "category": "create-customer",
+      "tier": 1,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 6308,
+      "checks": [
+        {
+          "check": "customer with name=\"Fjordlys AS\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .email = \"post@fjordlys.no\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .organizationNumber = \"876543210\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .isCustomer = true",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-customer-en",
+      "category": "create-customer",
+      "tier": 1,
+      "lang": "en",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 15191,
+      "checks": [
+        {
+          "check": "customer with name=\"Alpine Solutions Ltd\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .email = \"info@alpine.co.uk\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .organizationNumber = \"998877665\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-customer-de",
+      "category": "create-customer",
+      "tier": 1,
+      "lang": "de",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 6397,
+      "checks": [
+        {
+          "check": "customer with name=\"Windkraft GmbH\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .email = \"info@windkraft.de\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .organizationNumber = \"918267581\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-customer-es",
+      "category": "create-customer",
+      "tier": 1,
+      "lang": "es",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 6286,
+      "checks": [
+        {
+          "check": "customer with name=\"Sol del Mar S.L.\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .email = \"contacto@soldelmar.es\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .organizationNumber = \"556677889\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-product-nb",
+      "category": "create-product",
+      "tier": 1,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 8005,
+      "checks": [
+        {
+          "check": "product with name=\"Konsulenttjenester\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .priceExcludingVatCurrency = 1500",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-department-nb",
+      "category": "create-department",
+      "tier": 1,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 5463,
+      "checks": [
+        {
+          "check": "department with name=\"Salg\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .departmentNumber = \"200\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-employee-nb",
+      "category": "create-employee",
+      "tier": 1,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 12263,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Kari\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Olsen\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .email = \"kari@olsen.no\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-employee-en",
+      "category": "create-employee",
+      "tier": 1,
+      "lang": "en",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 9322,
+      "checks": [
+        {
+          "check": "employee with firstName=\"John\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Smith\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .email = \"john.smith@company.com\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-employee-admin-nb",
+      "category": "create-employee-admin",
+      "tier": 1,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 3,
+      "apiErrors": 0,
+      "optimalCalls": 3,
+      "callEfficiency": "100%",
+      "elapsedMs": 12339,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Lars\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Berg\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .email = \"lars@berg.no\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/employee/entitlement/:grantEntitlementsByTemplate",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-employee-fr",
+      "category": "create-employee",
+      "tier": 1,
+      "lang": "fr",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 8668,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Nathan\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Moreau\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .email = \"nathan.moreau@example.com\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-travel-nb",
+      "category": "create-travel-expense",
+      "tier": 1,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 9608,
+      "checks": [
+        {
+          "check": "travelExpense with title=\"Kundebesøk Oslo\"",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/travelExpense",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-employee-pt",
+      "category": "create-employee",
+      "tier": 1,
+      "lang": "pt",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 8340,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Rita\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Almeida\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .email = \"rita.almeida@example.org\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-employee-de",
+      "category": "create-employee",
+      "tier": 1,
+      "lang": "de",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 8205,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Elias\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Meyer\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .email = \"elias.meyer@example.org\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-customer-fr",
+      "category": "create-customer",
+      "tier": 1,
+      "lang": "fr",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 6135,
+      "checks": [
+        {
+          "check": "customer with name=\"Lumière SARL\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .email = \"contact@lumiere.fr\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .organizationNumber = \"556677889\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-customer-pt",
+      "category": "create-customer",
+      "tier": 1,
+      "lang": "pt",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 4943,
+      "checks": [
+        {
+          "check": "customer with name=\"Floresta Lda\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .email = \"post@floresta.no\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .organizationNumber = \"893475656\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-customer-nn",
+      "category": "create-customer",
+      "tier": 1,
+      "lang": "nn",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 5888,
+      "checks": [
+        {
+          "check": "customer with name=\"Bølgekraft AS\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .email = \"post@blgekraft.no\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .organizationNumber = \"812297848\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        }
+      ]
+    }
+  ]
+}

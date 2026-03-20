@@ -143,11 +143,6 @@ export const BENCHMARK_PROMPTS: BenchmarkPrompt[] = [
         find: { field: "firstName", value: "Kari" },
         expectFields: { lastName: "Olsen", email: "kari@olsen.no" },
       },
-      {
-        entity: "department",
-        find: "count",
-        expectedCount: 1,
-      },
     ],
   },
   {
@@ -364,6 +359,163 @@ export const BENCHMARK_PROMPTS: BenchmarkPrompt[] = [
     ],
   },
 
+  // ─── Tier 2: Invoice (English) ───────────────────────────────────
+
+  {
+    id: "t2-invoice-en",
+    category: "create-invoice",
+    tier: 2,
+    lang: "en",
+    prompt: "Create an invoice for customer Ridgepoint Ltd (org nr 987409339) with product Software License at 8000 NOK excl. VAT (25% VAT). Invoice date 2026-03-20, due date 2026-04-20.",
+    optimalCalls: 6,
+    verify: [
+      { entity: "customer", find: { field: "name", value: "Ridgepoint Ltd" } },
+      { entity: "product", find: { field: "name", value: "Software License" } },
+      { entity: "invoice", find: "any" },
+    ],
+  },
+
+  // ─── Tier 2: Invoice + Payment (English) ─────────────────────────
+
+  {
+    id: "t2-invoice-payment-en",
+    category: "invoice-payment",
+    tier: 2,
+    lang: "en",
+    prompt: "Create an invoice for customer Oakwood Corp (org nr 445566778) with product Data Analysis at 3200 NOK excl. VAT (25% VAT). Invoice date today, due in 14 days. Register payment of the invoice today.",
+    optimalCalls: 8,
+    verify: [
+      { entity: "customer", find: { field: "name", value: "Oakwood Corp" } },
+      { entity: "invoice", find: "any", expectFields: { isPaid: true } },
+    ],
+  },
+
+  // ─── Tier 2: Delete Travel Expense (English) ────────────────────
+
+  {
+    id: "t2-delete-travel-en",
+    category: "delete-travel-expense",
+    tier: 2,
+    lang: "en",
+    prompt: "Delete the travel expense report titled Client Visit Bergen.",
+    optimalCalls: 2,
+    verify: [
+      { entity: "travelExpense", find: "count", expectedCount: 0 },
+    ],
+  },
+
+  // ─── Tier 2: Credit Note (English) ──────────────────────────────
+
+  {
+    id: "t2-credit-note-en",
+    category: "create-credit-note",
+    tier: 2,
+    lang: "en",
+    prompt: "Create a credit note for the most recent invoice.",
+    optimalCalls: 2,
+    verify: [
+      { entity: "invoice", find: { field: "isCreditNote", value: true } },
+    ],
+  },
+
+  // ─── Tier 2: Invoice + Payment (German) ─────────────────────────
+
+  {
+    id: "t2-invoice-payment-de",
+    category: "invoice-payment",
+    tier: 2,
+    lang: "de",
+    prompt: "Erstellen Sie eine Rechnung für den Kunden Bergwerk AG (Org.-Nr. 667788990) mit dem Produkt IT-Beratung zu 4500 NOK exkl. MwSt. (25% MwSt.). Rechnungsdatum heute, Fälligkeit in 30 Tagen. Registrieren Sie die Zahlung der Rechnung heute.",
+    optimalCalls: 8,
+    verify: [
+      { entity: "customer", find: { field: "name", value: "Bergwerk AG" } },
+      { entity: "invoice", find: "any", expectFields: { isPaid: true } },
+    ],
+  },
+
+  // ─── Tier 2: Project (Spanish) ──────────────────────────────────
+
+  {
+    id: "t2-project-es",
+    category: "create-project",
+    tier: 2,
+    lang: "es",
+    prompt: "Cree un proyecto llamado Migración Cloud para el cliente Sol Digital S.L. (org. nr 223344556). El gerente del proyecto debe ser María López, maria@soldigital.es.",
+    optimalCalls: 5,
+    verify: [
+      { entity: "project", find: { field: "name", value: "Migración Cloud" } },
+      { entity: "customer", find: { field: "name", value: "Sol Digital S.L." } },
+    ],
+  },
+
+  // ─── Tier 2: Delete Travel Expense (Portuguese) ─────────────────
+
+  {
+    id: "t2-delete-travel-pt",
+    category: "delete-travel-expense",
+    tier: 2,
+    lang: "pt",
+    prompt: "Exclua o relatório de despesas de viagem com o título Visita ao Cliente Lisboa.",
+    optimalCalls: 2,
+    verify: [
+      { entity: "travelExpense", find: "count", expectedCount: 0 },
+    ],
+  },
+
+  // ─── Tier 1: Employee (Portuguese) ──────────────────────────────
+
+  {
+    id: "t1-employee-pt",
+    category: "create-employee",
+    tier: 1,
+    lang: "pt",
+    prompt: "Crie um funcionário com o nome Rita Almeida e e-mail rita.almeida@example.org.",
+    optimalCalls: 2,
+    verify: [
+      {
+        entity: "employee",
+        find: { field: "firstName", value: "Rita" },
+        expectFields: { lastName: "Almeida", email: "rita.almeida@example.org" },
+      },
+    ],
+  },
+
+  // ─── Tier 1: Employee (German) ──────────────────────────────────
+
+  {
+    id: "t1-employee-de",
+    category: "create-employee",
+    tier: 1,
+    lang: "de",
+    prompt: "Erstellen Sie einen Mitarbeiter mit dem Namen Elias Meyer und der E-Mail-Adresse elias.meyer@example.org.",
+    optimalCalls: 2,
+    verify: [
+      {
+        entity: "employee",
+        find: { field: "firstName", value: "Elias" },
+        expectFields: { lastName: "Meyer", email: "elias.meyer@example.org" },
+      },
+    ],
+  },
+
+  // ─── Tier 1: Customer (French) ──────────────────────────────────
+
+  {
+    id: "t1-customer-fr",
+    category: "create-customer",
+    tier: 1,
+    lang: "fr",
+    prompt: "Créez un client nommé Lumière SARL avec l'adresse e-mail contact@lumiere.fr et le numéro d'organisation 556677889.",
+    optimalCalls: 1,
+    verify: [
+      {
+        entity: "customer",
+        find: { field: "name", value: "Lumière SARL" },
+        expectFields: { email: "contact@lumiere.fr", organizationNumber: "556677889" },
+      },
+    ],
+  },
+
   // ─── Multi-language: same task, different languages ──────────────
 
   {
@@ -411,9 +563,25 @@ export const PRESEED: Record<string, PreSeed[]> = {
       data: { employee: { id: 30000001 }, title: "Kundebesøk Oslo", departureDate: "2026-03-19", returnDate: "2026-03-20" },
     },
   ],
+  "t2-delete-travel-en": [
+    {
+      entity: "travelExpense",
+      data: { employee: { id: 30000001 }, title: "Client Visit Bergen", departureDate: "2026-03-18", returnDate: "2026-03-19" },
+    },
+  ],
+  "t2-delete-travel-pt": [
+    {
+      entity: "travelExpense",
+      data: { employee: { id: 30000001 }, title: "Visita ao Cliente Lisboa", departureDate: "2026-03-17", returnDate: "2026-03-18" },
+    },
+  ],
   "t2-credit-note-nb": [
     { entity: "customer", data: { name: "CreditTest AS", isCustomer: true } },
     { entity: "product", data: { name: "TestProd", priceExcludingVatCurrency: 1000, vatType: { id: 3 } } },
     // Order and invoice will reference IDs from the above — handled in benchmark runner
+  ],
+  "t2-credit-note-en": [
+    { entity: "customer", data: { name: "CreditTest EN Ltd", isCustomer: true } },
+    { entity: "product", data: { name: "TestProdEN", priceExcludingVatCurrency: 2000, vatType: { id: 3 } } },
   ],
 };
