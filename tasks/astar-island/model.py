@@ -841,10 +841,22 @@ def build_prediction(
     # Layer 5: Calibration (disabled — GBT subsumes calibration's role)
     # tensor = apply_calibration(tensor, initial_grid, calibration)
 
-    # Layer 6: GBT blend — captures feature interactions the tables miss
+    # Layer 6: GBT blend — per-terrain weights (forests need more GBT)
+    # Forest cells benefit most from XGBoost (captures colonization dynamics)
+    # R4: +0.17, R5: +1.78 by increasing forest blend from 0.25 to 0.70
     gbt_pred = gbt_predict(initial_grid, settlements)
     if gbt_pred is not None:
-        tensor = (1 - GBT_BLEND_WEIGHT) * tensor + GBT_BLEND_WEIGHT * gbt_pred
+        h_l6, w_l6, _ = tensor.shape
+        for y in range(h_l6):
+            for x in range(w_l6):
+                code = initial_grid[y][x]
+                if code in {10, 5}:
+                    continue
+                if code == 4:  # Forest: XGBoost is much better
+                    blend = 0.70
+                else:  # Plains, settlements: heuristic dominates
+                    blend = GBT_BLEND_WEIGHT
+                tensor[y, x] = (1 - blend) * tensor[y, x] + blend * gbt_pred[y, x]
 
     # Layer 7: Global observation ratio correction.
     # Uses pooled observation terrain frequencies to adapt to each round's
