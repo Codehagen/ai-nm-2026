@@ -1,0 +1,87 @@
+{
+  "timestamp": "2026-03-20T11:59:06.974Z",
+  "parallel": 1,
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "errors": 0,
+    "totalCalls": 10,
+    "totalOptimal": 2,
+    "totalErrors": 0,
+    "totalTimeMs": 40770
+  },
+  "results": [
+    {
+      "id": "t2-credit-note-complaint-fr",
+      "category": "create-credit-note",
+      "tier": 2,
+      "lang": "fr",
+      "status": "pass",
+      "apiCalls": 10,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "20%",
+      "elapsedMs": 40770,
+      "checks": [
+        {
+          "check": "invoice with isCreditNote=true",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/invoice",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/invoice/30000009",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/invoice",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/order",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/invoice/30000013/:send",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice/30000013/:createCreditNote",
+          "ok": true
+        }
+      ]
+    }
+  ]
+}

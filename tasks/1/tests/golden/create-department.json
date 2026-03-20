@@ -1,0 +1,29 @@
+{
+  "capturedAt": "2026-03-20T07:30:03.726Z",
+  "source": "sandbox",
+  "request": {
+    "method": "POST",
+    "path": "/department",
+    "body": {
+      "name": "Conformance Dept",
+      "departmentNumber": "801100"
+    }
+  },
+  "response": {
+    "status": 201,
+    "bodyKeys": [
+      "value"
+    ],
+    "valueKeys": [
+      "businessActivityTypeId",
+      "departmentManager",
+      "departmentNumber",
+      "displayName",
+      "id",
+      "isInactive",
+      "name",
+      "url",
+      "version"
+    ]
+  }
+}

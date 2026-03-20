@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-03-20T11:16:03.525Z",
+  "parallel": 1,
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "errors": 0,
+    "totalCalls": 7,
+    "totalOptimal": 4,
+    "totalErrors": 0,
+    "totalTimeMs": 34329
+  },
+  "results": [
+    {
+      "id": "t2-supplier-invoice-es",
+      "category": "supplier-invoice",
+      "tier": 2,
+      "lang": "es",
+      "status": "pass",
+      "apiCalls": 7,
+      "apiErrors": 0,
+      "optimalCalls": 4,
+      "callEfficiency": "57%",
+      "elapsedMs": 34329,
+      "checks": [
+        {
+          "check": "supplier with name=\"Montaña SL\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "voucher exists",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/supplier",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/ledger/voucher",
+          "ok": true
+        }
+      ]
+    }
+  ]
+}

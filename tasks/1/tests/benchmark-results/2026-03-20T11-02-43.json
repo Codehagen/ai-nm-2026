@@ -1,0 +1,47 @@
+{
+  "timestamp": "2026-03-20T11:02:43.166Z",
+  "parallel": 1,
+  "summary": {
+    "passed": 0,
+    "failed": 0,
+    "errors": 2,
+    "totalCalls": 0,
+    "totalOptimal": 12,
+    "totalErrors": 0,
+    "totalTimeMs": 0
+  },
+  "results": [
+    {
+      "id": "t2-salary-de",
+      "category": "salary-payroll",
+      "tier": 2,
+      "lang": "de",
+      "status": "error",
+      "apiCalls": 0,
+      "apiErrors": 0,
+      "optimalCalls": 6,
+      "callEfficiency": "0%",
+      "elapsedMs": 0,
+      "checks": [],
+      "failedChecks": [
+        "Runtime: Unexpected non-whitespace character after JSON at position 4 (line 1 column 5)"
+      ]
+    },
+    {
+      "id": "t2-salary-nb",
+      "category": "salary-payroll",
+      "tier": 2,
+      "lang": "nb",
+      "status": "error",
+      "apiCalls": 0,
+      "apiErrors": 0,
+      "optimalCalls": 6,
+      "callEfficiency": "0%",
+      "elapsedMs": 0,
+      "checks": [],
+      "failedChecks": [
+        "Runtime: Unexpected non-whitespace character after JSON at position 4 (line 1 column 5)"
+      ]
+    }
+  ]
+}

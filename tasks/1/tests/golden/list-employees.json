@@ -1,0 +1,56 @@
+{
+  "capturedAt": "2026-03-20T07:30:01.528Z",
+  "source": "sandbox",
+  "request": {
+    "method": "GET",
+    "path": "/employee"
+  },
+  "response": {
+    "status": 200,
+    "bodyKeys": [
+      "count",
+      "from",
+      "fullResultSize",
+      "values",
+      "versionDigest"
+    ],
+    "valuesCount": 22,
+    "valueKeys": [
+      "address",
+      "allowInformationRegistration",
+      "bankAccountNumber",
+      "bic",
+      "comments",
+      "companyId",
+      "creditorBankCountryId",
+      "dateOfBirth",
+      "department",
+      "displayName",
+      "dnumber",
+      "email",
+      "employeeCategory",
+      "employeeNumber",
+      "employments",
+      "firstName",
+      "holidayAllowanceEarned",
+      "iban",
+      "id",
+      "internationalId",
+      "isAuthProjectOverviewURL",
+      "isContact",
+      "isProxy",
+      "lastName",
+      "nationalIdentityNumber",
+      "phoneNumberHome",
+      "phoneNumberMobile",
+      "phoneNumberMobileCountry",
+      "phoneNumberWork",
+      "pictureId",
+      "url",
+      "userType",
+      "usesAbroadPayment",
+      "version",
+      "vismaConnect2FAactive"
+    ]
+  }
+}

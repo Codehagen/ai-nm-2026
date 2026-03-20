@@ -5,8 +5,8 @@ import { SolveRequestSchema } from "./dtos.js";
 import { solve } from "./model.js";
 import { logSolve, logRequest } from "./logger.js";
 
-if (!process.env.AI_GATEWAY_API_KEY) {
-  console.error("FATAL: AI_GATEWAY_API_KEY environment variable is not set");
+if (!process.env.GOOGLE_API_KEY) {
+  console.error("FATAL: GOOGLE_API_KEY environment variable is not set");
   process.exit(1);
 }
 

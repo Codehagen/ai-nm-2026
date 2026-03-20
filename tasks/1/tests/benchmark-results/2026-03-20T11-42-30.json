@@ -1,0 +1,2567 @@
+{
+  "timestamp": "2026-03-20T11:42:30.794Z",
+  "parallel": 4,
+  "summary": {
+    "passed": 51,
+    "failed": 0,
+    "errors": 0,
+    "totalCalls": 203,
+    "totalOptimal": 191,
+    "totalErrors": 0,
+    "totalTimeMs": 884523
+  },
+  "results": [
+    {
+      "id": "t1-customer-nb",
+      "category": "create-customer",
+      "tier": 1,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 6393,
+      "checks": [
+        {
+          "check": "customer with name=\"Fjordlys AS\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .email = \"post@fjordlys.no\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .organizationNumber = \"876543210\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .isCustomer = true",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-customer-en",
+      "category": "create-customer",
+      "tier": 1,
+      "lang": "en",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 5487,
+      "checks": [
+        {
+          "check": "customer with name=\"Alpine Solutions Ltd\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .email = \"info@alpine.co.uk\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .organizationNumber = \"998877665\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-customer-de",
+      "category": "create-customer",
+      "tier": 1,
+      "lang": "de",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 6897,
+      "checks": [
+        {
+          "check": "customer with name=\"Windkraft GmbH\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .email = \"info@windkraft.de\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .organizationNumber = \"918267581\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-customer-es",
+      "category": "create-customer",
+      "tier": 1,
+      "lang": "es",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 7035,
+      "checks": [
+        {
+          "check": "customer with name=\"Sol del Mar S.L.\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .email = \"contacto@soldelmar.es\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .organizationNumber = \"556677889\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-product-nb",
+      "category": "create-product",
+      "tier": 1,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 6565,
+      "checks": [
+        {
+          "check": "product with name=\"Konsulenttjenester\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .priceExcludingVatCurrency = 1500",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-department-nb",
+      "category": "create-department",
+      "tier": 1,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 4806,
+      "checks": [
+        {
+          "check": "department with name=\"Salg\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .departmentNumber = \"200\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-employee-nb",
+      "category": "create-employee",
+      "tier": 1,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 9495,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Kari\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Olsen\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .email = \"kari@olsen.no\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-employee-en",
+      "category": "create-employee",
+      "tier": 1,
+      "lang": "en",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 8478,
+      "checks": [
+        {
+          "check": "employee with firstName=\"John\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Smith\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .email = \"john.smith@company.com\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-employee-admin-nb",
+      "category": "create-employee-admin",
+      "tier": 1,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 3,
+      "apiErrors": 0,
+      "optimalCalls": 3,
+      "callEfficiency": "100%",
+      "elapsedMs": 12509,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Lars\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Berg\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .email = \"lars@berg.no\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/employee/entitlement/:grantEntitlementsByTemplate",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-employee-fr",
+      "category": "create-employee",
+      "tier": 1,
+      "lang": "fr",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 8527,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Nathan\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Moreau\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .email = \"nathan.moreau@example.com\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-travel-nb",
+      "category": "create-travel-expense",
+      "tier": 1,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 9029,
+      "checks": [
+        {
+          "check": "travelExpense with title=\"Kundebesøk Oslo\"",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/travelExpense",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-project-nb",
+      "category": "create-project",
+      "tier": 2,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 5,
+      "apiErrors": 0,
+      "optimalCalls": 5,
+      "callEfficiency": "100%",
+      "elapsedMs": 22659,
+      "checks": [
+        {
+          "check": "project with name=\"Nettside Redesign\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "customer with name=\"Nordfjord AS\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .organizationNumber = \"912345678\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "employee with firstName=\"Erik\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Hansen\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/project",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-project-en",
+      "category": "create-project",
+      "tier": 2,
+      "lang": "en",
+      "status": "pass",
+      "apiCalls": 5,
+      "apiErrors": 0,
+      "optimalCalls": 5,
+      "callEfficiency": "100%",
+      "elapsedMs": 22493,
+      "checks": [
+        {
+          "check": "project with name=\"Cloud Migration\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "customer with name=\"TechVentures Inc\"",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/project",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-invoice-nb",
+      "category": "create-invoice",
+      "tier": 2,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 6,
+      "apiErrors": 0,
+      "optimalCalls": 6,
+      "callEfficiency": "100%",
+      "elapsedMs": 23833,
+      "checks": [
+        {
+          "check": "customer with name=\"Havblikk AS\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "product with name=\"Designtjenester\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .priceExcludingVatCurrency = 5000",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "invoice count = 1",
+          "pass": true,
+          "detail": "1"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/ledger/account/30000001",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/order",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-invoice-payment-nb",
+      "category": "invoice-payment",
+      "tier": 2,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 10,
+      "apiErrors": 0,
+      "optimalCalls": 8,
+      "callEfficiency": "80%",
+      "elapsedMs": 45601,
+      "checks": [
+        {
+          "check": "customer with name=\"Solvik AS\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "invoice.isPaid = true",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/ledger/account/30000001",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/order",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/invoice/paymentType",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/invoice/30000009",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/invoice/30000009",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/invoice/30000009/:payment",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-invoice-send-nb",
+      "category": "invoice-send",
+      "tier": 2,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 7,
+      "apiErrors": 0,
+      "optimalCalls": 7,
+      "callEfficiency": "100%",
+      "elapsedMs": 27203,
+      "checks": [
+        {
+          "check": "customer with name=\"Greenfield Corp\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "invoice.isSent = true",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/ledger/account/30000001",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/order",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/invoice/30000009/:send",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-delete-travel-nb",
+      "category": "delete-travel-expense",
+      "tier": 2,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 8775,
+      "checks": [
+        {
+          "check": "travelExpense count = 0",
+          "pass": true,
+          "detail": "0"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/travelExpense",
+          "ok": true
+        },
+        {
+          "method": "DELETE",
+          "path": "/travelExpense/30000006",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-credit-note-nb",
+      "category": "create-credit-note",
+      "tier": 2,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 12340,
+      "checks": [
+        {
+          "check": "invoice with isCreditNote=true",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/invoice",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice/30000009/:createCreditNote",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-invoice-en",
+      "category": "create-invoice",
+      "tier": 2,
+      "lang": "en",
+      "status": "pass",
+      "apiCalls": 6,
+      "apiErrors": 0,
+      "optimalCalls": 6,
+      "callEfficiency": "100%",
+      "elapsedMs": 27022,
+      "checks": [
+        {
+          "check": "customer with name=\"Ridgepoint Ltd\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "product with name=\"Software License\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "invoice exists",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/ledger/account/30000001",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/order",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-invoice-payment-en",
+      "category": "invoice-payment",
+      "tier": 2,
+      "lang": "en",
+      "status": "pass",
+      "apiCalls": 8,
+      "apiErrors": 0,
+      "optimalCalls": 8,
+      "callEfficiency": "100%",
+      "elapsedMs": 30209,
+      "checks": [
+        {
+          "check": "customer with name=\"Oakwood Corp\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "invoice.isPaid = true",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/ledger/account/30000001",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/order",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/invoice/paymentType",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/invoice/30000009/:payment",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-delete-travel-en",
+      "category": "delete-travel-expense",
+      "tier": 2,
+      "lang": "en",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 7386,
+      "checks": [
+        {
+          "check": "travelExpense count = 0",
+          "pass": true,
+          "detail": "0"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/travelExpense",
+          "ok": true
+        },
+        {
+          "method": "DELETE",
+          "path": "/travelExpense/30000006",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-credit-note-en",
+      "category": "create-credit-note",
+      "tier": 2,
+      "lang": "en",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 11301,
+      "checks": [
+        {
+          "check": "invoice with isCreditNote=true",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/invoice",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice/30000009/:createCreditNote",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-invoice-payment-de",
+      "category": "invoice-payment",
+      "tier": 2,
+      "lang": "de",
+      "status": "pass",
+      "apiCalls": 8,
+      "apiErrors": 0,
+      "optimalCalls": 8,
+      "callEfficiency": "100%",
+      "elapsedMs": 31920,
+      "checks": [
+        {
+          "check": "customer with name=\"Bergwerk AG\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "invoice.isPaid = true",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/ledger/account/30000001",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/order",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/invoice/paymentType",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/invoice/30000009/:payment",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-project-es",
+      "category": "create-project",
+      "tier": 2,
+      "lang": "es",
+      "status": "pass",
+      "apiCalls": 5,
+      "apiErrors": 0,
+      "optimalCalls": 5,
+      "callEfficiency": "100%",
+      "elapsedMs": 21353,
+      "checks": [
+        {
+          "check": "project with name=\"Migración Cloud\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "customer with name=\"Sol Digital S.L.\"",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/project",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-delete-travel-pt",
+      "category": "delete-travel-expense",
+      "tier": 2,
+      "lang": "pt",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 8592,
+      "checks": [
+        {
+          "check": "travelExpense count = 0",
+          "pass": true,
+          "detail": "0"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/travelExpense",
+          "ok": true
+        },
+        {
+          "method": "DELETE",
+          "path": "/travelExpense/30000006",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-employee-pt",
+      "category": "create-employee",
+      "tier": 1,
+      "lang": "pt",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 10297,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Rita\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Almeida\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .email = \"rita.almeida@example.org\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-employee-de",
+      "category": "create-employee",
+      "tier": 1,
+      "lang": "de",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 12198,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Elias\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Meyer\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .email = \"elias.meyer@example.org\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-customer-fr",
+      "category": "create-customer",
+      "tier": 1,
+      "lang": "fr",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 5882,
+      "checks": [
+        {
+          "check": "customer with name=\"Lumière SARL\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .email = \"contact@lumiere.fr\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .organizationNumber = \"556677889\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-supplier-invoice-es",
+      "category": "supplier-invoice",
+      "tier": 2,
+      "lang": "es",
+      "status": "pass",
+      "apiCalls": 8,
+      "apiErrors": 0,
+      "optimalCalls": 4,
+      "callEfficiency": "50%",
+      "elapsedMs": 36132,
+      "checks": [
+        {
+          "check": "supplier with name=\"Montaña SL\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "voucher exists",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/supplier",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/ledger/voucher",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-salary-de",
+      "category": "salary-payroll",
+      "tier": 2,
+      "lang": "de",
+      "status": "pass",
+      "apiCalls": 6,
+      "apiErrors": 0,
+      "optimalCalls": 6,
+      "callEfficiency": "100%",
+      "elapsedMs": 22240,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Laura\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Schneider\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "employment exists",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "salarySpecification count = 2",
+          "pass": true,
+          "detail": "2"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee/employment",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/salary/type",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/salary/specification",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/salary/specification",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-salary-nb",
+      "category": "salary-payroll",
+      "tier": 2,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 6,
+      "apiErrors": 0,
+      "optimalCalls": 6,
+      "callEfficiency": "100%",
+      "elapsedMs": 23344,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Kari\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Olsen\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "employment exists",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "salarySpecification count = 2",
+          "pass": true,
+          "detail": "2"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee/employment",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/salary/type",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/salary/specification",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/salary/specification",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-invoice-multiline-es",
+      "category": "invoice-multiline",
+      "tier": 2,
+      "lang": "es",
+      "status": "pass",
+      "apiCalls": 8,
+      "apiErrors": 0,
+      "optimalCalls": 8,
+      "callEfficiency": "100%",
+      "elapsedMs": 32218,
+      "checks": [
+        {
+          "check": "customer with name=\"Río Verde SL\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "product with name=\"Desarrollo de sistemas\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "product with name=\"Asesoría de datos\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "product with name=\"Mantenimiento\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "invoice exists",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/ledger/account/30000001",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/order",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-invoice-multiline-nb",
+      "category": "invoice-multiline",
+      "tier": 2,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 8,
+      "apiErrors": 0,
+      "optimalCalls": 8,
+      "callEfficiency": "100%",
+      "elapsedMs": 34548,
+      "checks": [
+        {
+          "check": "customer with name=\"Fjelltopp AS\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "product with name=\"Konsulenttjenester\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "product with name=\"Catering\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "product with name=\"Frakt\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "invoice exists",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/ledger/account/30000001",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/order",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-order-invoice-payment-de",
+      "category": "order-invoice-payment",
+      "tier": 2,
+      "lang": "de",
+      "status": "pass",
+      "apiCalls": 9,
+      "apiErrors": 0,
+      "optimalCalls": 8,
+      "callEfficiency": "89%",
+      "elapsedMs": 34279,
+      "checks": [
+        {
+          "check": "customer with name=\"Sonnental GmbH\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .organizationNumber = \"904562262\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "product with name=\"Netzwerkdienst\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "product with name=\"Wartung\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "invoice.isPaid = true",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/order",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/ledger/account/30000001",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/invoice/paymentType",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/invoice/30000010/:payment",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-project-fixedprice-en",
+      "category": "project-fixed-price-invoice",
+      "tier": 2,
+      "lang": "en",
+      "status": "pass",
+      "apiCalls": 10,
+      "apiErrors": 0,
+      "optimalCalls": 9,
+      "callEfficiency": "90%",
+      "elapsedMs": 38570,
+      "checks": [
+        {
+          "check": "project with name=\"CRM Integration\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "customer with name=\"Greenfield Ltd\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .organizationNumber = \"989358626\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "employee with firstName=\"Daniel\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Johnson\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "invoice exists",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/project",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/ledger/account/30000001",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/order",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-update-employee-nb",
+      "category": "update-employee",
+      "tier": 2,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 10744,
+      "checks": [
+        {
+          "check": "employee.phoneNumberMobile = \"98765432\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/employee/30000001",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-update-customer-en",
+      "category": "update-customer",
+      "tier": 2,
+      "lang": "en",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 7934,
+      "checks": [
+        {
+          "check": "customer with name=\"Nordfjord AS\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .email = \"new@nordfjord.no\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/customer/30000006",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-create-contact-nb",
+      "category": "create-contact",
+      "tier": 1,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 3,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "67%",
+      "elapsedMs": 12736,
+      "checks": [
+        {
+          "check": "customer with name=\"Havblikk AS\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "contact with firstName=\"Per\"",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/contact",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-delete-voucher-nb",
+      "category": "delete-voucher",
+      "tier": 2,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 7719,
+      "checks": [
+        {
+          "check": "voucher count = 0",
+          "pass": true,
+          "detail": "0"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/ledger/voucher",
+          "ok": true
+        },
+        {
+          "method": "DELETE",
+          "path": "/ledger/voucher/30000006",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-create-multiple-employees-en",
+      "category": "create-multiple-employees",
+      "tier": 2,
+      "lang": "en",
+      "status": "pass",
+      "apiCalls": 3,
+      "apiErrors": 0,
+      "optimalCalls": 3,
+      "callEfficiency": "100%",
+      "elapsedMs": 9783,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Alice\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "employee with firstName=\"Bob\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "department with name=\"Sales\"",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-supplier-invoice-nb",
+      "category": "supplier-invoice",
+      "tier": 2,
+      "lang": "nb",
+      "status": "pass",
+      "apiCalls": 7,
+      "apiErrors": 0,
+      "optimalCalls": 4,
+      "callEfficiency": "57%",
+      "elapsedMs": 37995,
+      "checks": [
+        {
+          "check": "supplier with name=\"Fjellservice AS\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "voucher exists",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/supplier",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/ledger/voucher",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-salary-en",
+      "category": "salary-payroll",
+      "tier": 2,
+      "lang": "en",
+      "status": "pass",
+      "apiCalls": 6,
+      "apiErrors": 0,
+      "optimalCalls": 6,
+      "callEfficiency": "100%",
+      "elapsedMs": 20395,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Sarah\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Connor\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "employment exists",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "salarySpecification count = 2",
+          "pass": true,
+          "detail": "2"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee/employment",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/salary/type",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/salary/specification",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/salary/specification",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-customer-pt",
+      "category": "create-customer",
+      "tier": 1,
+      "lang": "pt",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 6367,
+      "checks": [
+        {
+          "check": "customer with name=\"Floresta Lda\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .email = \"post@floresta.no\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .organizationNumber = \"893475656\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-customer-nn",
+      "category": "create-customer",
+      "tier": 1,
+      "lang": "nn",
+      "status": "pass",
+      "apiCalls": 1,
+      "apiErrors": 0,
+      "optimalCalls": 1,
+      "callEfficiency": "100%",
+      "elapsedMs": 5695,
+      "checks": [
+        {
+          "check": "customer with name=\"Bølgekraft AS\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .email = \"post@blgekraft.no\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .organizationNumber = \"812297848\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-employee-es",
+      "category": "create-employee",
+      "tier": 1,
+      "lang": "es",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 8959,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Carlos\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"García\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "  .email = \"carlos.garcia@empresa.es\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t1-employee-nn",
+      "category": "create-employee",
+      "tier": 1,
+      "lang": "nn",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 9910,
+      "checks": [
+        {
+          "check": "employee with firstName=\"Håkon\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .lastName = \"Eide\"",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-invoice-payment-es",
+      "category": "invoice-payment",
+      "tier": 2,
+      "lang": "es",
+      "status": "pass",
+      "apiCalls": 8,
+      "apiErrors": 0,
+      "optimalCalls": 8,
+      "callEfficiency": "100%",
+      "elapsedMs": 38505,
+      "checks": [
+        {
+          "check": "customer with name=\"Estrela Lda\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "invoice.isPaid = true",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/ledger/account/30000001",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/order",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/invoice/paymentType",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/invoice/30000009/:payment",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-invoice-payment-pt",
+      "category": "invoice-payment",
+      "tier": 2,
+      "lang": "pt",
+      "status": "pass",
+      "apiCalls": 8,
+      "apiErrors": 0,
+      "optimalCalls": 8,
+      "callEfficiency": "100%",
+      "elapsedMs": 30355,
+      "checks": [
+        {
+          "check": "customer with name=\"Porto Alegre Lda\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "invoice.isPaid = true",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/ledger/account/30000001",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/order",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/invoice/paymentType",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/invoice/30000009/:payment",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-project-fr",
+      "category": "create-project",
+      "tier": 2,
+      "lang": "fr",
+      "status": "pass",
+      "apiCalls": 5,
+      "apiErrors": 0,
+      "optimalCalls": 5,
+      "callEfficiency": "100%",
+      "elapsedMs": 21935,
+      "checks": [
+        {
+          "check": "project with name=\"Audit Interne\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "customer with name=\"Forêt SARL\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "employee with firstName=\"Sophie\"",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/department",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/employee",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/project",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-delete-travel-fr",
+      "category": "delete-travel-expense",
+      "tier": 2,
+      "lang": "fr",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 7774,
+      "checks": [
+        {
+          "check": "travelExpense count = 0",
+          "pass": true,
+          "detail": "0"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/travelExpense",
+          "ok": true
+        },
+        {
+          "method": "DELETE",
+          "path": "/travelExpense/30000006",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "t2-credit-note-pt",
+      "category": "create-credit-note",
+      "tier": 2,
+      "lang": "pt",
+      "status": "pass",
+      "apiCalls": 2,
+      "apiErrors": 0,
+      "optimalCalls": 2,
+      "callEfficiency": "100%",
+      "elapsedMs": 12101,
+      "checks": [
+        {
+          "check": "invoice with isCreditNote=true",
+          "pass": true,
+          "detail": "found"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "GET",
+          "path": "/invoice",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice/30000009/:createCreditNote",
+          "ok": true
+        }
+      ]
+    }
+  ]
+}
