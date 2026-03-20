@@ -940,7 +940,11 @@ def build_prediction(
                     if obs_cls[c] < min_obs[c]:
                         cls_strength[c] = 0.0
                 adj = 1.0 + cls_strength * (ratio - 1.0)
-                adj = np.clip(adj, 0.80, 1.25)  # optimized safety clamp
+                # Per-class clamp: wider for settlement (allows stronger correction
+                # on extreme rounds like R8 where expansion is 4.8x over-predicted)
+                adj_min = np.array([0.80, 0.60, 1.00, 1.00, 0.80, 1.00])
+                adj_max = np.array([1.25, 1.30, 1.00, 1.00, 1.25, 1.00])
+                adj = np.clip(adj, adj_min, adj_max)
                 for y in range(h):
                     for x in range(w):
                         if initial_grid[y][x] in {10, 5}:
