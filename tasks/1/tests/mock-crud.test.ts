@@ -606,6 +606,163 @@ describe("Mock Tripletex API", () => {
     });
   });
 
+  // ─── Full Workflow: Travel Expense with Costs & Per Diem ────────────
+
+  describe("Full workflow: travel expense with costs and per diem", () => {
+    it("creates travel expense, adds costs and per diem", async () => {
+      // Create employee
+      const deptRes = await client.post("/department", { name: "Reise", departmentNumber: "99" });
+      expect(deptRes.status).toBe(201);
+      const deptId = deptRes.body.value.id;
+
+      const empRes = await client.post("/employee", {
+        firstName: "Lucy",
+        lastName: "Walker",
+        email: "lucy@example.org",
+        dateOfBirth: "1990-01-15",
+        userType: "STANDARD",
+        department: { id: deptId },
+      });
+      expect(empRes.status).toBe(201);
+      const empId = empRes.body.value.id;
+
+      // Create travel expense
+      const teRes = await client.post("/travelExpense", {
+        employee: { id: empId },
+        title: "Client visit Trondheim",
+        travelDetails: {
+          departureDate: "2026-03-19",
+          returnDate: "2026-03-22",
+          departureFrom: "Oslo",
+          destination: "Trondheim",
+          purpose: "Client visit",
+        },
+      });
+      expect(teRes.status).toBe(201);
+      const teId = teRes.body.value.id;
+
+      // Get cost categories
+      const catRes = await client.get("/travelExpense/costCategory");
+      expect(catRes.status).toBe(200);
+      expect(catRes.body.values.length).toBeGreaterThan(0);
+      const flyCat = catRes.body.values.find((c: Record<string, unknown>) => c.description === "Fly");
+      expect(flyCat).toBeDefined();
+      const taxiCat = catRes.body.values.find((c: Record<string, unknown>) => c.description === "Taxi");
+      expect(taxiCat).toBeDefined();
+
+      // Get travel payment types
+      const ptRes = await client.get("/travelExpense/paymentType");
+      expect(ptRes.status).toBe(200);
+      expect(ptRes.body.values.length).toBeGreaterThan(0);
+      const paymentTypeId = ptRes.body.values[0].id;
+
+      // Add flight cost
+      const flightRes = await client.post("/travelExpense/cost", {
+        travelExpense: { id: teId },
+        costCategory: { id: flyCat.id },
+        paymentType: { id: paymentTypeId },
+        date: "2026-03-19",
+        amountCurrencyIncVat: 7200,
+        comments: "Flight ticket",
+      });
+      expect(flightRes.status).toBe(201);
+
+      // Add taxi cost
+      const taxiRes = await client.post("/travelExpense/cost", {
+        travelExpense: { id: teId },
+        costCategory: { id: taxiCat.id },
+        paymentType: { id: paymentTypeId },
+        date: "2026-03-19",
+        amountCurrencyIncVat: 650,
+        comments: "Taxi",
+      });
+      expect(taxiRes.status).toBe(201);
+
+      // Get rate categories for per diem
+      const rcRes = await client.get("/travelExpense/rateCategory?type=PER_DIEM&isValidDomestic=true&isValidAccommodation=true");
+      expect(rcRes.status).toBe(200);
+      expect(rcRes.body.values.length).toBeGreaterThan(0);
+      const overnightCat = rcRes.body.values[0];
+
+      // Get rate for the category
+      const rateRes = await client.get(`/travelExpense/rate?rateCategoryId=${overnightCat.id}`);
+      expect(rateRes.status).toBe(200);
+      expect(rateRes.body.values.length).toBeGreaterThan(0);
+      const rateType = rateRes.body.values[0];
+
+      // Add per diem compensation
+      const perDiemRes = await client.post("/travelExpense/perDiemCompensation", {
+        travelExpense: { id: teId },
+        rateType: { id: rateType.id },
+        rateCategory: { id: overnightCat.id },
+        overnightAccommodation: "HOTEL",
+        location: "Trondheim",
+        count: 4,
+        rate: 800,
+        isDeductionForBreakfast: false,
+        isDeductionForLunch: false,
+        isDeductionForDinner: false,
+      });
+      expect(perDiemRes.status).toBe(201);
+
+      // Verify costs exist
+      const costsRes = await client.get(`/travelExpense/cost?travelExpenseId=${teId}`);
+      expect(costsRes.status).toBe(200);
+      expect(costsRes.body.values.length).toBe(2);
+
+      // Verify per diem exists
+      const pdRes = await client.get(`/travelExpense/perDiemCompensation?travelExpenseId=${teId}`);
+      expect(pdRes.status).toBe(200);
+      expect(pdRes.body.values.length).toBe(1);
+    });
+
+    it("rejects cost with invalid travel expense ref", async () => {
+      const res = await client.post("/travelExpense/cost", {
+        travelExpense: { id: 99999 },
+        costCategory: { id: 30000001 },
+        date: "2026-03-19",
+        amountCurrencyIncVat: 100,
+      });
+      expect(res.status).toBe(422);
+    });
+
+    it("rejects cost with invalid cost category ref", async () => {
+      // First create a valid travel expense
+      const teRes = await client.post("/travelExpense", {
+        employee: { id: 30000001 },
+        title: "Test",
+        travelDetails: { departureDate: "2026-03-19", returnDate: "2026-03-20" },
+      });
+      const teId = teRes.body.value.id;
+
+      const res = await client.post("/travelExpense/cost", {
+        travelExpense: { id: teId },
+        costCategory: { id: 99999 },
+        date: "2026-03-19",
+        amountCurrencyIncVat: 100,
+      });
+      expect(res.status).toBe(422);
+    });
+
+    it("rejects per diem with invalid rate category ref", async () => {
+      const teRes = await client.post("/travelExpense", {
+        employee: { id: 30000001 },
+        title: "Test2",
+        travelDetails: { departureDate: "2026-03-19", returnDate: "2026-03-20" },
+      });
+      const teId = teRes.body.value.id;
+
+      const res = await client.post("/travelExpense/perDiemCompensation", {
+        travelExpense: { id: teId },
+        rateType: { id: 30000001 },
+        rateCategory: { id: 99999 },
+        count: 1,
+        rate: 800,
+      });
+      expect(res.status).toBe(422);
+    });
+  });
+
   // ─── Full Workflow: Delete Travel Expense ───────────────────────────
 
   describe("Full workflow: delete travel expense", () => {

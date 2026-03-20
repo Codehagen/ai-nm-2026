@@ -112,6 +112,125 @@ export function registerCustomRoutes(app: Hono, store: EntityStore): void {
     return c.json(wrapList(vatTypes));
   });
 
+  // ─── Travel Expense Sub-Endpoints ──────────────────────────────────
+
+  /** GET /travelExpense/costCategory — list cost categories */
+  app.get("/travelExpense/costCategory", (c) => {
+    const categories = store.list("travelExpenseCostCategory");
+    return c.json(wrapList(categories));
+  });
+
+  /** GET /travelExpense/costCategory/:id */
+  app.get("/travelExpense/costCategory/:id", (c) => {
+    const id = parseInt(c.req.param("id"));
+    const cat = store.getById("travelExpenseCostCategory", id);
+    if (!cat) return c.json(errorResponse(404, `costCategory with id ${id} not found`), 404);
+    return c.json(wrapValue(cat));
+  });
+
+  /** GET /travelExpense/paymentType — list travel payment types */
+  app.get("/travelExpense/paymentType", (c) => {
+    const types = store.list("travelExpensePaymentType");
+    return c.json(wrapList(types));
+  });
+
+  /** GET /travelExpense/rateCategory — list rate categories */
+  app.get("/travelExpense/rateCategory", (c) => {
+    let categories = store.list("travelExpenseRateCategory");
+    // Filter by type if specified
+    const type = c.req.query("type");
+    if (type) categories = categories.filter((cat: Record<string, unknown>) => cat.type === type);
+    const isValidDomestic = c.req.query("isValidDomestic");
+    if (isValidDomestic === "true") categories = categories.filter((cat: Record<string, unknown>) => cat.isValidDomestic === true);
+    const isValidDayTrip = c.req.query("isValidDayTrip");
+    if (isValidDayTrip === "true") categories = categories.filter((cat: Record<string, unknown>) => cat.isValidDayTrip === true);
+    const isValidAccommodation = c.req.query("isValidAccommodation");
+    if (isValidAccommodation === "true") categories = categories.filter((cat: Record<string, unknown>) => cat.isValidAccommodation === true);
+    return c.json(wrapList(categories));
+  });
+
+  /** GET /travelExpense/rate — list rates */
+  app.get("/travelExpense/rate", (c) => {
+    let rates = store.list("travelExpenseRate");
+    const rateCategoryId = c.req.query("rateCategoryId");
+    if (rateCategoryId) {
+      const catId = parseInt(rateCategoryId);
+      rates = rates.filter((r: Record<string, unknown>) => {
+        const rc = r.rateCategory as { id?: number } | undefined;
+        return rc?.id === catId;
+      });
+    }
+    return c.json(wrapList(rates));
+  });
+
+  /** POST /travelExpense/cost — add cost to travel expense */
+  app.post("/travelExpense/cost", async (c) => {
+    let body: Record<string, unknown>;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json(errorResponse(400, "Invalid JSON body"), 400);
+    }
+    const te = body.travelExpense as { id?: number } | undefined;
+    if (!te?.id || !store.has("travelExpense", te.id)) {
+      return c.json(errorResponse(422, "Validering feilet.", [{ field: "travelExpense", message: "Kan ikke være null." }]), 422);
+    }
+    const cc = body.costCategory as { id?: number } | undefined;
+    if (!cc?.id || !store.has("travelExpenseCostCategory", cc.id)) {
+      return c.json(errorResponse(422, "Validering feilet.", [{ field: "costCategory", message: "Kan ikke være null." }]), 422);
+    }
+    const entity = store.create("travelExpenseCost", body);
+    return c.json(wrapValue(entity), 201);
+  });
+
+  /** GET /travelExpense/cost — list costs */
+  app.get("/travelExpense/cost", (c) => {
+    let costs = store.list("travelExpenseCost");
+    const travelExpenseId = c.req.query("travelExpenseId");
+    if (travelExpenseId) {
+      const teId = parseInt(travelExpenseId);
+      costs = costs.filter((cost: Record<string, unknown>) => {
+        const te = cost.travelExpense as { id?: number } | undefined;
+        return te?.id === teId;
+      });
+    }
+    return c.json(wrapList(costs));
+  });
+
+  /** POST /travelExpense/perDiemCompensation — add per diem to travel expense */
+  app.post("/travelExpense/perDiemCompensation", async (c) => {
+    let body: Record<string, unknown>;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json(errorResponse(400, "Invalid JSON body"), 400);
+    }
+    const te = body.travelExpense as { id?: number } | undefined;
+    if (!te?.id || !store.has("travelExpense", te.id)) {
+      return c.json(errorResponse(422, "Validering feilet.", [{ field: "travelExpense", message: "Kan ikke være null." }]), 422);
+    }
+    const rc = body.rateCategory as { id?: number } | undefined;
+    if (!rc?.id || !store.has("travelExpenseRateCategory", rc.id)) {
+      return c.json(errorResponse(422, "Validering feilet.", [{ field: "rateCategory", message: "Kan ikke være null." }]), 422);
+    }
+    const entity = store.create("travelExpensePerDiem", body);
+    return c.json(wrapValue(entity), 201);
+  });
+
+  /** GET /travelExpense/perDiemCompensation — list per diem compensations */
+  app.get("/travelExpense/perDiemCompensation", (c) => {
+    let perDiems = store.list("travelExpensePerDiem");
+    const travelExpenseId = c.req.query("travelExpenseId");
+    if (travelExpenseId) {
+      const teId = parseInt(travelExpenseId);
+      perDiems = perDiems.filter((pd: Record<string, unknown>) => {
+        const te = pd.travelExpense as { id?: number } | undefined;
+        return te?.id === teId;
+      });
+    }
+    return c.json(wrapList(perDiems));
+  });
+
   // ─── Employee Employment ────────────────────────────────────────────
 
   /** GET /employee/employment — list employments */
