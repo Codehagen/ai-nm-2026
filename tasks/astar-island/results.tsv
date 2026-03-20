@@ -91,3 +91,4 @@ ec6fe48	84.332017	0.0	1	discard	L7 settlement strength 0.80->1.00	R7 worse 64.05
 a7bb9aa	84.118673	0.0	49	discard	LightGBM num_leaves=31	R5 drops to 83.80
 e155e4b	84.434661	0.0	1	discard	L7 empty=1.00 forest=1.50	flat, R4 slightly worse
 d667b59	83.996817	0.0	24	discard	global features (settl_ratio, forest_ratio, n_settl_norm)	R7=68.19(+3.7!) but R2=89.92 R6=78.49
+cc48576	84.440518	0.0	3	discard	XGBoost 400 trees + lr=0.05 (249s)	no improvement, 3x slower
