@@ -1,61 +1,71 @@
-"""Retrain the GBT models using all available ground truth data.
+"""Retrain the GBT models using local ground truth data (offline).
 
-Run this before each new round to incorporate GT from all completed rounds.
-The more training data, the better the model generalizes.
+Trains with 37 features: 30 cell features + 7 round-level observation stats.
 
 Usage:
     cd tasks/astar-island
-    ASTAR_TOKEN=... python retrain_gbt.py
+    python retrain_gbt.py
 """
 
+import json
 import os
 import sys
 import pickle
 import numpy as np
+import warnings
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+warnings.filterwarnings("ignore")
+
+sys.path.insert(0, os.path.dirname(__file__))
 
 import xgboost as xgb
-from client import AstarClient
-from model import _extract_cell_features
+from model import _extract_cell_features, compute_obs_stats
+from utils import load_observations
+
+
+ROUNDS = {
+    1: "71451d74-be9f-471f-aacd-a41f3b68a9cd",
+    2: "76909e29-f664-4b2f-b16b-61b7507277e9",
+    4: "8e839974-b13b-407b-a5e7-fc749d877195",
+    5: "fd3c92ff-3178-4dc9-8d9b-acf389b3982b",
+    6: "ae78003a-4efe-425a-881a-d16a39bca0ad",
+    7: "36e581f1-73f8-453f-ab98-cbe3052b701b",
+}
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 
 def main():
-    token = os.environ.get("ASTAR_TOKEN", "")
-    if not token:
-        print("ERROR: Set ASTAR_TOKEN env var")
-        return
+    print("Retraining GBT models from local data (37 features)...")
 
-    client = AstarClient(token=token)
-    rounds = client.get_my_rounds()
-    completed = [r for r in rounds if r["status"] in ("completed", "scoring")]
-
-    if not completed:
-        print("No completed rounds to train on.")
-        return
-
-    print(f"Found {len(completed)} completed round(s)")
-
-    # Collect training data from all completed rounds
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
 
-    for r in completed:
-        round_id = r["id"]
-        round_num = r["round_number"]
-        detail = client.get_round_detail(round_id)
+    for rnum, round_id in sorted(ROUNDS.items()):
+        init_path = os.path.join(DATA_DIR, f"round{rnum}_initial.json")
+        if not os.path.exists(init_path):
+            continue
 
-        for seed in range(detail.seeds_count):
-            try:
-                analysis = client.get_analysis(round_id, seed)
-            except Exception as e:
-                print(f"  R{round_num} seed {seed}: skipped ({e})")
+        with open(init_path) as f:
+            info = json.load(f)
+
+        # Load observation stats for this round (7 features)
+        all_obs = load_observations(round_id)
+        obs_stats = compute_obs_stats(all_obs) if all_obs else np.zeros(7)
+
+        for seed in range(5):
+            gt_path = os.path.join(DATA_DIR, f"gt_r{rnum}_seed{seed}.npy")
+            if not os.path.exists(gt_path):
                 continue
 
-            gt = np.array(analysis.ground_truth)
-            grid = detail.initial_states[seed].grid
-            feats, coords = _extract_cell_features(grid, detail.initial_states[seed].settlements)
+            gt = np.load(gt_path)
+            grid = info["initial_states"][seed]["grid"]
+            settlements = info["initial_states"][seed]["settlements"]
+            feats, coords = _extract_cell_features(grid, settlements)
             targets = np.array([gt[y, x] for y, x in coords])
+
+            # Append obs stats to get 37 features per cell
+            stats_tile = np.tile(obs_stats, (len(feats), 1))
+            feats = np.hstack([feats, stats_tile])
 
             for i, (y, x) in enumerate(coords):
                 code = grid[y][x]
@@ -69,10 +79,7 @@ def main():
                     X_data["settl"].append(feats[i])
                     Y_data["settl"].append(targets[i])
 
-            # Also save GT for offline evaluation
-            np.save(f"data/gt_r{round_num}_seed{seed}.npy", gt)
-
-        print(f"  Round {round_num}: loaded {detail.seeds_count} seeds")
+        print(f"  Round {rnum}: loaded 5 seeds")
 
     # Train terrain-specific XGBoost models
     models = {}
@@ -105,7 +112,7 @@ def main():
         pickle.dump(models, f)
 
     total = sum(len(X_data[t]) for t in X_data)
-    print(f"\nSaved GBT models: {total} total training samples from {len(completed)} round(s)")
+    print(f"\nSaved GBT models: {total} total samples, {len(ROUNDS)} rounds, 37 features")
 
 
 if __name__ == "__main__":
