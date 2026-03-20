@@ -8,12 +8,14 @@ Timeout: 300 seconds inference on NVIDIA L4
 
 | Model | Size | Local (pycocotools) | Live Score | Notes |
 |-------|------|---------------------|------------|-------|
-| YOLOv8l + WBF (latest) | 84 MB | 0.8669 | 0.9007 | 3-pass WBF, precision rounding |
+| YOLOv8l cls=1.5 full-data | 84 MB | 0.9848* | **0.9040** | cls loss boost, full dataset, resume from best |
+| YOLOv8l + WBF (original) | 84 MB | 0.8669 | 0.9007 | 3-pass WBF, precision rounding |
 | YOLOv8l + WBF | 84 MB | 0.8635 | 0.8966 | 3-pass WBF (960, 1280, 1280+TTA) |
-| YOLOv8m (tweaked) | 299 MB | — | 0.6915 | Single-scale, tweaked conf/iou |
 | YOLOv8m (initial) | 299 MB | — | 0.6894 | First submission |
 
-**Note:** Local scores use pycocotools (per-category AP, matches competition). Live is consistently ~0.03-0.04 higher than local — likely due to different test set.
+*\*Local score inflated — model trained on full dataset, so held-out test is leaked. Only live score is reliable for full-dataset models.*
+
+**Note:** For 3-way split models, local is ~0.03-0.04 below live. For full-dataset models, local is meaningless — use live score only.
 
 ## Architecture
 
@@ -55,15 +57,16 @@ python test_local.py --zip submission.zip
 
 ## Ideas to explore (priority order)
 
-1. ~~Model size: yolov8m → yolov8l~~ DONE — YOLOv8l is current best
-2. ~~Longer training~~ DONE — 150-200 epochs tested, diminishing returns
-3. ~~Multi-model ensemble~~ TESTED — 3-model WBF scored lower than single best + too slow (228s)
-4. ~~Inference param sweep~~ DONE — 35+ experiments, found optimal WBF/conf/precision params
-5. **SWA (Stochastic Weight Averaging)** — IN PROGRESS, +0.005 cls_mAP, -0.003 det_mAP vs best
-6. **Different optimizers/LR** — IN PROGRESS on VM (SGD, AdamW, cos_lr variants)
-7. **Product reference images**: Use the 327 product reference photos for few-shot category matching
-8. **RT-DETR-l**: Transformer-based, in ultralytics 8.1.0
-9. **YOLOv8x**: Larger model, check if fits in 420MB and 300s timeout
+1. ~~Model size: yolov8m → yolov8l~~ DONE
+2. ~~Longer training~~ DONE — 150-200 epochs, diminishing returns
+3. ~~Multi-model ensemble~~ TESTED — slower, scored lower than single model
+4. ~~Inference param sweep~~ DONE — 35+ experiments, found optimal config
+5. ~~SWA~~ TESTED — marginal gain, not worth complexity
+6. ~~cls loss weight~~ DONE — cls=1.5 gave +0.0033 live (0.9007→0.9040)
+7. **More cls loss variants** — Try cls=2.0 or cls=1.0 to find sweet spot
+8. **Full-dataset + longer epochs** — Currently training on VM, mAP 0.810+ and climbing
+9. **Product reference images**: Use 327 product reference photos for classification boost
+10. **RT-DETR-l**: Transformer-based alternative in ultralytics 8.1.0
 
 ## Constraints
 
