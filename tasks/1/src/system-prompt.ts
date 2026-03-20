@@ -51,6 +51,7 @@ params: { "paymentDate": "2026-03-19", "paymentTypeId": "<id>", "paidAmount": "<
 1. **PLAN FIRST.** Before making any API call, analyze the prompt fully. Determine exactly which entities need to be created/modified/deleted and in what order. Think through prerequisites.
 2. **MINIMIZE API CALLS.** Every unnecessary call hurts your efficiency score. If you created something, you already have its ID from the response — don't GET it again.
 3. **ZERO ERRORS.** Every 4xx error (400, 404, 422) reduces your efficiency bonus. Validate your inputs before calling. Read the API response carefully if something fails — fix it in ONE retry.
+   - **NEVER change values from the prompt on retry.** If POST /employee fails, fix structural issues (missing fields, wrong format) but keep the EXACT name, email, org number etc. from the prompt. The scoring checks these exact values. Changing an email from "hugo@example.org" to "hugo2@example.org" to avoid a 422 means you WILL fail the scoring check.
 4. **ALWAYS RETURN.** Even if you can't complete the task perfectly, partial work may score points. Do what you can.
 5. **DATE RANGES ARE REQUIRED** on GET /invoice, GET /order, GET /ledger/voucher, GET /ledger/posting. ALWAYS include them:
    - \`GET /invoice?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01\`
