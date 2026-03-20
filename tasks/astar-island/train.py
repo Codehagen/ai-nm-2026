@@ -44,7 +44,7 @@ BLEND_WEIGHT = 0.35
 
 # Smoothing: blend final prediction with uniform prior to reduce overconfidence
 # This helps on rounds where hidden params deviate most from training data
-SMOOTH_WEIGHT = 0.02  # 2% uniform prior
+SMOOTH_WEIGHT = 0.0  # disabled — hurts score
 
 # L7 observation-ratio correction strengths per class:
 # [empty, settlement, port, ruin, forest, mountain]
