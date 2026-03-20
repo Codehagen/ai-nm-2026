@@ -19,6 +19,7 @@ import warnings
 from typing import Optional
 
 import numpy as np
+from scipy import ndimage
 
 warnings.filterwarnings("ignore", category=UserWarning)  # suppress xgboost warnings
 
@@ -61,6 +62,21 @@ def _extract_cell_features(
             settl_pos.append((s.x, s.y))
             if getattr(s, "has_port", False):
                 port_pos.append((s.x, s.y))
+
+    # Pre-compute connected components of land (not ocean, not mountain)
+    grid_arr = np.array(initial_grid)
+    land_mask = (grid_arr != 10) & (grid_arr != 5)
+    labeled, _ = ndimage.label(land_mask)
+    # Compute per-component size and settlement count
+    comp_sizes = {}
+    comp_settl = {}
+    for y_ in range(h):
+        for x_ in range(w):
+            comp = labeled[y_, x_]
+            if comp > 0:
+                comp_sizes[comp] = comp_sizes.get(comp, 0) + 1
+                if initial_grid[y_][x_] in {1, 2}:
+                    comp_settl[comp] = comp_settl.get(comp, 0) + 1
 
     features = []
     coords = []
@@ -155,6 +171,11 @@ def _extract_cell_features(
                 (abs(y - py) + abs(x - px) for px, py in port_pos), default=99
             )
 
+            # Connected component features
+            comp = labeled[y, x]
+            comp_size = comp_sizes.get(comp, 0)
+            comp_n_settl = comp_settl.get(comp, 0)
+
             features.append([
                 code, dist, adj_ocean, adj_forest, adj_settl, adj_mountain,
                 int(code == 11), int(code == 4), int(code == 1), int(code == 2),
@@ -163,11 +184,11 @@ def _extract_cell_features(
                 dist_ocean, dist_mountain, forests_r2,
                 y, x,  # map position (captures fjord/border effects)
                 settlements_r3, settl_r12, settl_r57,
-                dist_port,
+                dist_port, comp_size, comp_n_settl,
             ])
             coords.append((y, x))
 
-    return np.array(features) if features else np.empty((0, 23)), coords
+    return np.array(features) if features else np.empty((0, 25)), coords
 
 
 def load_gbt_models() -> Optional[list]:
