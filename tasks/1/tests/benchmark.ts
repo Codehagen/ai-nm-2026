@@ -150,6 +150,8 @@ function getEntityPath(entity: string): string {
     project: "/project", travelExpense: "/travelExpense",
     account: "/ledger/account", voucher: "/ledger/voucher",
     contact: "/contact", activity: "/activity",
+    employment: "/employee/employment", salarySpecification: "/salary/specification",
+    salaryType: "/salary/type", supplier: "/supplier",
   };
   return paths[entity] || `/${entity}`;
 }

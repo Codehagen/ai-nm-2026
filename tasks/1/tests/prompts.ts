@@ -516,6 +516,51 @@ export const BENCHMARK_PROMPTS: BenchmarkPrompt[] = [
     ],
   },
 
+  // ─── Tier 2: Supplier Invoice ────────────────────────────────────
+
+  {
+    id: "t2-supplier-invoice-es",
+    category: "supplier-invoice",
+    tier: 2,
+    lang: "es",
+    prompt: 'Hemos recibido la factura INV-2026-9187 del proveedor Montaña SL (org. nº 884646979) por 19500 NOK con IVA incluido. El importe corresponde a servicios de oficina (cuenta 7300). Registre la factura del proveedor con el IVA soportado correcto (25 %).',
+    optimalCalls: 4, // POST supplier + GET account x2 + POST voucher
+    verify: [
+      { entity: "supplier", find: { field: "name", value: "Montaña SL" } },
+      { entity: "voucher", find: "any" },
+    ],
+  },
+
+  // ─── Tier 2: Salary / Payroll ────────────────────────────────────
+
+  {
+    id: "t2-salary-de",
+    category: "salary-payroll",
+    tier: 2,
+    lang: "de",
+    prompt: 'Führen Sie die Gehaltsabrechnung für Laura Schneider (laura.schneider@example.org) für diesen Monat durch. Das Grundgehalt beträgt 33000 NOK. Fügen Sie einen einmaligen Bonus von 17850 NOK zum Grundgehalt hinzu.',
+    optimalCalls: 6, // POST dept + POST employee + POST employment + GET salary/type + POST salary/spec (base) + POST salary/spec (bonus)
+    verify: [
+      { entity: "employee", find: { field: "firstName", value: "Laura" }, expectFields: { lastName: "Schneider" } },
+      { entity: "employment", find: "any" },
+      { entity: "salarySpecification", find: "count", expectedCount: 2 },
+    ],
+  },
+
+  {
+    id: "t2-salary-nb",
+    category: "salary-payroll",
+    tier: 2,
+    lang: "nb",
+    prompt: 'Utfør lønnskjøring for ansatt Kari Olsen (kari.olsen@firma.no) for denne måneden. Fastlønn er 40000 NOK. Legg til en overtidsgodtgjørelse på 8500 NOK.',
+    optimalCalls: 6,
+    verify: [
+      { entity: "employee", find: { field: "firstName", value: "Kari" }, expectFields: { lastName: "Olsen" } },
+      { entity: "employment", find: "any" },
+      { entity: "salarySpecification", find: "count", expectedCount: 2 },
+    ],
+  },
+
   // ─── Tier 2: Multi-line invoice with different VAT rates ─────────
 
   {
@@ -584,6 +629,137 @@ export const BENCHMARK_PROMPTS: BenchmarkPrompt[] = [
     ],
   },
 
+  // ─── Tier 2: Update Employee Phone Number ───────────────────────
+
+  {
+    id: "t2-update-employee-nb",
+    category: "update-employee",
+    tier: 2,
+    lang: "nb",
+    prompt: "Oppdater telefonnummeret til den første ansatte i kontoen til 98765432.",
+    optimalCalls: 2, // GET employee + PUT employee
+    verify: [
+      {
+        entity: "employee",
+        find: "any",
+        expectFields: { phoneNumberMobile: "98765432" },
+      },
+    ],
+  },
+
+  // ─── Tier 2: Update Customer Email ─────────────────────────────
+
+  {
+    id: "t2-update-customer-en",
+    category: "update-customer",
+    tier: 2,
+    lang: "en",
+    prompt: "Update the email address of customer Nordfjord AS to new@nordfjord.no.",
+    optimalCalls: 2, // GET customer + PUT customer
+    verify: [
+      {
+        entity: "customer",
+        find: { field: "name", value: "Nordfjord AS" },
+        expectFields: { email: "new@nordfjord.no" },
+      },
+    ],
+  },
+
+  // ─── Tier 1: Create Contact for Customer ───────────────────────
+
+  {
+    id: "t1-create-contact-nb",
+    category: "create-contact",
+    tier: 1,
+    lang: "nb",
+    prompt: "Opprett en kontaktperson for kunde Havblikk AS. Kontaktpersonen heter Per Hansen, e-post per@havblikk.no, mobil 91234567.",
+    optimalCalls: 2, // POST customer + POST contact
+    verify: [
+      {
+        entity: "customer",
+        find: { field: "name", value: "Havblikk AS" },
+      },
+      {
+        entity: "contact",
+        find: { field: "firstName", value: "Per" },
+      },
+    ],
+  },
+
+  // ─── Tier 2: Delete Voucher ────────────────────────────────────
+
+  {
+    id: "t2-delete-voucher-nb",
+    category: "delete-voucher",
+    tier: 2,
+    lang: "nb",
+    prompt: "Slett bilaget med beskrivelse Feilregistrering.",
+    optimalCalls: 2, // GET voucher + DELETE voucher
+    verify: [
+      {
+        entity: "voucher",
+        find: "count",
+        expectedCount: 0,
+      },
+    ],
+  },
+
+  // ─── Tier 2: Create Multiple Employees ─────────────────────────
+
+  {
+    id: "t2-create-multiple-employees-en",
+    category: "create-multiple-employees",
+    tier: 2,
+    lang: "en",
+    prompt: "Create two employees: Alice Brown (alice@company.com) and Bob Wilson (bob@company.com). Both should be in the Sales department.",
+    optimalCalls: 3, // POST department + POST employee x2
+    verify: [
+      {
+        entity: "employee",
+        find: { field: "firstName", value: "Alice" },
+      },
+      {
+        entity: "employee",
+        find: { field: "firstName", value: "Bob" },
+      },
+      {
+        entity: "department",
+        find: { field: "name", value: "Sales" },
+      },
+    ],
+  },
+
+  // ─── Tier 2: Supplier Invoice (Norwegian) ──────────────────────
+
+  {
+    id: "t2-supplier-invoice-nb",
+    category: "supplier-invoice",
+    tier: 2,
+    lang: "nb",
+    prompt: "Vi har mottatt faktura FV-2026-445 fra leverandør Fjellservice AS (org.nr 887766554) på 25000 NOK inkl. mva. Beløpet gjelder kontortjenester (konto 7300). Registrer leverandørfakturaen med korrekt inngående mva (25%).",
+    optimalCalls: 4, // POST supplier + GET account x2 + POST voucher
+    verify: [
+      { entity: "supplier", find: { field: "name", value: "Fjellservice AS" } },
+      { entity: "voucher", find: "any" },
+    ],
+  },
+
+  // ─── Tier 2: Salary / Payroll (English) ────────────────────────
+
+  {
+    id: "t2-salary-en",
+    category: "salary-payroll",
+    tier: 2,
+    lang: "en",
+    prompt: "Run payroll for employee Sarah Connor (sarah.connor@company.com) for this month. Base salary is 45000 NOK. Add overtime compensation of 12000 NOK.",
+    optimalCalls: 6,
+    verify: [
+      { entity: "employee", find: { field: "firstName", value: "Sarah" }, expectFields: { lastName: "Connor" } },
+      { entity: "employment", find: "any" },
+      { entity: "salarySpecification", find: "count", expectedCount: 2 },
+    ],
+  },
+
   // ─── Multi-language: same task, different languages ──────────────
 
   {
@@ -614,6 +790,95 @@ export const BENCHMARK_PROMPTS: BenchmarkPrompt[] = [
         find: { field: "name", value: "Bølgekraft AS" },
         expectFields: { email: "post@blgekraft.no", organizationNumber: "812297848" },
       },
+    ],
+  },
+  {
+    id: "t1-employee-es",
+    category: "create-employee",
+    tier: 1,
+    lang: "es",
+    prompt: "Cree un empleado llamado Carlos García con correo electrónico carlos.garcia@empresa.es.",
+    optimalCalls: 2,
+    verify: [
+      {
+        entity: "employee",
+        find: { field: "firstName", value: "Carlos" },
+        expectFields: { lastName: "García", email: "carlos.garcia@empresa.es" },
+      },
+    ],
+  },
+  {
+    id: "t1-employee-nn",
+    category: "create-employee",
+    tier: 1,
+    lang: "nn",
+    prompt: "Opprett ein tilsett med namn Håkon Eide og e-post hakon.eide@example.org.",
+    optimalCalls: 2,
+    verify: [
+      {
+        entity: "employee",
+        find: { field: "firstName", value: "Håkon" },
+        expectFields: { lastName: "Eide" },
+      },
+    ],
+  },
+  {
+    id: "t2-invoice-payment-es",
+    category: "invoice-payment",
+    tier: 2,
+    lang: "es",
+    prompt: "Cree una factura para el cliente Estrela Lda (org. nº 975389642) con el producto Servicio de red a 4700 NOK sin IVA (25% IVA). Fecha de factura hoy, vencimiento en 30 días. Registre el pago completo de la factura hoy.",
+    optimalCalls: 8,
+    verify: [
+      { entity: "customer", find: { field: "name", value: "Estrela Lda" } },
+      { entity: "invoice", find: "any", expectFields: { isPaid: true } },
+    ],
+  },
+  {
+    id: "t2-invoice-payment-pt",
+    category: "invoice-payment",
+    tier: 2,
+    lang: "pt",
+    prompt: "Crie uma fatura para o cliente Porto Alegre Lda (org. nº 842889154) com o produto Consultoria de dados a 11200 NOK sem IVA (25% IVA). Data da fatura hoje, vencimento em 30 dias. Registre o pagamento completo da fatura hoje.",
+    optimalCalls: 8,
+    verify: [
+      { entity: "customer", find: { field: "name", value: "Porto Alegre Lda" } },
+      { entity: "invoice", find: "any", expectFields: { isPaid: true } },
+    ],
+  },
+  {
+    id: "t2-project-fr",
+    category: "create-project",
+    tier: 2,
+    lang: "fr",
+    prompt: "Créez un projet nommé Audit Interne pour le client Forêt SARL (org. nº 925519685). Le chef de projet est Sophie Martin, sophie.martin@foret.fr.",
+    optimalCalls: 5,
+    verify: [
+      { entity: "project", find: { field: "name", value: "Audit Interne" } },
+      { entity: "customer", find: { field: "name", value: "Forêt SARL" } },
+      { entity: "employee", find: { field: "firstName", value: "Sophie" } },
+    ],
+  },
+  {
+    id: "t2-delete-travel-fr",
+    category: "delete-travel-expense",
+    tier: 2,
+    lang: "fr",
+    prompt: "Supprimez la note de frais de voyage intitulée Visite Client Paris.",
+    optimalCalls: 2,
+    verify: [
+      { entity: "travelExpense", find: "count", expectedCount: 0 },
+    ],
+  },
+  {
+    id: "t2-credit-note-pt",
+    category: "create-credit-note",
+    tier: 2,
+    lang: "pt",
+    prompt: "Crie uma nota de crédito para a fatura mais recente.",
+    optimalCalls: 2,
+    verify: [
+      { entity: "invoice", find: { field: "isCreditNote", value: true } },
     ],
   },
 ];
@@ -651,5 +916,21 @@ export const PRESEED: Record<string, PreSeed[]> = {
   "t2-credit-note-en": [
     { entity: "customer", data: { name: "CreditTest EN Ltd", isCustomer: true } },
     { entity: "product", data: { name: "TestProdEN", priceExcludingVatCurrency: 2000, vatType: { id: 3 } } },
+  ],
+  "t2-delete-travel-fr": [
+    {
+      entity: "travelExpense",
+      data: { employee: { id: 30000001 }, title: "Visite Client Paris", departureDate: "2026-03-16", returnDate: "2026-03-17" },
+    },
+  ],
+  "t2-credit-note-pt": [
+    { entity: "customer", data: { name: "CreditTest PT Lda", isCustomer: true } },
+    { entity: "product", data: { name: "TestProdPT", priceExcludingVatCurrency: 1500, vatType: { id: 3 } } },
+  ],
+  "t2-update-customer-en": [
+    { entity: "customer", data: { name: "Nordfjord AS", email: "old@nordfjord.no", isCustomer: true } },
+  ],
+  "t2-delete-voucher-nb": [
+    { entity: "voucher", data: { description: "Feilregistrering" } },
   ],
 };
