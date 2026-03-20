@@ -8,7 +8,9 @@ Timeout: 300 seconds inference on NVIDIA L4
 
 | Model | Size | Local (pycocotools) | Live Score | Notes |
 |-------|------|---------------------|------------|-------|
-| YOLOv8l cls=1.5 full-data | 84 MB | 0.9848* | **0.9040** | cls loss boost, full dataset, resume from best |
+| YOLOv8l cls=1.5 v2 | 84 MB | 0.9861* | **0.9055** | best checkpoint, current live best |
+| YOLOv8l cls=1.5 + ConvNeXt | 201 MB | — | 0.8941 | two-stage HURT — classifier degraded cls on unseen |
+| YOLOv8l cls=1.5 full-data | 84 MB | 0.9848* | 0.9040 | cls loss boost, full dataset |
 | YOLOv8l + WBF (original) | 84 MB | 0.8669 | 0.9007 | 3-pass WBF, precision rounding |
 | YOLOv8l + WBF | 84 MB | 0.8635 | 0.8966 | 3-pass WBF (960, 1280, 1280+TTA) |
 | YOLOv8m (initial) | 299 MB | — | 0.6894 | First submission |

@@ -8,4 +8,6 @@ timestamp	name	val_metric	model_size_mb	duration_min	status	notes
 2026-03-20 11:42	yolov8l-precision	0.8831	84.0	123.4	kept	bbox round(2), score round(6)
 2026-03-20 14:04	yolov8l-vm-variant	0.9007	84.0	0.0	kept	LIVE SCORE — new best live!
 2026-03-20 14:21	yolov8l-swa	0.8663	84.2	140.1	rejected	SWA avg of 3 checkpoints, marginal
-2026-03-20 18:13	yolov8l-cls1.5-full	0.9040	84.2	0.0	kept	LIVE SCORE — cls=1.5, full dataset, new best!
+2026-03-20 18:13	yolov8l-cls1.5-full	0.9040	84.2	0.0	kept	LIVE SCORE — cls=1.5, full dataset
+2026-03-20 21:06	yolov8l-cls1.5-v2	0.9055	84.2	42.6	kept	LIVE SCORE — new checkpoint, best live!
+2026-03-20 22:17	fast-2stage-convnext	0.8941	200.8	64.5	rejected	LIVE — classifier hurt classification mAP
