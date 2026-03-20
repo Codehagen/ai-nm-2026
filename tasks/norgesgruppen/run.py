@@ -104,9 +104,9 @@ def main():
             predictions.append({
                 "image_id": image_id,
                 "category_id": int(label),
-                "bbox": [round(x1, 1), round(y1, 1),
-                         round(x2 - x1, 1), round(y2 - y1, 1)],
-                "score": round(float(score), 4),
+                "bbox": [round(x1, 2), round(y1, 2),
+                         round(x2 - x1, 2), round(y2 - y1, 2)],
+                "score": round(float(score), 6),
             })
 
     output_path.parent.mkdir(parents=True, exist_ok=True)

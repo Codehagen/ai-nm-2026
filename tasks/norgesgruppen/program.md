@@ -8,8 +8,9 @@ Timeout: 300 seconds inference on NVIDIA L4
 
 | Model | Size | Local Score | Live Score | Notes |
 |-------|------|-------------|------------|-------|
-| YOLOv8l + WBF | 84 MB | 0.8719 | TBD | 3-pass WBF (960, 1280, 1280+TTA) |
-| YOLOv8m (baseline) | 299 MB | — | 0.6915 | Single-scale, tweaked conf/iou |
+| YOLOv8l + WBF (optimized) | 84 MB | 0.8831 | 0.8966 | 3-pass WBF, precision rounding |
+| YOLOv8l + WBF | 84 MB | 0.8823 | 0.8966 | 3-pass WBF (960, 1280, 1280+TTA) |
+| YOLOv8m (tweaked) | 299 MB | — | 0.6915 | Single-scale, tweaked conf/iou |
 | YOLOv8m (initial) | 299 MB | — | 0.6894 | First submission |
 
 ## Architecture
@@ -20,7 +21,8 @@ Timeout: 300 seconds inference on NVIDIA L4
   - Pass 2: 1280 no TTA (training scale, clean signal)
   - Pass 3: 1280 + TTA (augmented)
   - WBF fusion with weights [1, 2, 3]
-- **Key settings**: conf=0.001, iou=0.7 (per-pass NMS), WBF iou_thr=0.55
+- **Key settings**: conf=0.01, iou=0.7 (per-pass NMS), WBF iou_thr=0.55, skip_box_thr=0.001
+- **Precision**: bbox round(2), score round(6) — free +0.0008 from better IoU matching
 
 ## Known issues
 
