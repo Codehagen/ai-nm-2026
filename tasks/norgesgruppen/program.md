@@ -56,13 +56,14 @@ python test_local.py --zip submission.zip
 ## Ideas to explore (priority order)
 
 1. ~~Model size: yolov8m → yolov8l~~ DONE — YOLOv8l is current best
-2. **Longer training**: 150-200 epochs on full data (yolo/ split)
-3. **YOLOv8x**: Larger model, check if fits in 420MB and 300s timeout
-4. **RT-DETR-l**: Transformer-based, in ultralytics 8.1.0
-5. **Augmentation tuning**: mosaic, mixup, copy_paste ratios
-6. **Loss weights**: Higher cls loss (currently 0.5) to boost classification mAP
-7. **Multi-model ensemble**: Pack 2 small models, WBF merge in run.py
-8. **Product reference images**: Use the 327 product reference photos for few-shot category matching
+2. ~~Longer training~~ DONE — 150-200 epochs tested, diminishing returns
+3. ~~Multi-model ensemble~~ TESTED — 3-model WBF scored lower than single best + too slow (228s)
+4. ~~Inference param sweep~~ DONE — 35+ experiments, found optimal WBF/conf/precision params
+5. **SWA (Stochastic Weight Averaging)** — IN PROGRESS, +0.005 cls_mAP, -0.003 det_mAP vs best
+6. **Different optimizers/LR** — IN PROGRESS on VM (SGD, AdamW, cos_lr variants)
+7. **Product reference images**: Use the 327 product reference photos for few-shot category matching
+8. **RT-DETR-l**: Transformer-based, in ultralytics 8.1.0
+9. **YOLOv8x**: Larger model, check if fits in 420MB and 300s timeout
 
 ## Constraints
 
@@ -82,8 +83,11 @@ python test_local.py --zip submission.zip
 | `train.py` | Training script (autoresearch-compatible) |
 | `convert_coco.py` | COCO → YOLO format (2-way split) |
 | `convert_coco_3way.py` | COCO → YOLO format (3-way split with held-out test) |
-| `eval_local.py` | Scoring: det_mAP + cls_mAP |
-| `test_local.py` | Local sandbox simulator + scoring |
+| `eval_local.py` | Scoring: det_mAP + cls_mAP (old global AP — superseded by pycocotools) |
+| `test_local.py` | Local sandbox simulator + pycocotools scoring (matches competition) |
+| `swa.py` | Stochastic Weight Averaging — merge checkpoints |
+| `autoresearch_inference.py` | Inference param sweep (WBF, conf, scales) |
+| `sweep_final.py` | Final sweep (conf_type, NMW, precision) |
 | `package.sh` | Build submission.zip |
-| `autoresearch_fast.py` | Fast 5-min experiment loops |
 | `results.tsv` | Experiment log |
+| `results_inference.tsv` | Inference sweep results |

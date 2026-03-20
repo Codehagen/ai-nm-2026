@@ -6,3 +6,5 @@ timestamp	name	val_metric	model_size_mb	duration_min	status	notes
 2026-03-20 09:24	yolov8l-wbf-skip01	0.8823	84.0	132.4	kept	optimized WBF skip_thr=0.01
 2026-03-20 11:10	yolov8l-wbf-live	0.8966	84.0	0.0	kept	LIVE SCORE — first YOLOv8l submission
 2026-03-20 11:42	yolov8l-precision	0.8831	84.0	123.4	kept	bbox round(2), score round(6)
+2026-03-20 14:04	yolov8l-vm-variant	0.9007	84.0	0.0	kept	LIVE SCORE — new best live!
+2026-03-20 14:21	yolov8l-swa	0.8663	84.2	140.1	pending	SWA avg of 3 checkpoints, +cls_mAP (pycocotools)
