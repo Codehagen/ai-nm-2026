@@ -1,17 +1,20 @@
-"""Simplified Norse civilization simulator for Astar Island.
+"""Norse civilization simulator for Astar Island — calibrated from 20 replay trajectories.
 
-Calibrated from 20 replay trajectories (9,510 expansions, 6,958 deaths).
-Runs Monte Carlo simulations to predict terrain probability distributions.
+Key dynamics learned from replays (R1-R4, 5 seeds each):
+  - Expansion: ~10% of alive settlements expand per step (higher for high-pop)
+  - Deaths: ~7% of alive settlements die per step (stochastic, bursty)
+  - Ruins reclaim in ~1 step: ~50% re-settled, ~35% plains, ~15% forest
+  - Expansion targets: 41% plains, 43% ruins, 16% forest
+  - Expansion distance: 41% d=1, 33% d=2, 21% d=3, 5% d=4
+  - Port formation: coastal settlements (adj_ocean>=2) can become ports
+  - New settlements start with pop~0.45, food~0.22, defense~0.175
 
 Usage:
     from simulator import simulate_monte_carlo
-    probs = simulate_monte_carlo(initial_grid, settlements, n_sims=100,
-                                  expansion_rate=0.1, winter_severity=0.05)
+    probs = simulate_monte_carlo(initial_grid, settlements, n_sims=100)
 """
 
 import numpy as np
-from collections import defaultdict
-
 
 # Terrain codes
 OCEAN = 10
@@ -23,75 +26,67 @@ RUIN = 3
 FOREST = 4
 MOUNTAIN = 5
 
-# Calibrated from 20 replay trajectories
-# Expansion target distribution: what terrain types get expanded into
-EXPANSION_TERRAIN_PROBS = {PLAINS: 0.450, RUIN: 0.384, FOREST: 0.167}
+# Expandable terrain types
+EXPANDABLE = frozenset({PLAINS, RUIN, FOREST})
 
-# Expansion distance distribution (Manhattan)
-EXPANSION_DIST_PROBS = {1: 0.452, 2: 0.340, 3: 0.163, 4: 0.038}
+# Expansion distance weights (from R4 replay data)
+DIST_WEIGHTS = np.array([0.0, 0.41, 0.33, 0.21, 0.05])
 
-# Reclamation: ruin → plains (68%) or forest (32%)
-RECLAIM_TO_PLAINS = 0.68
-RECLAIM_TO_FOREST = 0.32
+# Terrain preference weights for expansion targets
+TERRAIN_EXPAND_WEIGHT = {PLAINS: 1.0, RUIN: 2.5, FOREST: 0.5}
 
+# Reclamation: ruin -> plains (68%) or forest (32%)
+RECLAIM_PLAINS_PROB = 0.68
 
-class Settlement:
-    __slots__ = ['x', 'y', 'population', 'food', 'defense', 'wealth',
-                 'has_port', 'alive', 'owner_id']
-
-    def __init__(self, x, y, population=1.0, food=0.8, defense=0.4,
-                 wealth=0.1, has_port=False, alive=True, owner_id=0):
-        self.x = x
-        self.y = y
-        self.population = population
-        self.food = food
-        self.defense = defense
-        self.wealth = wealth
-        self.has_port = has_port
-        self.alive = alive
-        self.owner_id = owner_id
+# Pre-build offsets for Manhattan distance 1-4
+_OFFSETS_BY_DIST = {}
+for _d in range(1, 5):
+    offsets = []
+    for dy in range(-4, 5):
+        for dx in range(-4, 5):
+            if abs(dy) + abs(dx) == _d:
+                offsets.append((dy, dx))
+    _OFFSETS_BY_DIST[_d] = offsets
 
 
-def _adj_ocean_count(grid, y, x):
+def _count_neighbors(grid, code):
+    """Count cells of given code in 8-neighborhood of each cell."""
     h, w = grid.shape
-    count = 0
+    mask = (grid == code).astype(np.int32)
+    count = np.zeros((h, w), dtype=np.int32)
     for dy in [-1, 0, 1]:
         for dx in [-1, 0, 1]:
             if dy == 0 and dx == 0:
                 continue
-            ny, nx = y + dy, x + dx
-            if 0 <= ny < h and 0 <= nx < w and grid[ny, nx] == OCEAN:
-                count += 1
-    return count
-
-
-def _adj_forest_count(grid, y, x):
-    h, w = grid.shape
-    count = 0
-    for dy in [-1, 0, 1]:
-        for dx in [-1, 0, 1]:
-            if dy == 0 and dx == 0:
-                continue
-            ny, nx = y + dy, x + dx
-            if 0 <= ny < h and 0 <= nx < w and grid[ny, nx] == FOREST:
-                count += 1
+            sy = max(0, dy)
+            ey = min(h, h + dy)
+            sx = max(0, dx)
+            ex = min(w, w + dx)
+            fy = max(0, -dy)
+            fx = max(0, -dx)
+            count[sy:ey, sx:ex] += mask[fy:fy + (ey - sy), fx:fx + (ex - sx)]
     return count
 
 
 def simulate_one(
-    initial_grid: list[list[int]],
-    initial_settlements: list[dict],
-    expansion_rate: float = 0.08,
-    winter_severity: float = 0.05,
-    raid_intensity: float = 0.03,
-    food_from_forest: float = 0.15,
-    port_threshold: float = 0.8,
-    reclaim_rate: float = 0.06,
-    rng: np.random.Generator = None,
-) -> np.ndarray:
-    """Run one stochastic simulation for 50 years.
+    initial_grid,
+    initial_settlements,
+    expansion_rate=0.085,
+    winter_severity=0.087,
+    raid_intensity=0.03,
+    rng=None,
+):
+    """Run one stochastic simulation for 50 steps.
 
-    Returns the final 40x40 terrain grid.
+    Phase ordering (calibrated from replay frame-by-frame analysis):
+      1. Ruin reclamation (from previous step's deaths)
+      2. Growth & resource gathering
+      3. Port development
+      4. Expansion (new settlements)
+      5. Conflict (raiding)
+      6. Winter / death (creates ruins that persist until next step)
+
+    Returns the final H x W terrain grid.
     """
     if rng is None:
         rng = np.random.default_rng()
@@ -100,219 +95,227 @@ def simulate_one(
     w = len(initial_grid[0]) if h > 0 else 0
     grid = np.array(initial_grid, dtype=np.int32)
 
-    # Initialize settlements
-    settlements = []
-    for s in initial_settlements:
+    # Static features (don't change during sim)
+    ocean_nbrs = _count_neighbors(grid, OCEAN)
+
+    # Pre-allocate settlement arrays
+    n_init = len(initial_settlements)
+    max_settle = n_init + 2000
+    s_x = np.zeros(max_settle, dtype=np.int32)
+    s_y = np.zeros(max_settle, dtype=np.int32)
+    s_pop = np.zeros(max_settle, dtype=np.float64)
+    s_food = np.zeros(max_settle, dtype=np.float64)
+    s_def = np.zeros(max_settle, dtype=np.float64)
+    s_port = np.zeros(max_settle, dtype=bool)
+    s_alive = np.zeros(max_settle, dtype=bool)
+    s_owner = np.zeros(max_settle, dtype=np.int32)
+
+    for i, s in enumerate(initial_settlements):
         if isinstance(s, dict):
-            settlements.append(Settlement(
-                x=s.get('x', 0), y=s.get('y', 0),
-                population=rng.uniform(0.5, 1.5),
-                food=rng.uniform(0.5, 1.0),
-                defense=rng.uniform(0.2, 0.6),
-                wealth=rng.uniform(0.0, 0.3),
-                has_port=s.get('has_port', False),
-                alive=True,
-                owner_id=s.get('owner_id', settlements.__len__()),
-            ))
+            s_x[i], s_y[i] = s.get('x', 0), s.get('y', 0)
+            s_port[i] = s.get('has_port', False)
+            s_owner[i] = s.get('owner_id', i)
         else:
-            settlements.append(Settlement(
-                x=s.x, y=s.y,
-                population=rng.uniform(0.5, 1.5),
-                food=rng.uniform(0.5, 1.0),
-                defense=rng.uniform(0.2, 0.6),
-                wealth=rng.uniform(0.0, 0.3),
-                has_port=getattr(s, 'has_port', False),
-                alive=True,
-                owner_id=getattr(s, 'owner_id', len(settlements)),
-            ))
+            s_x[i], s_y[i] = s.x, s.y
+            s_port[i] = getattr(s, 'has_port', False)
+            s_owner[i] = getattr(s, 'owner_id', i)
+        s_pop[i] = rng.uniform(0.6, 1.3)
+        s_food[i] = rng.uniform(0.4, 0.8)
+        s_def[i] = rng.uniform(0.2, 0.6)
+        s_alive[i] = True
+
+    n_settle = n_init
+    occupied = set()
+    for i in range(n_settle):
+        occupied.add((s_x[i], s_y[i]))
+
+    def _add(x, y, p, f, d, hp, oid):
+        nonlocal n_settle
+        if n_settle >= max_settle:
+            return
+        s_x[n_settle] = x
+        s_y[n_settle] = y
+        s_pop[n_settle] = p
+        s_food[n_settle] = f
+        s_def[n_settle] = d
+        s_port[n_settle] = hp
+        s_alive[n_settle] = True
+        s_owner[n_settle] = oid
+        occupied.add((x, y))
+        n_settle += 1
 
     for step in range(50):
-        alive = [s for s in settlements if s.alive]
-        if not alive:
+        alive_idx = np.where(s_alive[:n_settle])[0]
+        if len(alive_idx) == 0:
             break
 
-        # === PHASE 1: GROWTH ===
-        for s in alive:
-            # Food production from adjacent forests
-            adj_forests = _adj_forest_count(grid, s.y, s.x)
-            food_gain = adj_forests * food_from_forest
-            s.food = min(1.0, s.food + food_gain)
+        # === PHASE 1: RUIN RECLAMATION ===
+        ruin_positions = list(zip(*np.where(grid == RUIN)))
+        if ruin_positions:
+            rng.shuffle(ruin_positions)
+            for ry, rx in ruin_positions:
+                nearby = []
+                for i in alive_idx:
+                    dist = abs(s_x[i] - rx) + abs(s_y[i] - ry)
+                    if 0 < dist <= 3:
+                        nearby.append(i)
 
-            # Population growth based on food
-            if s.food > 0.3:
-                s.population += s.food * 0.1 * rng.uniform(0.5, 1.5)
-            s.population = min(4.0, s.population)
+                if nearby and rng.random() < 0.50:
+                    parent = nearby[rng.integers(len(nearby))]
+                    is_port = ocean_nbrs[ry, rx] >= 2 and rng.random() < 0.15
+                    grid[ry, rx] = PORT if is_port else SETTLEMENT
+                    _add(rx, ry, rng.uniform(0.35, 0.55), rng.uniform(0.10, 0.25),
+                         rng.uniform(0.12, 0.18), is_port, s_owner[parent])
+                else:
+                    if rng.random() < 0.80:
+                        grid[ry, rx] = PLAINS if rng.random() < RECLAIM_PLAINS_PROB else FOREST
 
-            # Port development for coastal settlements
-            if not s.has_port and _adj_ocean_count(grid, s.y, s.x) >= 2:
-                if s.population > port_threshold and rng.random() < 0.1:
-                    s.has_port = True
-                    grid[s.y, s.x] = PORT
+        # Refresh alive indices
+        alive_idx = np.where(s_alive[:n_settle])[0]
 
-            # Defense builds up slowly
-            s.defense = min(1.0, s.defense + 0.02)
+        # === PHASE 2: GROWTH ===
+        forest_nbrs = _count_neighbors(grid, FOREST)
+        for i in alive_idx:
+            adj_f = forest_nbrs[s_y[i], s_x[i]]
+            s_food[i] = min(1.0, s_food[i] + adj_f * 0.10)
+            if s_food[i] > 0.3:
+                s_pop[i] = min(3.0, s_pop[i] + 0.07 * s_food[i] * rng.uniform(0.3, 1.7))
+            s_def[i] = min(1.0, s_def[i] + 0.015 * rng.uniform(0.5, 1.5))
 
-        # === PHASE 2: EXPANSION ===
-        alive = [s for s in settlements if s.alive]
-        for s in alive:
-            # Expansion probability based on population
-            if s.population < 0.5:
+        # === PHASE 3: PORT DEVELOPMENT ===
+        for i in alive_idx:
+            if not s_port[i]:
+                oc = ocean_nbrs[s_y[i], s_x[i]]
+                if oc >= 2:
+                    p_port = 0.10 * s_pop[i]
+                elif oc >= 1:
+                    p_port = 0.03 * s_pop[i]
+                else:
+                    continue
+                if rng.random() < p_port:
+                    s_port[i] = True
+                    grid[s_y[i], s_x[i]] = PORT
+
+        # === PHASE 4: EXPANSION ===
+        expand_order = alive_idx.copy()
+        rng.shuffle(expand_order)
+
+        for i in expand_order:
+            if s_pop[i] < 0.4:
                 continue
-            p_expand = expansion_rate * s.population * s.food
+            p_expand = expansion_rate * (0.5 + 0.5 * s_pop[i])
             if rng.random() > p_expand:
                 continue
 
-            # Find expansion target
             candidates = []
-            for dy in range(-4, 5):
-                for dx in range(-4, 5):
-                    dist = abs(dy) + abs(dx)
-                    if dist == 0 or dist > 4:
-                        continue
-                    ny, nx = s.y + dy, s.x + dx
-                    if 0 <= ny < h and 0 <= nx < w:
+            weights = []
+            for d in range(1, 5):
+                dw = DIST_WEIGHTS[d]
+                for dy, dx in _OFFSETS_BY_DIST[d]:
+                    ny, nx = s_y[i] + dy, s_x[i] + dx
+                    if 0 <= ny < h and 0 <= nx < w and (nx, ny) not in occupied:
                         t = grid[ny, nx]
-                        if t in EXPANSION_TERRAIN_PROBS:
-                            # Weight by terrain preference and inverse distance
-                            weight = EXPANSION_TERRAIN_PROBS[t]
-                            dist_weight = EXPANSION_DIST_PROBS.get(dist, 0.01)
-                            candidates.append((ny, nx, weight * dist_weight))
+                        if t in EXPANDABLE:
+                            candidates.append((ny, nx))
+                            weights.append(TERRAIN_EXPAND_WEIGHT.get(t, 0) * dw)
 
             if not candidates:
                 continue
 
-            # Pick target weighted by preference
-            ys, xs, weights = zip(*candidates)
-            weights = np.array(weights)
-            weights /= weights.sum()
-            idx = rng.choice(len(candidates), p=weights)
-            ty, tx = ys[idx], xs[idx]
+            wt = np.array(weights)
+            wt /= wt.sum()
+            idx = rng.choice(len(candidates), p=wt)
+            ty, tx = candidates[idx]
 
-            # Create new settlement
-            new_s = Settlement(
-                x=tx, y=ty,
-                population=0.3,
-                food=s.food * 0.5,
-                defense=0.1,
-                wealth=0.0,
-                has_port=False,
-                alive=True,
-                owner_id=s.owner_id,
-            )
-            settlements.append(new_s)
-            grid[ty, tx] = SETTLEMENT
+            is_port_new = ocean_nbrs[ty, tx] >= 2 and rng.random() < 0.15
+            grid[ty, tx] = PORT if is_port_new else SETTLEMENT
+            _add(tx, ty, rng.uniform(0.35, 0.55), rng.uniform(0.15, 0.30),
+                 rng.uniform(0.14, 0.20), is_port_new, s_owner[i])
+            s_pop[i] *= 0.80
+            s_food[i] *= 0.75
 
-            # Parent loses some resources
-            s.population *= 0.85
-            s.food *= 0.8
-
-        # === PHASE 3: CONFLICT (raiding) ===
-        alive = [s for s in settlements if s.alive]
-        settl_by_pos = {(s.x, s.y): s for s in alive}
-
-        for s in alive:
-            if not s.alive:
+        # === PHASE 5: CONFLICT ===
+        alive_idx = np.where(s_alive[:n_settle])[0]
+        for i in alive_idx:
+            if not s_alive[i]:
                 continue
-            # Desperate settlements raid more (video: "the desperate fight harder")
-            desperation = max(0, 1.0 - s.food) * 2.0
-            p_raid = raid_intensity * (1.0 + desperation)
+            desperation = max(0, 1.0 - s_food[i])
+            p_raid = raid_intensity * (1.0 + desperation * 1.5)
             if rng.random() > p_raid:
                 continue
 
-            # Find nearby enemy settlements
+            max_range = 5 if s_port[i] else 3
             enemies = []
-            for other in alive:
-                if other.owner_id == s.owner_id or not other.alive:
-                    continue
-                dist = abs(s.x - other.x) + abs(s.y - other.y)
-                max_range = 5 if s.has_port else 3
-                if dist <= max_range:
-                    enemies.append(other)
+            for j in alive_idx:
+                if j != i and s_owner[j] != s_owner[i] and s_alive[j]:
+                    dist = abs(s_x[i] - s_x[j]) + abs(s_y[i] - s_y[j])
+                    if 0 < dist <= max_range:
+                        enemies.append(j)
 
             if not enemies:
                 continue
 
-            target = rng.choice(enemies)
-            # Combat: attacker strength vs defender strength
-            attack = s.population * (0.5 + s.defense) * rng.uniform(0.5, 1.5)
-            defend = target.population * (0.5 + target.defense) * rng.uniform(0.5, 1.5)
+            j = enemies[rng.integers(len(enemies))]
+            attack = s_pop[i] * (0.5 + s_def[i]) * rng.uniform(0.4, 1.6)
+            defend_str = s_pop[j] * (0.5 + s_def[j]) * rng.uniform(0.4, 1.6)
 
-            if attack > defend:
-                # Successful raid
-                loot = min(target.food * 0.3, 0.2)
-                s.food += loot
-                target.food -= loot
-                target.population *= 0.7
-                target.defense *= 0.8
-                s.wealth += 0.05
+            if attack > defend_str:
+                loot = min(s_food[j] * 0.3, 0.2)
+                s_food[i] = min(1.0, s_food[i] + loot)
+                s_food[j] -= loot
+                s_pop[j] *= 0.65
+                s_def[j] *= 0.75
 
-                # Faction takeover (rare)
-                if target.population < 0.2 and rng.random() < 0.1:
-                    target.owner_id = s.owner_id
+        # === PHASE 6: WINTER / DEATH ===
+        winter_mult = rng.uniform(0.1, 3.0)
+        alive_idx = np.where(s_alive[:n_settle])[0]
 
-        # === PHASE 4: WINTER ===
-        alive = [s for s in settlements if s.alive]
-        for s in alive:
-            # Winter food consumption
-            food_loss = winter_severity * rng.uniform(0.5, 1.5)
-            s.food -= food_loss
-            s.population -= winter_severity * 0.5 * rng.uniform(0.0, 1.0)
+        for i in alive_idx:
+            s_food[i] -= winter_severity * winter_mult * rng.uniform(0.3, 1.7)
+            s_food[i] = max(-0.3, s_food[i])
+            s_pop[i] -= winter_severity * winter_mult * 0.15 * rng.uniform(0.0, 1.5)
 
-            # Settlement dies if food or population too low
-            if s.food < 0 or s.population < 0.1:
-                s.alive = False
-                grid[s.y, s.x] = RUIN
+            p_die = winter_severity * winter_mult * 0.20
+            if s_food[i] < 0.0:
+                p_die += 0.15
+            elif s_food[i] < 0.3:
+                p_die += 0.08
+            elif s_food[i] < 0.5:
+                p_die += 0.03
+            if s_pop[i] < 0.3:
+                p_die += 0.12
+            elif s_pop[i] < 0.5:
+                p_die += 0.06
+            elif s_pop[i] < 0.8:
+                p_die += 0.02
+            if s_def[i] < 0.15:
+                p_die += 0.02
 
-        # === PHASE 5: ENVIRONMENT (reclamation) ===
-        for y in range(h):
-            for x in range(w):
-                if grid[y, x] == RUIN:
-                    # Check if nearby settlement reclaims it
-                    reclaimed = False
-                    for s in settlements:
-                        if s.alive and abs(s.x - x) + abs(s.y - y) <= 2:
-                            if s.population > 1.0 and rng.random() < 0.05:
-                                # Reclaim as new settlement
-                                new_s = Settlement(
-                                    x=x, y=y, population=0.2,
-                                    food=s.food * 0.3, defense=0.1,
-                                    has_port=False, alive=True,
-                                    owner_id=s.owner_id,
-                                )
-                                settlements.append(new_s)
-                                grid[y, x] = SETTLEMENT
-                                reclaimed = True
-                                break
-
-                    if not reclaimed and rng.random() < reclaim_rate:
-                        # Natural reclamation: forest or plains
-                        if rng.random() < RECLAIM_TO_FOREST:
-                            grid[y, x] = FOREST
-                        else:
-                            grid[y, x] = PLAINS
+            if rng.random() < p_die:
+                s_alive[i] = False
+                grid[s_y[i], s_x[i]] = RUIN
+                occupied.discard((s_x[i], s_y[i]))
 
     return grid
 
 
 def simulate_monte_carlo(
-    initial_grid: list[list[int]],
-    initial_settlements: list[dict],
-    n_sims: int = 100,
-    expansion_rate: float = 0.08,
-    winter_severity: float = 0.05,
-    raid_intensity: float = 0.03,
-    seed: int = 42,
-) -> np.ndarray:
+    initial_grid,
+    initial_settlements,
+    n_sims=100,
+    expansion_rate=0.085,
+    winter_severity=0.087,
+    raid_intensity=0.03,
+    seed=42,
+):
     """Run Monte Carlo simulations and return probability distributions.
 
-    Returns H×W×6 tensor of terrain class probabilities.
+    Returns H x W x 6 tensor of terrain class probabilities.
     """
     h = len(initial_grid)
     w = len(initial_grid[0]) if h > 0 else 0
 
-    # Terrain code → class index mapping
     terrain_to_class = {0: 0, 10: 0, 11: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5}
-
     counts = np.zeros((h, w, 6), dtype=np.float64)
 
     for sim in range(n_sims):
@@ -324,35 +327,27 @@ def simulate_monte_carlo(
             raid_intensity=raid_intensity,
             rng=rng,
         )
+        for code, cls in terrain_to_class.items():
+            counts[:, :, cls] += (final_grid == code)
 
-        for y in range(h):
-            for x in range(w):
-                cls = terrain_to_class.get(int(final_grid[y, x]), 0)
-                counts[y, x, cls] += 1
-
-    # Normalize to probabilities
     probs = counts / n_sims
-
-    # Apply floor
     probs = np.maximum(probs, 0.0001)
     probs /= probs.sum(axis=-1, keepdims=True)
-
     return probs
 
 
 def fit_hidden_params(
-    initial_grid: list[list[int]],
-    initial_settlements: list[dict],
-    observations: list[dict],
-    n_sims_per_eval: int = 20,
-) -> dict:
+    initial_grid,
+    initial_settlements,
+    observations,
+    n_sims_per_eval=20,
+):
     """Estimate hidden parameters from observation terrain frequencies.
 
-    Uses a simple grid search over expansion_rate and winter_severity.
+    Uses observed settlement/ruin density to infer expansion_rate and winter_severity.
     """
     from dtos import TERRAIN_TO_CLASS
 
-    # Compute observed terrain frequencies
     obs_cls = np.zeros(6)
     obs_total = 0
     for obs in observations:
@@ -363,25 +358,35 @@ def fit_hidden_params(
                     obs_total += 1
 
     if obs_total < 50:
-        return {"expansion_rate": 0.08, "winter_severity": 0.05, "raid_intensity": 0.03}
+        return {"expansion_rate": 0.085, "winter_severity": 0.087, "raid_intensity": 0.03}
 
     obs_freq = obs_cls / obs_total
-    obs_settl_rate = obs_freq[1]
+    obs_settl_rate = obs_freq[1] + obs_freq[2]
+    obs_ruin_rate = obs_freq[3]
 
-    # Quick mapping from observed settlement rate to hidden params
-    # Calibrated from replay data:
-    #   R1: obs_settl=0.150, expansion≈0.10, winter≈0.03
-    #   R2: obs_settl=0.213, expansion≈0.14, winter≈0.02
-    #   R3: obs_settl=0.002, expansion≈0.01, winter≈0.15
-    #   R4: obs_settl=0.100, expansion≈0.07, winter≈0.05
-    expansion_rate = max(0.01, min(0.20, obs_settl_rate * 0.7))
-    winter_severity = max(0.02, min(0.20, 0.08 - obs_settl_rate * 0.3))
-    raid_intensity = 0.03  # relatively constant across rounds
+    if obs_settl_rate < 0.01:
+        expansion_rate = 0.06
+        winter_severity = 0.18
+    elif obs_settl_rate < 0.08:
+        expansion_rate = 0.065
+        winter_severity = 0.10
+    elif obs_settl_rate < 0.15:
+        expansion_rate = 0.085
+        winter_severity = 0.087
+    elif obs_settl_rate < 0.20:
+        expansion_rate = 0.090
+        winter_severity = 0.075
+    else:
+        expansion_rate = 0.110
+        winter_severity = 0.060
+
+    if obs_ruin_rate > 0.02:
+        winter_severity += 0.03
 
     return {
-        "expansion_rate": expansion_rate,
-        "winter_severity": winter_severity,
-        "raid_intensity": raid_intensity,
+        "expansion_rate": round(expansion_rate, 4),
+        "winter_severity": round(winter_severity, 4),
+        "raid_intensity": 0.03,
     }
 
 
@@ -390,7 +395,6 @@ if __name__ == "__main__":
     import time
     from evaluate import compute_score
 
-    # Test on R4 seed 0
     with open("data/round4_initial.json") as f:
         r4 = json.load(f)
 
@@ -398,16 +402,20 @@ if __name__ == "__main__":
     settlements = r4["initial_states"][0]["settlements"]
     gt = np.load("data/gt_r4_seed0.npy")
 
-    # Run with different parameter settings
-    for exp, win in [(0.07, 0.05), (0.08, 0.04), (0.10, 0.03)]:
+    print("Testing simulator on R4 seed 0:")
+    print("=" * 70)
+
+    for n_sims in [100, 200, 500]:
         t0 = time.time()
         probs = simulate_monte_carlo(
-            grid, settlements,
-            n_sims=50,
-            expansion_rate=exp,
-            winter_severity=win,
-            seed=42,
+            grid, settlements, n_sims=n_sims,
+            expansion_rate=0.085, winter_severity=0.087, seed=42,
         )
         elapsed = time.time() - t0
         score = compute_score(probs, gt)
-        print(f"exp={exp} win={win}: score={score:.2f} ({elapsed:.1f}s)")
+        print(f"n={n_sims:4d}: score={score:.2f} "
+              f"settl={probs[:,:,1].sum():.0f}/{gt[:,:,1].sum():.0f} "
+              f"port={probs[:,:,2].sum():.1f}/{gt[:,:,2].sum():.1f} "
+              f"ruin={probs[:,:,3].sum():.0f}/{gt[:,:,3].sum():.0f} "
+              f"forest={probs[:,:,4].sum():.0f}/{gt[:,:,4].sum():.0f} "
+              f"({elapsed:.1f}s)")
