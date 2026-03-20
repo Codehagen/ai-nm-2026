@@ -218,12 +218,12 @@ def gbt_predict(
 # (50 queries across 5 seeds, pooled). Format: init_code → [P(class 0..5)]
 # Calibrated from Round 1 GROUND TRUTH (not stochastic observations)
 EMPIRICAL_TRANSITIONS = {
-    1:  [0.3705, 0.4100, 0.0078, 0.0311, 0.1805, 0.0000],  # Settlement (n=201)
-    2:  [0.3643, 0.1200, 0.3186, 0.0214, 0.1757, 0.0000],  # Port (n=7)
-    4:  [0.0722, 0.1645, 0.0147, 0.0129, 0.7357, 0.0000],  # Forest (n=1663)
+    1:  [0.3773, 0.4099, 0.0064, 0.0327, 0.1737, 0.0000],  # Settlement (n=430, R1+R2)
+    2:  [0.3764, 0.1208, 0.2997, 0.0294, 0.1736, 0.0000],  # Port (n=18)
+    4:  [0.0890, 0.1770, 0.0135, 0.0154, 0.7051, 0.0000],  # Forest (n=3338)
     5:  [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 1.0000],  # Mountain
     10: [1.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],  # Ocean
-    11: [0.7771, 0.1611, 0.0145, 0.0126, 0.0348, 0.0000],  # Plains (n=4719)
+    11: [0.7559, 0.1729, 0.0147, 0.0155, 0.0410, 0.0000],  # Plains (n=9812)
 }
 
 # Distance-based transition for INLAND Plains (code 11, not coastal)
