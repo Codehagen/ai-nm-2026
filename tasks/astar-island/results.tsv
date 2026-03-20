@@ -58,3 +58,4 @@ c8ef8a0	92.336447	0.0	2	keep	LORO-optimal correction [.4,.9,.5,.9,.6] (LORO avg=
 65a5f72	92.336447	0.0	23	keep	re-enable Layer 2 + repeat query strategy (5vp×2rep)	-
 373adf8	91.330022	0.0	1	keep	blend=0.3 with 4-round model (R4 cross-round=94.06)	-
 aaa4bf0	91.434271	0.0	3	keep	L7 full correction=1.0 (LOO avg=92.24, best ever cross-round)	-
+6d2bd6f	91.537670	0.0	6	keep	agent-optimized L7 [1.38,.90,.44,.61,1.16,0] (avg=93.10!)	-
