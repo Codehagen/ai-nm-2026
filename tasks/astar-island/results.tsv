@@ -107,3 +107,4 @@ ff19dfa	-	0.0	127	keep	PRODUCTION: stats+recalib+safeL7 combined	-
 f809175	84.565888	0.0	1	keep	widen L7 settlement lower clamp 0.50 (R8=86.47 +2.59)	-
 2f32954	86.526200	0.0	1	keep	EMP_BLEND=0.40 (was 0.45, +0.008)
 9c9405c	86.531969	0.0	2	keep	XGB depth=5 for forest+settl (was 4, +0.006)
+eb62f29	86.569806	0.0	10	keep	weight XGB training by round weight (+0.038)
