@@ -52,3 +52,4 @@ tested	-	-	-	discard	center of mass distance	near-zero correlation
 retrain	93.881761	0.0	0	keep	XGBoost mcw=3 + 30 features + 2-round (R1=93.88, cross-round R2=91.85)	-
 8ea34f3	93.761995	0.0	38	keep	observation ratio correction Layer 7 (cross-round R2=92.08!)	-
 3c900cc	93.797047	0.0	4	keep	per-class correction strengths (cross-round R2=92.14!)	-
+2acc285	92.730000	0.0	3	keep	uniform 0.7 obs correction (R4 would be 93.84 vs 91.80 submitted!)	-
