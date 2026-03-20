@@ -73,7 +73,12 @@ function getErrorHint(
 
   // Product number already in use
   if (vm?.some((v) => v.field === "number" && v.message.includes("i bruk"))) {
-    return "The product number already exists. GET /product?number=<the number>&fields=id,name to find the existing product and use its ID.";
+    return "The product number already exists. GET /product?number=<the number>&fields=id,name,priceExcludingVatCurrency,vatType,version to find it. If name or price differs from the prompt, PUT /product/{id} to update it.";
+  }
+
+  // Division creation missing required fields
+  if (method === "POST" && path.includes("division")) {
+    return 'Division requires ALL of: name, startDate, municipalityDate, organizationNumber, municipality. Use: {"name": "Hovedenhet", "startDate": "2026-01-01", "municipalityDate": "2026-01-01", "organizationNumber": "000000000", "municipality": {"id": <mun_id>}}. GET /municipality?count=1&fields=id first.';
   }
 
   return null;
@@ -215,6 +220,7 @@ export async function solve(
       }),
     },
     stopWhen: stepCountIs(30),
+    timeout: { totalMs: 240_000, stepMs: 60_000 }, // 4 min total, 60s per step
     abortSignal: signal,
   });
 
