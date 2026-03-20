@@ -100,6 +100,13 @@ def _extract_cell_features(
     kernel5 = np.ones((5, 5))
     passable_r2 = ndimage.convolve(passable_mask, kernel5, mode='constant', cval=0.0)
 
+    # Land ratio in 7x7 window (radius 3)
+    land_float = (grid_arr != 10).astype(np.float64)
+    kernel7 = np.ones((7, 7))
+    land_sum_r3 = ndimage.convolve(land_float, kernel7, mode='constant', cval=0.0)
+    land_count_r3 = ndimage.convolve(np.ones((h, w)), kernel7, mode='constant', cval=0.0)
+    land_ratio_r3 = land_sum_r3 / np.maximum(land_count_r3, 1.0)
+
     features = []
     coords = []
     for y in range(h):
@@ -202,6 +209,7 @@ def _extract_cell_features(
             dist_to_edge = min(y, x, h - 1 - y, w - 1 - x)
             bfs_d = int(bfs_dist[y, x])
             passable_5x5 = int(passable_r2[y, x])
+            land_r3 = float(land_ratio_r3[y, x])
 
             features.append([
                 code, dist, adj_ocean, adj_forest, adj_settl, adj_mountain,
@@ -212,11 +220,11 @@ def _extract_cell_features(
                 y, x,  # map position (captures fjord/border effects)
                 settlements_r3, settl_r12, settl_r57,
                 dist_port, comp_size, comp_n_settl,
-                dist_to_edge, bfs_d, passable_5x5,
+                dist_to_edge, bfs_d, passable_5x5, land_r3,
             ])
             coords.append((y, x))
 
-    return np.array(features) if features else np.empty((0, 28)), coords
+    return np.array(features) if features else np.empty((0, 29)), coords
 
 
 def load_gbt_models() -> Optional[list]:

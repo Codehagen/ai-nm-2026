@@ -43,3 +43,4 @@ tested	92.9391	0.0	0	discard	observation-based settlement rate scaling	marginal 
 b90517f	93.169200	0.0	23	keep	add connected component features (comp_size, comp_settlements)	-
 retrain	93.253054	0.0	0	keep	XGBoost with subsample=0.9 colsample=0.9 (cross-round R2=91.83)	-
 9dc085a	93.286334	0.0	31	keep	add dist_to_edge/bfs_dist/passable_5x5 (28 features, R2=91.85)	-
+b5946e9	93.269900	0.0	10	keep	add land_ratio_r3 (29 features)	-
