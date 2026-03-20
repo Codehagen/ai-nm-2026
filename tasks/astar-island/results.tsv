@@ -28,3 +28,4 @@ reverted	93.307500	0.0	5	discard	add n_ports feature to GBT	no improvement
 8a3a6d7	93.284398	0.0	3	keep	switch to XGBoost with L2 reg (lambda=2.0, cross-round R2=88.69 vs 88.49)	-
 a5c8fa4	93.370124	0.0	12	keep	add settlement band features r12/r57 (22 features, cross-round R2=88.73)	-
 2598be8	92.995804	0.0	1	keep	tune blend to 0.5 + XGBoost L2=2.0 (cross-round R2=88.76)	-
+b20e30b	92.808397	0.0	36	keep	recalibrate tables with R1+R2 pooled (cross-round R2=91.27!)	-
