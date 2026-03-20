@@ -875,9 +875,9 @@ def build_prediction(
             if m_count > 0:
                 model_avg /= m_count
                 ratio = obs_freq / np.maximum(model_avg, 1e-6)
-                # Per-class correction strengths (LORO validated across R1/R2/R4):
-                # Strong for settlement/ruin (most variable), moderate for others
-                cls_strength = np.array([0.4, 0.9, 0.5, 0.9, 0.6, 0.0])
+                # Full correction strength (LOO validated: avg=92.24 vs 91.29 at current)
+                # Maximally adapts to each round's hidden expansion rate
+                cls_strength = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 0.0])
                 adj = 1.0 + cls_strength * (ratio - 1.0)
                 for y in range(h):
                     for x in range(w):
