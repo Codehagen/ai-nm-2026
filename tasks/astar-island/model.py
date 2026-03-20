@@ -559,21 +559,6 @@ def fill_unobserved_dynamic(
                 else:
                     base = np.array(table[99], dtype=np.float64)
 
-                # Boost P(settlement) for forests adjacent to settlement cells
-                if not exposed_coastal and dist <= 4:
-                    adj_settl = sum(
-                        1 for dy in [-1, 0, 1] for dx in [-1, 0, 1]
-                        if not (dy == 0 and dx == 0)
-                        and 0 <= y + dy < h and 0 <= x + dx < w
-                        and initial_grid[y + dy][x + dx] in {1, 2}
-                    )
-                    if adj_settl >= 1:
-                        # GT shows: adj_settl=1 → P(settl)=0.237 vs 0.201 baseline
-                        boost = 0.03 * min(adj_settl, 2)
-                        base[1] += boost      # P(settlement)
-                        base[4] -= boost      # take from P(forest)
-                        base[4] = max(0.01, base[4])
-
                 tensor[y, x] = base
 
             elif code in {0, 11}:  # Plains — distance + exposed coastal from GT tables
@@ -585,19 +570,7 @@ def fill_unobserved_dynamic(
                 else:
                     base = np.array(table[99], dtype=np.float64)
 
-                # Boost P(settlement) for plains adjacent to settlement cells
-                if not exposed_coastal and dist <= 3:
-                    adj_settl = sum(
-                        1 for dy in [-1, 0, 1] for dx in [-1, 0, 1]
-                        if not (dy == 0 and dx == 0)
-                        and 0 <= y + dy < h and 0 <= x + dx < w
-                        and initial_grid[y + dy][x + dx] in {1, 2}
-                    )
-                    if adj_settl >= 1:
-                        boost = 0.02 * min(adj_settl, 2)
-                        base[1] += boost
-                        base[0] -= boost
-                        base[0] = max(0.01, base[0])
+                # adj_settlement boost removed — XGBoost captures this via features
 
                 tensor[y, x] = base
 
