@@ -57,3 +57,4 @@ a797f68	92.369840	0.0	36	keep	recalibrate all tables with 4 rounds GT (more robu
 c8ef8a0	92.336447	0.0	2	keep	LORO-optimal correction [.4,.9,.5,.9,.6] (LORO avg=91.67!)	-
 65a5f72	92.336447	0.0	23	keep	re-enable Layer 2 + repeat query strategy (5vp×2rep)	-
 373adf8	91.330022	0.0	1	keep	blend=0.3 with 4-round model (R4 cross-round=94.06)	-
+aaa4bf0	91.434271	0.0	3	keep	L7 full correction=1.0 (LOO avg=92.24, best ever cross-round)	-
