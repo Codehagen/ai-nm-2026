@@ -118,15 +118,22 @@ After creating, to make them admin: use the entitlement system via POST /employe
 ### POST /customer
 Create a customer. Required: name. ALWAYS set \`isCustomer: true\`.
 If the prompt includes an organization number (org. nr / org. nº / Org.-Nr.), set \`organizationNumber\`.
+If the prompt includes an address, include it as \`postalAddress\` (NOT \`address\`). This is a NESTED object on the customer.
 \`\`\`json
 {
   "name": "Acme AS",
   "email": "post@acme.no",
   "phoneNumber": "12345678",
   "organizationNumber": "987654321",
-  "isCustomer": true
+  "isCustomer": true,
+  "postalAddress": {
+    "addressLine1": "Storgata 1",
+    "postalCode": "0123",
+    "city": "Oslo"
+  }
 }
 \`\`\`
+CRITICAL: The address field is \`postalAddress\` (NOT \`address\`). Using \`address\` will cause 422. Include it directly in POST — do NOT use a separate /address endpoint.
 
 ### POST /product
 Create a product. Required: name. ALWAYS include \`vatType\`.
@@ -173,10 +180,10 @@ Creating an invoice requires a bank account number on ledger account 1920. Fresh
   "id": <id from GET>,
   "version": <version from GET>,
   "name": <name from GET>,
-  "bankAccountNumber": "12345678901"
+  "bankAccountNumber": "86011117947"
 }
 \`\`\`
-CRITICAL: The \`id\` and \`version\` MUST match what the GET returned EXACTLY. Do NOT guess these values. Include \`name\` in the PUT body. Use a simple 11-digit number for bankAccountNumber (e.g. "12345678901"). If PUT returns 422, re-GET to get the latest version and retry ONCE.
+CRITICAL: The \`id\` and \`version\` MUST match what the GET returned EXACTLY. Do NOT guess these values. Include \`name\` in the PUT body. Use exactly \`"86011117947"\` as the bankAccountNumber — this passes Norwegian MOD11 validation. Do NOT use random numbers like "12345678901" — they will fail validation. If PUT returns 422, re-GET to get the latest version and retry ONCE.
 
 Then create the invoice. Required: invoiceDate, invoiceDueDate, orders.
 \`\`\`json
@@ -262,49 +269,55 @@ Running payroll for an employee requires these steps in order:
 - Do NOT use /salary/transaction or /salary/payslip — use /salary/specification
 
 ### Supplier Invoice / Leverandørfaktura (TESTED RECIPE)
-To register a supplier invoice (incoming invoice from a vendor), use the voucher system:
+To register a supplier invoice (incoming invoice from a vendor), create BOTH a supplierInvoice entity AND a voucher:
 \`\`\`
 1. POST /supplier  {"name": "Supplier Name", "isSupplier": true, "organizationNumber": "..."}  → get supplier id
 2. GET /ledger/account?number=<expense_account>&fields=id  → get expense account id (e.g. 7300 for office services)
-3. GET /ledger/account?number=2400&fields=id  → get supplier ledger account id
-4. POST /ledger/voucher?sendToLedger=true  → create the voucher with postings
+3. GET /ledger/account?number=2400&fields=id  → get supplier ledger account id (Leverandørgjeld)
+4. POST /supplierInvoice  → creates the supplier invoice entity with a voucher:
 \`\`\`
-
-The voucher body MUST look like this (TESTED — this exact format works):
 \`\`\`json
 {
-  "date": "2026-03-20",
-  "description": "Faktura INV-2026-9187 fra Supplier",
-  "postings": [
-    {
-      "row": 1,
-      "date": "2026-03-20",
-      "description": "Office services",
-      "account": {"id": <expense_account_id>},
-      "amountGross": 19500.00,
-      "amountGrossCurrency": 19500.00,
-      "vatType": {"id": 1}
-    },
-    {
-      "row": 2,
-      "date": "2026-03-20",
-      "description": "Supplier credit",
-      "account": {"id": <account_2400_id>},
-      "supplier": {"id": <supplier_id>},
-      "amountGross": -19500.00,
-      "amountGrossCurrency": -19500.00
-    }
-  ]
+  "invoiceNumber": "INV-2026-9187",
+  "invoiceDate": "2026-03-20",
+  "invoiceDueDate": "2026-04-20",
+  "supplier": {"id": <supplier_id>},
+  "voucher": {
+    "date": "2026-03-20",
+    "description": "Faktura INV-2026-9187 fra Supplier",
+    "postings": [
+      {
+        "row": 1,
+        "date": "2026-03-20",
+        "description": "Office services",
+        "account": {"id": <expense_account_id>},
+        "amountGross": 19500.00,
+        "amountGrossCurrency": 19500.00,
+        "vatType": {"id": 1}
+      },
+      {
+        "row": 2,
+        "date": "2026-03-20",
+        "description": "Supplier credit",
+        "account": {"id": <account_2400_id>},
+        "supplier": {"id": <supplier_id>},
+        "amountGross": -19500.00,
+        "amountGrossCurrency": -19500.00
+      }
+    ]
+  }
 }
 \`\`\`
-CRITICAL rules for supplier invoice vouchers:
+CRITICAL rules for supplier invoices:
+- You MUST use POST /supplierInvoice (not POST /ledger/voucher). This creates both the supplier invoice entity and the voucher.
+- Set \`invoiceNumber\` to the invoice reference from the prompt (e.g., "INV-2026-9187").
+- Set \`invoiceDueDate\` to 30 days after \`invoiceDate\` if not specified.
 - \`row\` MUST start at 1 (not 0). Row 0 is reserved for system-generated entries.
 - \`amountGrossCurrency\` MUST equal \`amountGross\` (same value).
 - The expense posting (row 1) is POSITIVE (debit) with the GROSS amount INCLUDING VAT.
 - The supplier posting (row 2) is NEGATIVE (credit) with the same gross amount.
 - Use \`vatType: {"id": 1}\` for 25% input VAT (inngående mva). For other rates: 11 = 15%, 12 = 12%.
 - The supplier account is usually 2400 (Leverandørgjeld).
-- Do NOT use POST /supplierInvoice — it does not work for creating invoices.
 
 ### Travel Expense with Costs & Per Diem (TESTED RECIPE)
 To register a complete travel expense with costs (flights, taxi, etc.) and per diem:
