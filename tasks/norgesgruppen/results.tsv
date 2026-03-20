@@ -1,2 +1,5 @@
 timestamp	name	val_metric	model_size_mb	duration_min	status	notes
-2026-03-19 23:18	baseline-yolov8m	0.6894	299.0	0.0	kept	initial submission score
+2026-03-19 23:12	yolov8m-baseline	0.6894	299.0	0.0	kept	first submission, single-scale
+2026-03-19 23:46	yolov8m-tweaked	0.6915	299.0	0.0	kept	conf=0.001, iou=0.6, max_det=500
+2026-03-19 23:49	yolov8m-wbf-3pass	0.0000	299.0	0.0	failed	model.half() crashed sandbox
+2026-03-20 07:25	yolov8l-wbf-3pass	0.8719	84.0	180.4	kept	3-pass WBF, held-out test score

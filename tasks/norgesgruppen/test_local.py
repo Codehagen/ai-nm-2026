@@ -148,6 +148,9 @@ def main():
     parser.add_argument("--quick", action="store_true", help="Smoke test on sample image only")
     parser.add_argument("--model", default=None, help="Path to .pt model (default: models/best.pt)")
     parser.add_argument("--zip", default=None, help="Test a submission zip directly")
+    parser.add_argument("--data", default=None,
+                        help="YOLO data dir with test/ split (e.g. data/yolo-3way). "
+                             "Uses held-out test images for honest scoring.")
     args = parser.parse_args()
 
     output_json = Path("/tmp/_sandbox_sim_output/predictions.json")
@@ -166,6 +169,15 @@ def main():
                 idx += 1
         input_dir = tmp_input
         print(f"Quick smoke test on {idx-1} sample image(s)")
+    elif args.data:
+        # Use held-out test split from 3-way data
+        data_dir = TASK_DIR / args.data
+        input_dir = data_dir / "images" / "test"
+        if not input_dir.exists():
+            print(f"ERROR: No test split at {input_dir}")
+            print("Run: python convert_coco_3way.py first")
+            return
+        print(f"Held-out test eval on {input_dir} ({len(list(input_dir.iterdir()))} images)")
     else:
         input_dir = VAL_IMAGES
         print(f"Full eval on {input_dir} ({len(list(input_dir.iterdir()))} images)")
