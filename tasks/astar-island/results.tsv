@@ -25,3 +25,4 @@ d9c24c4	93.646245	0.0	18	keep	add dist_mountain/forests_r2/y,x coords to GBT (19
 2round	93.346234	0.0	0	keep	GBT trained on R1+R2 GT combined (R2 generalization: 94.3 vs 88.8 before)	-
 reverted	93.307500	0.0	5	discard	add n_ports feature to GBT	no improvement
 398f0cc	93.348005	0.0	2	keep	disable calibration layer (GBT subsumes it)	-
+8a3a6d7	93.284398	0.0	3	keep	switch to XGBoost with L2 reg (lambda=2.0, cross-round R2=88.69 vs 88.49)	-
