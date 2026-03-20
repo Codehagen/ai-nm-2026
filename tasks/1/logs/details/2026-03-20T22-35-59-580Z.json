@@ -1,0 +1,89 @@
+{
+  "timestamp": "2026-03-20T22:35:59.580Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice-payment",
+  "prompt": "Der Kunde Brückentor GmbH (Org.-Nr. 995557681) hat eine offene Rechnung über 9400 NOK ohne MwSt. für \"Webdesign\". Registrieren Sie die vollständige Zahlung dieser Rechnung.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 7,
+  "apiCalls": 7,
+  "apiErrors": 2,
+  "elapsedMs": 35390,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Brückentor GmbH",
+        "organizationNumber": "995557681",
+        "isCustomer": true
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "priceExcludingVatCurrency": 9400,
+        "vatType": {
+          "id": 3
+        },
+        "name": "Webdesign"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": false,
+      "status": 400,
+      "params": {
+        "invoiceDateTo": "2030-01-01",
+        "fields": "id,amount,amountIncVat,customer,isClosed",
+        "invoiceDateFrom": "2020-01-01"
+      },
+      "errorMessage": "Illegal field in fields filter: amountIncVat. amountIncVat does not match a field in the model: InvoiceDTO"
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": false,
+      "status": 400,
+      "params": {
+        "invoiceDateFrom": "2020-01-01",
+        "invoiceDateTo": "2030-01-01",
+        "fields": "id,amount,customer,isClosed"
+      },
+      "errorMessage": "Illegal field in fields filter: isClosed. isClosed does not match a field in the model: InvoiceDTO"
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": true,
+      "params": {
+        "invoiceDateTo": "2030-01-01",
+        "fields": "id,amount,customer",
+        "invoiceDateFrom": "2020-01-01"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147540967/:payment",
+      "ok": true,
+      "params": {
+        "paymentDate": "2026-03-20",
+        "paymentTypeId": "27085060",
+        "paidAmount": "11750"
+      }
+    }
+  ]
+}

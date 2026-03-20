@@ -12,7 +12,7 @@ if (!process.env.GOOGLE_API_KEY) {
 
 const app = new Hono();
 const startupTime = Date.now();
-const SOLVE_TIMEOUT_MS = 270_000; // 4.5 min (30s buffer before 5 min competition limit)
+const SOLVE_TIMEOUT_MS = 110_000; // 110s — cloudflared quick tunnels timeout at ~120s
 
 const PORT = 9053;
 

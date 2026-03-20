@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-03-20T22:37:05.442Z",
+  "prompt": "Opprett ein fri rekneskapsdimensjon \"Prosjekttype\" med verdiane \"Utvikling\" og \"Internt\". Bokfør deretter eit bilag på konto 7000 for 39700 kr, knytt til dimensjonsverdien \"Internt\".",
+  "filesCount": 0,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 100171,
+  "status": "error",
+  "error": "The operation was aborted due to timeout"
+}

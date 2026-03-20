@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T22:21:27.069Z",
+  "prompt": "The payment from Ironbridge Ltd (org no. 885925952) for the invoice \"System Development\" (26100 NOK excl. VAT) was returned by the bank. Reverse the payment so the invoice shows the outstanding amount again.",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

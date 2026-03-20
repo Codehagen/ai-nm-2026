@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T22:21:21.308Z",
+  "prompt": "Create and send an invoice to the customer Ridgepoint Ltd (org no. 941587437) for 40400 NOK excluding VAT. The invoice is for Maintenance.",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

@@ -1,0 +1,103 @@
+{
+  "timestamp": "2026-03-20T22:22:04.787Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice",
+  "prompt": "Create and send an invoice to the customer Ridgepoint Ltd (org no. 941587437) for 40400 NOK excluding VAT. The invoice is for Maintenance.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 7,
+  "apiCalls": 7,
+  "apiErrors": 0,
+  "elapsedMs": 43478,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/362534679",
+      "ok": true,
+      "body": {
+        "id": 362534679,
+        "name": "Bankinnskudd",
+        "bankAccountNumber": "86011117947",
+        "version": 0
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "organizationNumber": "941587437",
+        "isCustomer": true,
+        "name": "Ridgepoint Ltd"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "vatType": {
+          "id": 3
+        },
+        "name": "Maintenance",
+        "priceExcludingVatCurrency": 40400
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "deliveryDate": "2026-03-20",
+        "orderLines": [
+          {
+            "unitPriceExcludingVatCurrency": 40400,
+            "count": 1,
+            "vatType": {
+              "id": 3
+            },
+            "product": {
+              "id": 84394032
+            }
+          }
+        ],
+        "customer": {
+          "id": 108281909
+        },
+        "orderDate": "2026-03-20"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-04-03",
+        "invoiceDate": "2026-03-20",
+        "orders": [
+          {
+            "id": 401974870
+          }
+        ]
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147551062/:send",
+      "ok": true,
+      "params": {
+        "sendType": "EMAIL"
+      }
+    }
+  ]
+}

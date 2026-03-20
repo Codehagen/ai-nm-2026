@@ -320,6 +320,15 @@ export async function solve(
           // === Phase 1E: Auto-inject date ranges on GET ===
           if (method === "GET") {
             params = applyDateRangeDefaults(path, params);
+            // Strip known-invalid fields the model hallucinates
+            if (params?.fields && typeof params.fields === "string") {
+              const invalid = ["isClosed", "amountIncVat", "company"];
+              const cleaned = params.fields
+                .split(",")
+                .filter((f: string) => !invalid.includes(f.trim()))
+                .join(",");
+              if (cleaned !== params.fields) params = { ...params, fields: cleaned };
+            }
           }
 
           let callResult: TxResult;
@@ -384,7 +393,7 @@ export async function solve(
       }),
     },
     stopWhen: stepCountIs(30),
-    timeout: { totalMs: 240_000, stepMs: 60_000 }, // 4 min total, 60s per step
+    timeout: { totalMs: 100_000, stepMs: 30_000 }, // 100s total, 30s per step (cloudflared timeout ~120s)
     abortSignal: signal,
   });
 

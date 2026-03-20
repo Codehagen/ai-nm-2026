@@ -136,7 +136,20 @@
       "Bash(done)",
       "mcp__nmiai__search_docs",
       "mcp__nmiai__list_docs",
-      "Bash(jq:*)"
+      "Bash(jq:*)",
+      "Bash(mkdir -p ~/.gstack)",
+      "Bash(~/.gstack/just-upgraded-from)",
+      "Bash(rm -f ~/.gstack/last-update-check)",
+      "Bash(rm -f ~/.gstack/update-snoozed)",
+      "Bash(mv \"/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack\" \"/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack.bak\")",
+      "Bash(cp -Rf \"$HOME/.claude/skills/gstack\" \"/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack\")",
+      "Bash(rm -rf \"/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack.bak\")",
+      "Skill(setup-browser-cookies)",
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B cookies)",
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B text)",
+      "Bash($B handoff:*)",
+      "Bash($B resume:*)",
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B snapshot -C)"
     ]
   }
 }

@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-03-20T22:40:07.245Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "customer",
+  "prompt": "Opprett kunden Nordhav AS med organisasjonsnummer 829523760. Adressen er Industriveien 75, 8006 Bodø. E-post: post@nordhav.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 10388,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "isCustomer": true,
+        "name": "Nordhav AS",
+        "organizationNumber": "829523760",
+        "email": "post@nordhav.no",
+        "postalAddress": {
+          "city": "Bodø",
+          "postalCode": "8006",
+          "addressLine1": "Industriveien 75"
+        }
+      }
+    }
+  ]
+}

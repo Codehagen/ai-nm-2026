@@ -1,0 +1,144 @@
+{
+  "timestamp": "2026-03-20T22:36:03.475Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice",
+  "prompt": "Créez une facture pour le client Lumière SARL (nº org. 925760838) avec trois lignes de produit : Maintenance (3644) à 1850 NOK avec 25 % TVA, Licence logicielle (4934) à 14850 NOK avec 15 % TVA (alimentaire), et Service réseau (8806) à 17250 NOK avec 0 % TVA (exonéré).",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 9,
+  "apiCalls": 9,
+  "apiErrors": 0,
+  "elapsedMs": 31346,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/458980330",
+      "ok": true,
+      "body": {
+        "bankAccountNumber": "86011117947",
+        "name": "Bankinnskudd",
+        "id": 458980330,
+        "version": 0
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "isCustomer": true,
+        "name": "Lumière SARL",
+        "organizationNumber": "925760838"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "3644"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "4934",
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "8806",
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/product/84395025",
+      "ok": true,
+      "body": {
+        "id": 84395025,
+        "vatType": {
+          "id": 5
+        },
+        "version": 0,
+        "name": "Service réseau",
+        "priceExcludingVatCurrency": 17250
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "deliveryDate": "2026-03-20",
+        "orderLines": [
+          {
+            "product": {
+              "id": 84395023
+            },
+            "vatType": {
+              "id": 3
+            },
+            "unitPriceExcludingVatCurrency": 1850,
+            "count": 1
+          },
+          {
+            "vatType": {
+              "id": 31
+            },
+            "unitPriceExcludingVatCurrency": 14850,
+            "count": 1,
+            "product": {
+              "id": 84395024
+            }
+          },
+          {
+            "count": 1,
+            "vatType": {
+              "id": 5
+            },
+            "unitPriceExcludingVatCurrency": 17250,
+            "product": {
+              "id": 84395025
+            }
+          }
+        ],
+        "customer": {
+          "id": 108284851
+        },
+        "orderDate": "2026-03-20"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-04-03",
+        "orders": [
+          {
+            "id": 401975727
+          }
+        ],
+        "invoiceDate": "2026-03-20"
+      }
+    }
+  ]
+}

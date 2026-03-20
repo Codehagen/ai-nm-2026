@@ -1,0 +1,59 @@
+{
+  "timestamp": "2026-03-20T22:21:55.959Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice-payment",
+  "prompt": "The payment from Ironbridge Ltd (org no. 885925952) for the invoice \"System Development\" (26100 NOK excl. VAT) was returned by the bank. Reverse the payment so the invoice shows the outstanding amount again.",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 4,
+  "elapsedMs": 28889,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "organizationNumber": "885925952",
+        "name": "Ironbridge Ltd",
+        "isCustomer": true
+      },
+      "errorMessage": "POST /customer → 403"
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "name": "Ironbridge Ltd",
+        "isCustomer": true,
+        "organizationNumber": "885925952"
+      },
+      "errorMessage": "POST /customer → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "*",
+        "invoiceDateTo": "2030-01-01",
+        "invoiceDateFrom": "2020-01-01",
+        "count": "100"
+      },
+      "errorMessage": "GET /invoice → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": false,
+      "status": 403,
+      "errorMessage": "GET /employee → 403"
+    }
+  ]
+}

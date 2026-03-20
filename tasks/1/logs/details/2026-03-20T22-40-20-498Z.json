@@ -1,0 +1,65 @@
+{
+  "timestamp": "2026-03-20T22:40:20.498Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice-payment",
+  "prompt": "Kunden Strandvik AS (org.nr 840390055) har ein uteståande faktura på 27050 kr eksklusiv MVA for \"Datarådgjeving\". Registrer full betaling på denne fakturaen.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 5,
+  "apiCalls": 5,
+  "apiErrors": 0,
+  "elapsedMs": 25564,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "organizationNumber": "840390055",
+        "isCustomer": true,
+        "name": "Strandvik AS"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "vatType": {
+          "id": 3
+        },
+        "name": "Datarådgjeving",
+        "priceExcludingVatCurrency": 27050
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": true,
+      "params": {
+        "invoiceDateTo": "2030-01-01",
+        "invoiceDateFrom": "2020-01-01",
+        "fields": "id,amount,customer,isClosed"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147541048/:payment",
+      "ok": true,
+      "params": {
+        "paymentDate": "2026-03-20",
+        "paidAmount": "33812.5",
+        "paymentTypeId": "27088441"
+      }
+    }
+  ]
+}

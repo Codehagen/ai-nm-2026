@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-03-20T22:22:37.822Z",
+  "prompt": "Cree una dimensión contable personalizada \"Produktlinje\" con los valores \"Basis\" y \"Premium\". Luego registre un asiento en la cuenta 7140 por 39600 NOK, vinculado al valor de dimensión \"Premium\".",
+  "filesCount": 0,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 79601,
+  "status": "timeout"
+}
