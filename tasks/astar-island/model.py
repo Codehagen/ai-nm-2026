@@ -839,6 +839,139 @@ def simulator_predict(initial_grid, settlements, observations=None, n_sims=300):
 
 
 # ──────────────────────────────────────────────────────────────
+# Cross-seed empirical distance tables (built per-round from ALL observations)
+# ──────────────────────────────────────────────────────────────
+
+DIST_BUCKETS = [1, 2, 3, 4, 5, 6, 7, 8, 99]
+
+
+def _dist_to_bucket(d: int) -> int:
+    """Map a Manhattan distance to the nearest bucket."""
+    for b in DIST_BUCKETS:
+        if d <= b:
+            return b
+    return 99
+
+
+def _is_coastal_4connected(grid: list[list[int]], y: int, x: int) -> bool:
+    """Check if a cell has 2+ ocean neighbors (4-connected)."""
+    h, w = len(grid), len(grid[0])
+    count = 0
+    for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+        ny, nx = y + dy, x + dx
+        if 0 <= ny < h and 0 <= nx < w and grid[ny][nx] == 10:
+            count += 1
+    return count >= 2
+
+
+def build_round_empirical_tables(
+    all_observations: list[dict],
+    all_initial_grids: list[list[list[int]]],
+    all_settlements: list[list[dict]] | None = None,
+) -> dict:
+    """Build empirical P(class) tables from pooled cross-seed observations.
+
+    Groups observed cells by (initial_terrain, distance_bucket, coastal_status)
+    and computes empirical class distributions. This adapts to the round's
+    hidden parameters at the distance level.
+
+    Args:
+        all_observations: ALL observations across ALL seeds for this round
+        all_initial_grids: initial grid for each seed
+        all_settlements: settlements list for each seed (for distance computation)
+
+    Returns:
+        dict mapping (terrain_code, dist_bucket, coastal_bool) -> np.array of P(class)
+    """
+    if not all_observations or not all_initial_grids:
+        return {}
+
+    # Pre-compute settlement positions per seed
+    seed_settl_pos = {}
+    if all_settlements:
+        for si, settls in enumerate(all_settlements):
+            positions = []
+            for s in settls:
+                if isinstance(s, dict):
+                    positions.append((s.get("x", 0), s.get("y", 0)))
+                else:
+                    positions.append((s.x, s.y))
+            seed_settl_pos[si] = positions
+    else:
+        # Fall back to extracting settlements from initial grids
+        for si, grid in enumerate(all_initial_grids):
+            positions = []
+            h, w = len(grid), len(grid[0])
+            for y in range(h):
+                for x in range(w):
+                    if grid[y][x] in {1, 2}:
+                        positions.append((x, y))
+            seed_settl_pos[si] = positions
+
+    # Accumulate counts per bucket
+    buckets = {}  # (terrain_code, dist_bucket, coastal) -> counts[NUM_CLASSES]
+
+    for obs in all_observations:
+        seed_idx = obs.get("seed_index", 0)
+        if seed_idx >= len(all_initial_grids):
+            continue
+
+        grid = all_initial_grids[seed_idx]
+        h, w = len(grid), len(grid[0])
+        settl_pos = seed_settl_pos.get(seed_idx, [])
+
+        vp = obs.get("viewport", {})
+        vy, vx = vp.get("y", 0), vp.get("x", 0)
+        obs_grid = obs.get("grid", [])
+
+        for dy in range(len(obs_grid)):
+            for dx in range(len(obs_grid[0]) if obs_grid else 0):
+                abs_y = vy + dy
+                abs_x = vx + dx
+                if not (0 <= abs_y < h and 0 <= abs_x < w):
+                    continue
+
+                initial_code = grid[abs_y][abs_x]
+                # Skip static terrain (ocean=10, mountain=5)
+                if initial_code in {10, 5}:
+                    continue
+
+                # Compute distance to nearest settlement
+                if settl_pos:
+                    dist = min(
+                        abs(abs_y - sy) + abs(abs_x - sx)
+                        for sx, sy in settl_pos
+                    )
+                else:
+                    dist = 99
+                dist_bucket = _dist_to_bucket(dist)
+
+                # Coastal status (4-connected, 2+ ocean)
+                coastal = _is_coastal_4connected(grid, abs_y, abs_x)
+
+                # Observed terrain class
+                observed_code = obs_grid[dy][dx]
+                cls = TERRAIN_TO_CLASS.get(observed_code, 0)
+
+                key = (initial_code, dist_bucket, coastal)
+                if key not in buckets:
+                    buckets[key] = np.zeros(NUM_CLASSES)
+                buckets[key][cls] += 1
+
+    # Convert counts to probabilities (require minimum 10 observations)
+    result = {}
+    for key, counts in buckets.items():
+        total = counts.sum()
+        if total >= 10:
+            probs = counts / total
+            probs = np.maximum(probs, PROB_FLOOR)
+            probs /= probs.sum()
+            result[key] = probs
+
+    return result
+
+
+# ──────────────────────────────────────────────────────────────
 # Full prediction pipeline
 # ──────────────────────────────────────────────────────────────
 
@@ -850,10 +983,12 @@ def build_prediction(
     all_initial_grids: list[list[list[int]]],
     all_observations: list[dict],
     calibration: Optional[dict] = None,
+    all_settlements: list[list[dict]] | None = None,
+    round_empirical_tables: dict | None = None,
 ) -> np.ndarray:
     """Build a complete prediction tensor for one seed.
 
-    Applies all 5 prediction layers in sequence, then normalizes.
+    Applies all prediction layers in sequence, then normalizes.
     """
     # Layer 1: Static prediction
     tensor = build_static_prediction(initial_grid)
@@ -901,6 +1036,50 @@ def build_prediction(
             )
         except Exception:
             pass  # gracefully fall back to no blending if simulator fails
+
+    # Layer 6.7: Round-specific empirical distance tables.
+    # Pool ALL observations across ALL seeds, group by (initial_terrain, distance_bucket, coastal),
+    # and compute empirical P(class). This adapts to THIS round's hidden parameters at the distance level.
+    if round_empirical_tables is None and all_observations:
+        round_empirical_tables = build_round_empirical_tables(
+            all_observations, all_initial_grids,
+            all_settlements=all_settlements,
+        )
+
+    if round_empirical_tables:
+        h, w, _ = tensor.shape
+        EMPIRICAL_BLEND_WEIGHT = 0.20  # weight for round empirical tables
+        MIN_BUCKET_OBS = 20  # minimum obs in bucket to trust empirical
+
+        # Pre-compute settlement positions for this seed
+        _settl_pos = []
+        for s in settlements:
+            if isinstance(s, dict):
+                _settl_pos.append((s.get("x", 0), s.get("y", 0)))
+            else:
+                _settl_pos.append((s.x, s.y))
+
+        for y in range(h):
+            for x in range(w):
+                code = initial_grid[y][x]
+                if code in {10, 5}:
+                    continue
+
+                # Compute distance and bucket
+                if _settl_pos:
+                    dist = min(abs(y - sy) + abs(x - sx) for sx, sy in _settl_pos)
+                else:
+                    dist = 99
+                dist_bucket = _dist_to_bucket(dist)
+                coastal = _is_coastal_4connected(initial_grid, y, x)
+
+                key = (code, dist_bucket, coastal)
+                if key in round_empirical_tables:
+                    emp_probs = round_empirical_tables[key]
+                    tensor[y, x] = (
+                        (1 - EMPIRICAL_BLEND_WEIGHT) * tensor[y, x]
+                        + EMPIRICAL_BLEND_WEIGHT * emp_probs
+                    )
 
     # Layer 7: Observation-based ratio correction.
     # Use pooled observations from ALL seeds to estimate the hidden expansion

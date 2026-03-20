@@ -30,6 +30,9 @@ from model import (
     build_static_prediction,
     fill_unobserved_dynamic,
     compute_obs_stats,
+    build_round_empirical_tables,
+    _dist_to_bucket,
+    _is_coastal_4connected,
 )
 from evaluate import compute_score
 from utils import normalize_prediction, load_observations
@@ -192,6 +195,13 @@ def evaluate_loro():
         initial_states, gts = load_round_data(held_out)
         all_observations = load_observations(round_id)
 
+        # Build cross-seed empirical distance tables
+        all_grids = [initial_states[s]["grid"] for s in range(5)]
+        all_settl = [initial_states[s]["settlements"] for s in range(5)]
+        round_empirical = build_round_empirical_tables(
+            all_observations, all_grids, all_settlements=all_settl
+        ) if all_observations else {}
+
         scores = []
         for seed in range(5):
             grid = initial_states[seed]["grid"]
@@ -214,6 +224,24 @@ def evaluate_loro():
                             ttype = "plains" if code in {11, 0} else ("forest" if code == 4 else ("settl" if code in {1, 2} else "plains"))
                             bw = BLEND_TERRAIN.get(ttype, BLEND_WEIGHT)
                             tensor[y, x] = (1 - bw) * tensor[y, x] + bw * gbt_pred[y, x]
+
+            # Layer 6.7: Cross-seed empirical distance tables
+            if all_observations and round_empirical:
+                h, w, _ = tensor.shape
+                EMP_BLEND = 0.20
+                settl_pos = [(s['x'] if isinstance(s, dict) else s.x,
+                              s['y'] if isinstance(s, dict) else s.y) for s in settlements]
+                for y in range(h):
+                    for x in range(w):
+                        code = grid[y][x]
+                        if code in {10, 5}:
+                            continue
+                        dist = min((abs(y-sy)+abs(x-sx) for sx,sy in settl_pos), default=99)
+                        dist_bucket = _dist_to_bucket(dist)
+                        coastal = _is_coastal_4connected(grid, y, x)
+                        key = (code, dist_bucket, coastal)
+                        if key in round_empirical:
+                            tensor[y, x] = (1 - EMP_BLEND) * tensor[y, x] + EMP_BLEND * round_empirical[key]
 
             # Layer 7: Observation ratio correction
             if all_observations:
