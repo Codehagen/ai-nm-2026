@@ -853,11 +853,11 @@ def build_prediction(
                 if code in {10, 5}:
                     continue
                 if code == 4:  # Forest: XGBoost captures colonization dynamics
-                    blend = 0.70
-                elif code in {1, 2}:  # Settlements: moderate blend
-                    blend = 0.30
-                else:  # Plains: moderate blend
-                    blend = 0.30
+                    blend = 0.85
+                elif code in {1, 2}:  # Settlements
+                    blend = 0.50
+                else:  # Plains
+                    blend = 0.50
                 tensor[y, x] = (1 - blend) * tensor[y, x] + blend * gbt_pred[y, x]
 
     # Layer 7: Global observation ratio correction.
