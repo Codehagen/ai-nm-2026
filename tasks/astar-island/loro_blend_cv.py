@@ -36,10 +36,11 @@ ROUNDS = {
     2: "76909e29-f664-4b2f-b16b-61b7507277e9",
     4: "8e839974-b13b-407b-a5e7-fc749d877195",
     5: "fd3c92ff-3178-4dc9-8d9b-acf389b3982b",
+    6: "ae78003a-4efe-425a-881a-d16a39bca0ad",
 }
 
 # L7 strengths
-L7_STRENGTHS = np.array([1.38, 0.90, 0.44, 0.61, 1.16, 0.0])
+L7_STRENGTHS = np.array([1.20, 0.80, 0.44, 0.80, 1.30, 0.0])
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
@@ -248,8 +249,8 @@ def evaluate_round_with_blend(test_round_num, gbt_models, blend_weight, sim_weig
 
 
 def main():
-    blend_values = [0.35, 0.40]
-    test_rounds = [1, 2, 4, 5]
+    blend_values = [0.40]
+    test_rounds = [1, 2, 4, 5, 6]
 
     # Header
     print(f"{'Blend':<8}", end="")

@@ -39,8 +39,8 @@ from simulator import simulate_monte_carlo, fit_hidden_params
 # GBT model support
 # ──────────────────────────────────────────────────────────────
 
-GBT_BLEND_WEIGHT = 0.30  # how much to weight GBT vs heuristic (cross-round validated)
-SIM_BLEND_WEIGHT = 0.15  # how much to weight simulator vs XGBoost+heuristic
+GBT_BLEND_WEIGHT = 0.35  # how much to weight GBT vs heuristic (cross-round validated)
+SIM_BLEND_WEIGHT = 0.0  # disabled — proven +0.00 LORO, adds 30s latency
 _gbt_models = None  # lazy-loaded
 
 
@@ -907,7 +907,7 @@ def build_prediction(
                 ratio = obs_freq / np.maximum(model_avg, 1e-6)
                 # Per-class correction strengths (cross-round validated):
                 # Weak for empty/port (stable), stronger for settlement/ruin (variable)
-                cls_strength = np.array([1.38, 0.90, 0.44, 0.61, 1.16, 0.0])
+                cls_strength = np.array([1.20, 0.80, 0.44, 0.80, 1.30, 0.0])
                 adj = 1.0 + cls_strength * (ratio - 1.0)
                 for y in range(h):
                     for x in range(w):
