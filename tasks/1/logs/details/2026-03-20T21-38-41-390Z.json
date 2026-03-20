@@ -1,0 +1,262 @@
+{
+  "timestamp": "2026-03-20T21:38:41.390Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "travel-expense-full",
+  "prompt": "Register a travel expense for Alice Clark (alice.clark@example.org) for \"Client visit Oslo\". The trip lasted 3 days with per diem (daily rate 800 NOK). Expenses: flight ticket 2800 NOK and taxi 450 NOK.",
+  "filesCount": 0,
+  "steps": 8,
+  "toolCalls": 16,
+  "apiCalls": 16,
+  "apiErrors": 4,
+  "elapsedMs": 68596,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "departmentNumber": "1",
+        "name": "Sales"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "firstName": "Alice",
+        "dateOfBirth": "1990-01-15",
+        "userType": "STANDARD",
+        "email": "alice.clark@example.org",
+        "department": {
+          "id": 913851
+        },
+        "lastName": "Clark"
+      },
+      "errorMessage": "Validering feilet. The email already exists. GET /employee?email=<the email> to find the existing employee and use their ID instead of creating a new one.",
+      "validationMessages": [
+        {
+          "field": "email",
+          "message": "Det finnes allerede en bruker med denne e-postadressen.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "email": "alice.clark@example.org",
+        "fields": "id,firstName,lastName"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "count": "100"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "count": "10"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rateCategory",
+      "ok": true,
+      "params": {
+        "count": "50",
+        "fields": "id,name",
+        "dateFrom": "2026-03-18",
+        "type": "PER_DIEM",
+        "isValidDomestic": "true",
+        "dateTo": "2026-03-20"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "description": "Fly",
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/costCategory",
+      "ok": true,
+      "params": {
+        "fields": "id,description",
+        "description": "Taxi"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/travelExpense/rate",
+      "ok": true,
+      "params": {
+        "fields": "id,rate",
+        "rateCategoryId": "740"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense",
+      "ok": true,
+      "body": {
+        "employee": {
+          "id": 18580929
+        },
+        "title": "Client visit Oslo",
+        "travelDetails": {
+          "departureDate": "2026-03-18",
+          "purpose": "Client visit",
+          "destination": "Oslo",
+          "departureFrom": "Home",
+          "returnDate": "2026-03-20"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": true,
+      "body": {
+        "paymentType": {
+          "id": 27180470
+        },
+        "date": "2026-03-18",
+        "comments": "Flight ticket",
+        "amountCurrencyIncVat": 2800,
+        "costCategory": {
+          "id": 27180486
+        },
+        "travelExpense": {
+          "id": 11145759
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": false,
+      "status": 409,
+      "body": {
+        "amountCurrencyIncVat": 450,
+        "costCategory": {
+          "id": 27180501
+        },
+        "comments": "Taxi",
+        "paymentType": {
+          "id": 27180470
+        },
+        "date": "2026-03-18",
+        "travelExpense": {
+          "id": 11145759
+        }
+      },
+      "errorMessage": "RevisionException RevisionException = transient version conflict. Retry the exact same request once — it will succeed."
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/perDiemCompensation",
+      "ok": false,
+      "status": 409,
+      "body": {
+        "rateType": {
+          "id": 25888
+        },
+        "isDeductionForLunch": false,
+        "isDeductionForDinner": false,
+        "rateCategory": {
+          "id": 740
+        },
+        "travelExpense": {
+          "id": 11145759
+        },
+        "location": "Oslo",
+        "rate": 800,
+        "overnightAccommodation": "HOTEL",
+        "count": 3,
+        "isDeductionForBreakfast": false
+      },
+      "errorMessage": "RevisionException RevisionException = transient version conflict. Retry the exact same request once — it will succeed."
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": false,
+      "status": 409,
+      "body": {
+        "costCategory": {
+          "id": 27180501
+        },
+        "comments": "Taxi",
+        "amountCurrencyIncVat": 450,
+        "travelExpense": {
+          "id": 11145759
+        },
+        "paymentType": {
+          "id": 27180470
+        },
+        "date": "2026-03-18"
+      },
+      "errorMessage": "RevisionException RevisionException = transient version conflict. Retry the exact same request once — it will succeed."
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/perDiemCompensation",
+      "ok": true,
+      "body": {
+        "count": 3,
+        "isDeductionForLunch": false,
+        "rateCategory": {
+          "id": 740
+        },
+        "isDeductionForBreakfast": false,
+        "rate": 800,
+        "location": "Oslo",
+        "travelExpense": {
+          "id": 11145759
+        },
+        "isDeductionForDinner": false,
+        "overnightAccommodation": "HOTEL",
+        "rateType": {
+          "id": 25888
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/travelExpense/cost",
+      "ok": true,
+      "body": {
+        "paymentType": {
+          "id": 27180470
+        },
+        "date": "2026-03-18",
+        "costCategory": {
+          "id": 27180501
+        },
+        "amountCurrencyIncVat": 450,
+        "comments": "Taxi",
+        "travelExpense": {
+          "id": 11145759
+        }
+      }
+    }
+  ]
+}

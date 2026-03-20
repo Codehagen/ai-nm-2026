@@ -126,7 +126,14 @@
       "Bash(python test_local.py --zip submission_fast2stage.zip --quick)",
       "Bash(python test_local.py --zip submission_fast2stage.zip --data data/yolo-3way)",
       "Bash(jq -r \"[.taskType, .prompt, \\([.toolCallDetails[].path] | join\\(\"\"|\"\"\\)\\)] | join\\(\"\"|||\"\"\\)\")",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(xargs -r kill -9)",
+      "Bash(python test_local.py --zip submission.zip --quick)",
+      "Bash(rm -rf _v3check)",
+      "Bash(mkdir _v3check)",
+      "Bash(for f:*)",
+      "Bash(do)",
+      "Bash(done)"
     ]
   }
 }

@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-03-20T21:44:25.142Z",
+  "prompt": "Registre 36 horas para Fernando Romero (fernando.romero@example.org) en la actividad \"Design\" del proyecto \"Migración de datos\" para Luna SL (org. nº 854040561). Tarifa por hora: 850 NOK/h. Genere una factura de proyecto al cliente basada en las horas registradas.",
+  "filesCount": 0,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 114206,
+  "status": "timeout"
+}

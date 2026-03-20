@@ -140,12 +140,13 @@ POST /product. Required: name. ALWAYS include \`vatType\`.
   - 12% MVA (low rate/transport): \`"vatType": {"id": 32}\`
   - 0% exempt (within VAT law): \`"vatType": {"id": 5}\`
   - 0% exempt (outside VAT law): \`"vatType": {"id": 6}\`
-- If the prompt includes a product number, check if it exists first:
-  GET /product?number=5874&fields=id,name,priceExcludingVatCurrency,vatType,version
-  If found AND name+price match → use existing ID.
-  If found BUT name or price DIFFERS from the prompt → PUT /product/{id} to update (include id+version).
-  If NOT found (empty values) → POST /product with number, name, price and vatType.
-  CRITICAL: Scoring checks that products exist with the EXACT name and price from the prompt. Always verify or update.`;
+- If the prompt includes a product number:
+  1. GET /product?number=5874&fields=id,name,priceExcludingVatCurrency,vatType,version
+  2. If NOT found (empty values) → POST /product with number, name, price and vatType.
+  3. If found → COMPARE the name and price from the GET response with the prompt values.
+     If name or price DIFFERS → PUT /product/{id} to update (include id+version+name+price+vatType).
+     If they match exactly → use existing ID.
+  **YOU MUST ALWAYS CHECK the name and price. Pre-seeded products often have DIFFERENT names than what the prompt specifies. If you skip this check, scoring WILL fail (0 points) because it verifies the EXACT name and price from the prompt.**`;
 
 const RECIPE_DEPARTMENT = `## Creating a Department
 POST /department. Required: name, departmentNumber.
@@ -155,16 +156,15 @@ POST /department. Required: name, departmentNumber.
 
 const RECIPE_INVOICE = `## Invoice Chain (TESTED RECIPE)
 
-### Prerequisites — bank account setup:
+CRITICAL ORDER — do these steps in EXACTLY this sequence:
 1. GET /ledger/account?number=1920&fields=id,version,bankAccountNumber,name
-2. If \`bankAccountNumber\` is empty: PUT /ledger/account/{id} with id, version, name, and \`"bankAccountNumber": "86011117947"\`
+   If \`bankAccountNumber\` is empty: PUT /ledger/account/{id} with id, version, name, and \`"bankAccountNumber": "86011117947"\`
    Use exactly "86011117947" — it passes Norwegian MOD11 validation.
-
-### Create order + invoice:
-1. POST /customer  {"name": "X", "isCustomer": true, "organizationNumber": "..."}
-2. POST /product   {"name": "Y", "priceExcludingVatCurrency": 1000, "vatType": {"id": 3}}
-3. POST /order     {"customer": {"id": <cust_id>}, "deliveryDate": "<today>", "orderDate": "<today>", "orderLines": [{"product": {"id": <prod_id>}, "count": 1, "unitPriceExcludingVatCurrency": 1000, "vatType": {"id": 3}}]}
-4. POST /invoice   {"invoiceDate": "<today>", "invoiceDueDate": "<due>", "orders": [{"id": <order_id>}]}
+   **You MUST do this BEFORE creating any invoice. Invoicing without a bank account = 422.**
+2. POST /customer  {"name": "X", "isCustomer": true, "organizationNumber": "..."}
+3. POST /product   {"name": "Y", "priceExcludingVatCurrency": 1000, "vatType": {"id": 3}}
+4. POST /order     {"customer": {"id": <cust_id>}, "deliveryDate": "<today>", "orderDate": "<today>", "orderLines": [{"product": {"id": <prod_id>}, "count": 1, "unitPriceExcludingVatCurrency": 1000, "vatType": {"id": 3}}]}
+5. POST /invoice   {"invoiceDate": "<today>", "invoiceDueDate": "<due>", "orders": [{"id": <order_id>}]}
 
 ### PUT /invoice/{id}/:payment — USES QUERY PARAMS, NOT BODY!
 \`\`\`json
@@ -305,11 +305,14 @@ const RECIPE_TRAVEL_EXPENSE = `## Travel Expense (TESTED RECIPE)
 - Do NOT use \`departureDate\`/\`returnDate\` as top-level fields.
 
 ### Adding Costs:
-3. GET /travelExpense/costCategory?count=50&fields=id,description
-4. GET /travelExpense/paymentType?count=10&fields=id,description
+3. GET /travelExpense/costCategory?count=100&fields=id,description — call ONCE, scan the full list.
+   Common categories: "Fly/Flight" for flights, "Taxi" for taxi, "Hotell/Hotel" for hotels. Match by partial description.
+4. GET /travelExpense/paymentType?count=10&fields=id,description — call ONCE, use first result (usually "Egenfinansiert").
 5. POST /travelExpense/cost (one per expense):
    {"travelExpense": {"id": <travel_id>}, "costCategory": {"id": <cat_id>}, "paymentType": {"id": <pay_id>}, "date": "2026-03-19", "amountCurrencyIncVat": 7200, "comments": "Flight ticket"}
    - Costs use \`amountCurrencyIncVat\` (NOT \`amount\` or \`rate\`).
+   - If you get 409 RevisionException, just retry the same POST once — it's a transient version conflict.
+   IMPORTANT: Do NOT call GET /travelExpense/costCategory multiple times. Get the full list once and pick from it.
 
 ### Adding Per Diem:
 6. GET /travelExpense/rateCategory?type=PER_DIEM&isValidDomestic=true&dateFrom=<dep>&dateTo=<ret>&count=50&fields=id,name

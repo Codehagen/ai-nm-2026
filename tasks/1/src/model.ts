@@ -95,6 +95,16 @@ function getErrorHint(
     return 'Division requires ALL of: name, startDate, municipalityDate, organizationNumber, municipality. Use: {"name": "Hovedenhet", "startDate": "2026-01-01", "municipalityDate": "2026-01-01", "organizationNumber": "000000000", "municipality": {"id": <mun_id>}}. GET /municipality?count=1&fields=id first.';
   }
 
+  // 409 RevisionException — transient version conflict, just retry
+  if (result.status === 409) {
+    return 'RevisionException = transient version conflict. Retry the exact same request once — it will succeed.';
+  }
+
+  // Invoice creation fails because bank account not set up
+  if (method === "POST" && path.includes("invoice") && vm?.some((v) => v.message?.includes("bankkontonummer"))) {
+    return 'Bank account missing. Do: GET /ledger/account?number=1920&fields=id,version,bankAccountNumber,name → PUT /ledger/account/{id} with {"id":..,"version":..,"name":..,"bankAccountNumber":"86011117947"} → then retry POST /invoice.';
+  }
+
   // Travel expense cost — missing required fields
   if (method === "POST" && path.includes("travelExpense/cost")) {
     return 'Travel expense cost requires: travelExpense.id, costCategory.id, paymentType.id, date, amountCurrencyIncVat. GET /travelExpense/costCategory and /travelExpense/paymentType first to find valid IDs.';
@@ -328,6 +338,19 @@ export async function solve(
               break;
           }
 
+          // Auto-retry 409 RevisionException (transient version conflict)
+          if (!callResult.ok && callResult.status === 409) {
+            await new Promise((r) => setTimeout(r, 300));
+            switch (method) {
+              case "POST":
+                callResult = await client.post(path, body, params);
+                break;
+              case "PUT":
+                callResult = await client.put(path, body, params);
+                break;
+            }
+          }
+
           // Only track failed POSTs; clear on success
           if (method === "POST" && body) {
             const key = retryKey(path, body as Record<string, unknown>);
@@ -339,7 +362,7 @@ export async function solve(
           }
 
           // Enrich unhelpful errors with actionable hints
-          if (!callResult.ok && (callResult.status === 422 || callResult.status === 500)) {
+          if (!callResult.ok && (callResult.status === 409 || callResult.status === 422 || callResult.status === 500)) {
             callResult = enrichError(callResult, method, path);
           }
 

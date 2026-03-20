@@ -1,0 +1,130 @@
+{
+  "timestamp": "2026-03-20T21:51:33.942Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice",
+  "prompt": "Erstellen Sie eine Rechnung für den Kunden Grünfeld GmbH (Org.-Nr. 913178823) mit drei Produktzeilen: Netzwerkdienst (6475) zu 6400 NOK mit 25 % MwSt., Softwarelizenz (3355) zu 2450 NOK mit 15 % MwSt. (Lebensmittel), und Webdesign (3067) zu 12300 NOK mit 0 % MwSt. (befreit).",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 0,
+  "elapsedMs": 37569,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Grünfeld GmbH",
+        "organizationNumber": "913178823",
+        "isCustomer": true
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "6475"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "3355"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "3067"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/363550359",
+      "ok": true,
+      "body": {
+        "name": "Bankinnskudd",
+        "version": 0,
+        "id": 363550359,
+        "bankAccountNumber": "86011117947"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "deliveryDate": "2026-03-20",
+        "orderLines": [
+          {
+            "count": 1,
+            "product": {
+              "id": 84390307
+            },
+            "vatType": {
+              "id": 3
+            },
+            "unitPriceExcludingVatCurrency": 6400
+          },
+          {
+            "count": 1,
+            "product": {
+              "id": 84390309
+            },
+            "unitPriceExcludingVatCurrency": 2450,
+            "vatType": {
+              "id": 31
+            }
+          },
+          {
+            "vatType": {
+              "id": 5
+            },
+            "unitPriceExcludingVatCurrency": 12300,
+            "product": {
+              "id": 84390311
+            },
+            "count": 1
+          }
+        ],
+        "customer": {
+          "id": 108276283
+        },
+        "orderDate": "2026-03-20"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDate": "2026-03-20",
+        "orders": [
+          {
+            "id": 401973405
+          }
+        ],
+        "invoiceDueDate": "2026-04-03"
+      }
+    }
+  ]
+}

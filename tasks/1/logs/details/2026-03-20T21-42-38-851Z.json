@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-03-20T21:42:38.851Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "customer",
+  "prompt": "Crea el cliente Viento SL con número de organización 910107739. La dirección es Parkveien 93, 7010 Trondheim. Correo: post@viento.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 11814,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "email": "post@viento.no",
+        "isCustomer": true,
+        "organizationNumber": "910107739",
+        "postalAddress": {
+          "postalCode": "7010",
+          "city": "Trondheim",
+          "addressLine1": "Parkveien 93"
+        },
+        "name": "Viento SL"
+      }
+    }
+  ]
+}

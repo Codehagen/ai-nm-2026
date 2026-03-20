@@ -1,0 +1,91 @@
+{
+  "timestamp": "2026-03-20T21:51:23.657Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "supplier-invoice",
+  "prompt": "Recebemos a fatura INV-2026-5787 do fornecedor Luz do Sol Lda (org. nº 945810149) no valor de 35950 NOK com IVA incluído. O montante refere-se a serviços de escritório (conta 6590). Registe a fatura do fornecedor com o IVA dedutível correto (25 %).",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 0,
+  "elapsedMs": 27846,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true,
+      "body": {
+        "organizationNumber": "945810149",
+        "name": "Luz do Sol Lda",
+        "isSupplier": true
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "6590",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "number": "2400"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": true,
+      "params": {
+        "sendToLedger": "true"
+      },
+      "body": {
+        "supplier": {
+          "id": 108276280
+        },
+        "invoiceDueDate": "2026-04-20",
+        "voucher": {
+          "date": "2026-03-20",
+          "postings": [
+            {
+              "amountGross": 35950,
+              "description": "Serviços de escritório",
+              "date": "2026-03-20",
+              "vatType": {
+                "id": 1
+              },
+              "row": 1,
+              "account": {
+                "id": 363609883
+              },
+              "amountGrossCurrency": 35950
+            },
+            {
+              "date": "2026-03-20",
+              "supplier": {
+                "id": 108276280
+              },
+              "amountGross": -35950,
+              "description": "Supplier credit",
+              "account": {
+                "id": 363609666
+              },
+              "amountGrossCurrency": -35950,
+              "row": 2
+            }
+          ],
+          "description": "Fatura INV-2026-5787 de Luz do Sol Lda"
+        },
+        "invoiceNumber": "INV-2026-5787",
+        "invoiceDate": "2026-03-20"
+      }
+    }
+  ]
+}
