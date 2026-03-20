@@ -139,16 +139,14 @@ def allocate_queries(
     num_seeds: int,
     viewport_placements: list[list[Viewport]],
     total_budget: int = 50,
-    max_viewports_per_seed: int = 5,
-    min_repeats: int = 2,
 ) -> list[list[tuple[Viewport, int]]]:
     """Allocate query budget across seeds and viewports.
 
     Returns: per-seed list of (viewport, num_repeats) tuples.
 
-    Strategy: Use fewer viewports with more repeats for better frequency
-    estimates. The Bayesian observation layer needs 2+ repeats to be useful.
-    Prioritize viewports covering the most dynamic cells.
+    Strategy: distribute budget evenly across seeds, then within each seed
+    distribute across viewports. Agent research confirmed: 10/seed × 5 seeds
+    is optimal; concentrating on fewer seeds hurts.
     """
     per_seed_budget = total_budget // num_seeds
     remainder = total_budget % num_seeds
@@ -162,20 +160,12 @@ def allocate_queries(
             allocations.append([])
             continue
 
-        # Limit viewports to ensure enough repeats
-        # Take only the top viewports (sorted by dynamic cell coverage)
-        n_vps = min(len(vps), max_viewports_per_seed)
-        # Ensure we can do at least min_repeats per viewport
-        while n_vps > 1 and seed_budget // n_vps < min_repeats:
-            n_vps -= 1
-        selected_vps = vps[:n_vps]
-
-        # Distribute queries across selected viewports
-        per_vp = seed_budget // n_vps
-        vp_remainder = seed_budget % n_vps
+        # Distribute queries across viewports
+        per_vp = seed_budget // len(vps)
+        vp_remainder = seed_budget % len(vps)
 
         seed_alloc = []
-        for i, vp in enumerate(selected_vps):
+        for i, vp in enumerate(vps):
             repeats = per_vp + (1 if i < vp_remainder else 0)
             if repeats > 0:
                 seed_alloc.append((vp, repeats))
