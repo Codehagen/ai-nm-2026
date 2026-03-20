@@ -87,3 +87,4 @@ fa5e61c	89.219609	0.0	0	keep	LORO baseline: blend=0.35 L7=[1.20,0.80,0.44,0.80,1
 03b5dc8	89.028527	0.0	28	discard	residual learning: XGB predicts GT-heuristic corrections	worse than direct prediction
 225f38a	84.443356	0.0	2	keep	widen L7 clamp [0.80, 1.25] (R4=91.93 R6=82.55)
 64deaed	84.347338	0.0	17	discard	per-terrain blend (p=0.40 f=0.45 s=0.30)	R1/R2/R4/R6 regressed
+ec6fe48	84.332017	0.0	1	discard	L7 settlement strength 0.80->1.00	R7 worse 64.05
