@@ -135,6 +135,16 @@ def _extract_cell_features(
                 if abs(y - sy) + abs(x - sx) <= 3
             )
 
+            # Settlements in radius bands (captures expansion pressure at different scales)
+            settl_r12 = sum(
+                1 for sx, sy in settl_pos
+                if 1 <= abs(y - sy) + abs(x - sx) <= 2
+            )
+            settl_r57 = sum(
+                1 for sx, sy in settl_pos
+                if 5 <= abs(y - sy) + abs(x - sx) <= 7
+            )
+
             features.append([
                 code, dist, adj_ocean, adj_forest, adj_settl, adj_mountain,
                 int(code == 11), int(code == 4), int(code == 1), int(code == 2),
@@ -142,11 +152,11 @@ def _extract_cell_features(
                 dist2, nearby_settl, len(settl_pos),
                 dist_ocean, dist_mountain, forests_r2,
                 y, x,  # map position (captures fjord/border effects)
-                settlements_r3,
+                settlements_r3, settl_r12, settl_r57,
             ])
             coords.append((y, x))
 
-    return np.array(features) if features else np.empty((0, 20)), coords
+    return np.array(features) if features else np.empty((0, 22)), coords
 
 
 def load_gbt_models() -> Optional[list]:
