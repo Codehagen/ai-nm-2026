@@ -147,7 +147,8 @@ Create a product. Required: name. ALWAYS include \`vatType\`.
 \`\`\`
 - ALWAYS include \`vatType\` — without it you get 422. Default to \`{"id": 3}\` (25%) if no VAT rate specified.
 - Use the VAT type IDs listed above: 3=25%, 31=15%(food), 32=12%, 5=0%(exempt within), 6=0%(exempt outside).
-- If the prompt has a number in parentheses after the product name (e.g. "Consulting (5874)"), that is just a product number/reference for scoring — include it as \`"number": "5874"\` but it is NOT required.
+- If the prompt has a number in parentheses after the product name (e.g. "Consulting (5874)"), that is a product number — include it as \`"number": "5874"\`.
+  If POST /product returns 422 with "Produktnummeret er i bruk" (number already in use), the product already exists. GET /product?number=5874&fields=id,name to find it and use its ID.
 - You do NOT need to set \`priceIncludingVatCurrency\` — Tripletex calculates it automatically.
 - If creating multiple products, create each one separately with its own vatType.
 
