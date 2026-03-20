@@ -59,6 +59,7 @@ export async function solve(
 
   const result = await generateText({
     model: gateway(MODEL_ID),
+    temperature: 0, // Deterministic: reduces random errors on tool calls
     system: SYSTEM_PROMPT + `\n\nToday's date: ${today}`,
     messages: [{ role: "user", content }],
     tools: {

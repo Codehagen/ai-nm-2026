@@ -1,0 +1,117 @@
+{
+  "timestamp": "2026-03-20T10:17:04.412Z",
+  "parallel": 1,
+  "summary": {
+    "passed": 1,
+    "failed": 0,
+    "errors": 0,
+    "totalCalls": 12,
+    "totalOptimal": 8,
+    "totalErrors": 0,
+    "totalTimeMs": 35316
+  },
+  "results": [
+    {
+      "id": "t2-order-invoice-payment-de",
+      "category": "order-invoice-payment",
+      "tier": 2,
+      "lang": "de",
+      "status": "pass",
+      "apiCalls": 12,
+      "apiErrors": 0,
+      "optimalCalls": 8,
+      "callEfficiency": "67%",
+      "elapsedMs": 35316,
+      "checks": [
+        {
+          "check": "customer with name=\"Sonnental GmbH\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "  .organizationNumber = \"904562262\"",
+          "pass": true,
+          "detail": "ok"
+        },
+        {
+          "check": "product with name=\"Netzwerkdienst\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "product with name=\"Wartung\"",
+          "pass": true,
+          "detail": "found"
+        },
+        {
+          "check": "invoice.isPaid = true",
+          "pass": true,
+          "detail": "ok"
+        }
+      ],
+      "failedChecks": [],
+      "toolCallDetails": [
+        {
+          "method": "POST",
+          "path": "/customer",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/product",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/order",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/ledger/account",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/ledger/account/30000001",
+          "ok": true
+        },
+        {
+          "method": "POST",
+          "path": "/invoice",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/invoice/30000008",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/invoice/paymentType",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/invoice/30000008",
+          "ok": true
+        },
+        {
+          "method": "GET",
+          "path": "/invoice/30000008",
+          "ok": true
+        },
+        {
+          "method": "PUT",
+          "path": "/invoice/30000008/:payment",
+          "ok": true
+        }
+      ]
+    }
+  ]
+}
