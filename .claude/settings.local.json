@@ -99,7 +99,8 @@
       "Bash(echo \"Exit code: $?\")",
       "Bash(rm -f /Users/walgermo/Utvikling/ai-nm-2026/tasks/norgesgruppen/submission.zip)",
       "Bash(zip -r /Users/walgermo/Utvikling/ai-nm-2026/tasks/norgesgruppen/submission.zip . -x \".*\" \"__MACOSX/*\")",
-      "Bash(__NEW_LINE_c435b8b4bf2ba7cf__ gcloud:*)"
+      "Bash(__NEW_LINE_c435b8b4bf2ba7cf__ gcloud:*)",
+      "Bash(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -i ~/.ssh/google_compute_engine root@34.122.21.63 \"tail -12 /tmp/classifier.log 2>/dev/null; ps aux | grep python3 | grep -v grep | wc -l\")"
     ]
   }
 }
