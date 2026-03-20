@@ -1,0 +1,185 @@
+{
+  "timestamp": "2026-03-20T23:16:08.119Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "project",
+  "prompt": "Set a fixed price of 439950 NOK on the project \"Digital Transformation\" for Ironbridge Ltd (org no. 871706913). The project manager is Victoria Taylor (victoria.taylor@example.org). Invoice the customer for 50% of the fixed price as a milestone payment.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 13,
+  "apiCalls": 13,
+  "apiErrors": 1,
+  "elapsedMs": 40328,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "departmentNumber": "1",
+        "name": "Avdeling"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Ironbridge Ltd",
+        "isCustomer": true,
+        "organizationNumber": "871706913"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1920",
+        "fields": "id,version,bankAccountNumber,name"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/460115057",
+      "ok": true,
+      "body": {
+        "id": 460115057,
+        "name": "Bankinnskudd",
+        "version": 0,
+        "bankAccountNumber": "86011117947"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "dateOfBirth": "1990-01-15",
+        "userType": "STANDARD",
+        "email": "victoria.taylor@example.org",
+        "firstName": "Victoria",
+        "department": {
+          "id": 920023
+        },
+        "lastName": "Taylor"
+      },
+      "errorMessage": "Validering feilet. The email already exists. GET /employee?email=<the email> to find the existing employee and use their ID instead of creating a new one.",
+      "validationMessages": [
+        {
+          "field": "email",
+          "message": "Det finnes allerede en bruker med denne e-postadressen.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true,
+      "body": {
+        "projectManager": {
+          "id": 18595391
+        },
+        "customer": {
+          "id": 108292302
+        },
+        "name": "Digital Transformation",
+        "startDate": "2026-03-21",
+        "isInternal": false
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "name": "Milestone payment",
+        "vatType": {
+          "id": 3
+        },
+        "priceExcludingVatCurrency": 219975
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "email": "victoria.taylor@example.org",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/project/401977496",
+      "ok": true,
+      "body": {
+        "id": 401977496,
+        "fixedprice": 439950,
+        "isFixedPrice": true,
+        "version": 0
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "orderLines": [
+          {
+            "unitPriceExcludingVatCurrency": 219975,
+            "product": {
+              "id": 84397634
+            },
+            "vatType": {
+              "id": 3
+            },
+            "count": 1
+          }
+        ],
+        "deliveryDate": "2026-03-21",
+        "orderDate": "2026-03-21",
+        "project": {
+          "id": 401977496
+        },
+        "customer": {
+          "id": 108292302
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-04-04",
+        "invoiceDate": "2026-03-21",
+        "orders": [
+          {
+            "id": 401977502
+          }
+        ]
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147554402/:send",
+      "ok": true,
+      "params": {
+        "sendType": "EMAIL"
+      }
+    }
+  ]
+}

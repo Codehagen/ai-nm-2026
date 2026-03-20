@@ -1,0 +1,50 @@
+{
+  "timestamp": "2026-03-20T23:08:17.639Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "employee",
+  "prompt": "Me har ein ny tilsett som heiter Geir Stølsvik, fødd 6. March 1990. Opprett vedkomande som tilsett med e-post geir.stlsvik@example.org og startdato 14. November 2026.",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 3,
+  "apiCalls": 3,
+  "apiErrors": 0,
+  "elapsedMs": 20440,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "name": "Avdeling",
+        "departmentNumber": "1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true,
+      "body": {
+        "lastName": "Stølsvik",
+        "dateOfBirth": "1990-03-06",
+        "department": {
+          "id": 919611
+        },
+        "userType": "STANDARD",
+        "firstName": "Geir",
+        "email": "geir.stlsvik@example.org"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": true,
+      "body": {
+        "employee": {
+          "id": 18594598
+        },
+        "startDate": "2026-11-14"
+      }
+    }
+  ]
+}

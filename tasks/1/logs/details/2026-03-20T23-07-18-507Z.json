@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-03-20T23:07:18.507Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "supplier",
+  "prompt": "Registrer leverandøren Bergvik AS med organisasjonsnummer 852000139. E-post: faktura@bergvik.no.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 1,
+  "apiCalls": 1,
+  "apiErrors": 0,
+  "elapsedMs": 8357,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true,
+      "body": {
+        "organizationNumber": "852000139",
+        "name": "Bergvik AS",
+        "email": "faktura@bergvik.no"
+      }
+    }
+  ]
+}

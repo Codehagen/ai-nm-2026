@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T23:05:57.012Z",
+  "prompt": "Erstellen Sie eine benutzerdefinierte Buchhaltungsdimension \"Kostsenter\" mit den Werten \"Markedsføring\" und \"Drift\". Buchen Sie dann einen Beleg auf Konto 6340 über 43650 NOK, verknüpft mit dem Dimensionswert \"Markedsføring\".",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

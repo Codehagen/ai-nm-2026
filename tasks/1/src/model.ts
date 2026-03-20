@@ -372,6 +372,17 @@ export async function solve(
             }
           }
 
+          // Auto-book supplier invoice vouchers (sendToLedger param doesn't work)
+          if (method === "POST" && path.includes("supplierInvoice") && callResult.ok) {
+            const voucherId = (callResult.data as Record<string, unknown>)?.value
+              ? ((callResult.data as Record<string, unknown>).value as Record<string, unknown>)?.voucher
+              : undefined;
+            const vid = (voucherId as Record<string, unknown>)?.id;
+            if (vid) {
+              await client.put(`/ledger/voucher/${vid}/:sendToLedger`, {});
+            }
+          }
+
           // Only track failed POSTs; clear on success
           if (method === "POST" && body) {
             const key = retryKey(path, body as Record<string, unknown>);

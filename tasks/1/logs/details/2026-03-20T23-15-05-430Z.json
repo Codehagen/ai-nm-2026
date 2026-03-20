@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-03-20T23:15:05.430Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "product",
+  "prompt": "Erstellen Sie das Produkt \"Beratungsstunden\" mit der Produktnummer 3512. Der Preis beträgt 42600 NOK ohne MwSt., mit dem Standardsatz von 25 %.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 15987,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "3512",
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "vatType": {
+          "id": 3
+        },
+        "name": "Beratungsstunden",
+        "priceExcludingVatCurrency": 42600,
+        "number": "3512"
+      }
+    }
+  ]
+}

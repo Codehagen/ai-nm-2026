@@ -269,8 +269,7 @@ const RECIPE_SUPPLIER_INVOICE = `## Supplier Invoice (TESTED RECIPE)
 1. POST /supplier  {"name": "Supplier Name", "isSupplier": true, "organizationNumber": "..."}
 2. GET /ledger/account?number=<expense_account>&fields=id  (e.g. 7300 for office services)
 3. GET /ledger/account?number=2400&fields=id  (Leverandørgjeld)
-4. POST /supplierInvoice?sendToLedger=true:
-   params: { "sendToLedger": "true" }
+4. POST /supplierInvoice  (do NOT use sendToLedger param — it doesn't work reliably):
 \`\`\`
 \`\`\`json
 {
@@ -288,6 +287,10 @@ const RECIPE_SUPPLIER_INVOICE = `## Supplier Invoice (TESTED RECIPE)
   }
 }
 \`\`\`
+5. **CRITICAL — Book the voucher to the ledger:**
+   Extract the \`voucher.id\` from the POST /supplierInvoice response.
+   PUT /ledger/voucher/{voucher_id}/:sendToLedger  (empty body: {})
+   Without this step, the voucher stays as a draft and scoring will fail (0 points).
 - Use POST /supplierInvoice (not POST /ledger/voucher).
 - \`row\` MUST start at 1 (not 0).
 - \`amountGrossCurrency\` MUST equal \`amountGross\`.

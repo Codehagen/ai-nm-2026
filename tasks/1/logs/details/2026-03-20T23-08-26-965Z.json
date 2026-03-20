@@ -1,0 +1,83 @@
+{
+  "timestamp": "2026-03-20T23:08:26.965Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice-payment",
+  "prompt": "The payment from Brightstone Ltd (org no. 993125393) for the invoice \"Data Advisory\" (27100 NOK excl. VAT) was returned by the bank. Reverse the payment so the invoice shows the outstanding amount again.",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 7,
+  "apiCalls": 7,
+  "apiErrors": 0,
+  "elapsedMs": 25327,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Brightstone Ltd",
+        "organizationNumber": "993125393",
+        "isCustomer": true
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "name": "Data Advisory",
+        "vatType": {
+          "id": 3
+        },
+        "priceExcludingVatCurrency": 27100
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": true,
+      "params": {
+        "fields": "id,invoiceNumber,amount,amountOutstanding,customer,isClosed",
+        "invoiceDateTo": "2030-01-01",
+        "invoiceDateFrom": "2020-01-01"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/voucher",
+      "ok": true,
+      "params": {
+        "fields": "id,date,description,voucherType,postings",
+        "dateTo": "2030-01-01",
+        "dateFrom": "2020-01-01"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/voucher/608871739/:reverse",
+      "ok": true,
+      "params": {
+        "date": "2026-03-21"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/2147554070",
+      "ok": true,
+      "params": {
+        "fields": "id,amount,amountOutstanding,isClosed",
+        "invoiceDateFrom": "2020-01-01",
+        "invoiceDateTo": "2030-01-01"
+      }
+    }
+  ]
+}

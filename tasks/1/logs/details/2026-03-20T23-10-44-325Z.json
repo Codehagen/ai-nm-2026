@@ -1,0 +1,144 @@
+{
+  "timestamp": "2026-03-20T23:10:44.325Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice",
+  "prompt": "Create an invoice for the customer Windmill Ltd (org no. 994973150) with three product lines: System Development (6517) at 22950 NOK with 25% VAT, Maintenance (5339) at 8900 NOK with 15% VAT (food), and Consulting Hours (8246) at 10450 NOK with 0% VAT (exempt).",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 9,
+  "apiCalls": 9,
+  "apiErrors": 0,
+  "elapsedMs": 35648,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "isCustomer": true,
+        "organizationNumber": "994973150",
+        "name": "Windmill Ltd"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "6517",
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "5339",
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "8246"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/459993913",
+      "ok": true,
+      "body": {
+        "version": 0,
+        "bankAccountNumber": "86011117947",
+        "id": 459993913,
+        "name": "Bankinnskudd"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/product/84397325",
+      "ok": true,
+      "body": {
+        "id": 84397325,
+        "name": "Consulting Hours",
+        "vatType": {
+          "id": 5
+        },
+        "priceExcludingVatCurrency": 10450,
+        "version": 0
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "customer": {
+          "id": 108291504
+        },
+        "deliveryDate": "2026-03-21",
+        "orderDate": "2026-03-21",
+        "orderLines": [
+          {
+            "vatType": {
+              "id": 3
+            },
+            "count": 1,
+            "product": {
+              "id": 84397323
+            },
+            "unitPriceExcludingVatCurrency": 22950
+          },
+          {
+            "unitPriceExcludingVatCurrency": 8900,
+            "product": {
+              "id": 84397324
+            },
+            "count": 1,
+            "vatType": {
+              "id": 31
+            }
+          },
+          {
+            "product": {
+              "id": 84397325
+            },
+            "count": 1,
+            "vatType": {
+              "id": 5
+            },
+            "unitPriceExcludingVatCurrency": 10450
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDate": "2026-03-21",
+        "invoiceDueDate": "2026-04-04",
+        "orders": [
+          {
+            "id": 401977348
+          }
+        ]
+      }
+    }
+  ]
+}

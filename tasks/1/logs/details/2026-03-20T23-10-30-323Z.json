@@ -1,0 +1,93 @@
+{
+  "timestamp": "2026-03-20T23:10:30.323Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "project",
+  "prompt": "Crie o projeto \"Implementação Rio\" vinculado ao cliente Rio Azul Lda (org. nº 827937223). O gerente de projeto é Gonçalo Oliveira (goncalo.oliveira@example.org).",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 1,
+  "elapsedMs": 28457,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "name": "Avdeling",
+        "departmentNumber": "1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Rio Azul Lda",
+        "isCustomer": true,
+        "organizationNumber": "827937223"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "lastName": "Oliveira",
+        "email": "goncalo.oliveira@example.org",
+        "userType": "STANDARD",
+        "department": {
+          "id": 919729
+        },
+        "dateOfBirth": "1990-01-15",
+        "firstName": "Gonçalo"
+      },
+      "errorMessage": "Validering feilet. The email already exists. GET /employee?email=<the email> to find the existing employee and use their ID instead of creating a new one.",
+      "validationMessages": [
+        {
+          "field": "email",
+          "message": "Det finnes allerede en bruker med denne e-postadressen.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true,
+      "body": {
+        "name": "Implementação Rio",
+        "customer": {
+          "id": 108291479
+        },
+        "startDate": "2026-03-21",
+        "isInternal": false,
+        "projectManager": {
+          "id": 18215126
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "email": "goncalo.oliveira@example.org",
+        "fields": "id"
+      }
+    }
+  ]
+}

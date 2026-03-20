@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-03-20T23:07:27.057Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "product",
+  "prompt": "Créez le produit \"Jus de pomme\" avec le numéro de produit 3582. Le prix est de 33800 NOK hors TVA, avec le taux de TVA pour les denrées alimentaires de 15 %.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 0,
+  "elapsedMs": 13974,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "number": "3582",
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "priceExcludingVatCurrency": 33800,
+        "number": "3582",
+        "vatType": {
+          "id": 31
+        },
+        "name": "Jus de pomme"
+      }
+    }
+  ]
+}

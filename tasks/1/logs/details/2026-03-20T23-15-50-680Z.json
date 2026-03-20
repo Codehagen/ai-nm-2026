@@ -1,0 +1,93 @@
+{
+  "timestamp": "2026-03-20T23:15:50.680Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "project",
+  "prompt": "Opprett prosjektet \"Implementering Tindra\" knyttet til kunden Tindra AS (org.nr 886715536). Prosjektleder er Jonas Haugen (jonas.haugen@example.org).",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 1,
+  "elapsedMs": 31104,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "count": "1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "name": "Avdeling",
+        "departmentNumber": "1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Tindra AS",
+        "isCustomer": true,
+        "organizationNumber": "886715536"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "firstName": "Jonas",
+        "lastName": "Haugen",
+        "dateOfBirth": "1990-01-15",
+        "email": "jonas.haugen@example.org",
+        "userType": "STANDARD",
+        "department": {
+          "id": 920022
+        }
+      },
+      "errorMessage": "Validering feilet. The email already exists. GET /employee?email=<the email> to find the existing employee and use their ID instead of creating a new one.",
+      "validationMessages": [
+        {
+          "field": "email",
+          "message": "Det finnes allerede en bruker med denne e-postadressen.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true,
+      "body": {
+        "customer": {
+          "id": 108292300
+        },
+        "name": "Implementering Tindra",
+        "startDate": "2026-03-21",
+        "isInternal": false,
+        "projectManager": {
+          "id": 18219707
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "email": "jonas.haugen@example.org"
+      }
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "timestamp": "2026-03-20T23:06:28.570Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "voucher",
+  "prompt": "Erstellen Sie eine benutzerdefinierte Buchhaltungsdimension \"Kostsenter\" mit den Werten \"Markedsføring\" und \"Drift\". Buchen Sie dann einen Beleg auf Konto 6340 über 43650 NOK, verknüpft mit dem Dimensionswert \"Markedsføring\".",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 7,
+  "apiCalls": 7,
+  "apiErrors": 1,
+  "elapsedMs": 31557,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionName",
+      "ok": true,
+      "body": {
+        "dimensionName": "Kostsenter"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionValue",
+      "ok": true,
+      "body": {
+        "displayName": "Markedsføring",
+        "dimensionIndex": 1
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/accountingDimensionValue",
+      "ok": true,
+      "body": {
+        "displayName": "Drift",
+        "dimensionIndex": 1
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": false,
+      "status": 422,
+      "params": {
+        "sendToLedger": "true"
+      },
+      "body": {
+        "date": "2026-03-21",
+        "postings": [
+          {
+            "account": {
+              "number": 6340
+            },
+            "date": "2026-03-21",
+            "row": 1,
+            "freeAccountingDimension1": {
+              "id": 16789
+            },
+            "amountGrossCurrency": 43650,
+            "amountGross": 43650
+          },
+          {
+            "amountGrossCurrency": -43650,
+            "amountGross": -43650,
+            "account": {
+              "number": 1920
+            },
+            "date": "2026-03-21",
+            "row": 2
+          }
+        ],
+        "description": "Kostsenter Markedsføring"
+      },
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "postings.account.name",
+          "message": "Kan ikke være null.",
+          "path": "postings[0].account.name",
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "6340"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1920"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": true,
+      "params": {
+        "sendToLedger": "true"
+      },
+      "body": {
+        "description": "Kostsenter Markedsføring",
+        "postings": [
+          {
+            "freeAccountingDimension1": {
+              "id": 16789
+            },
+            "account": {
+              "id": 364284868
+            },
+            "row": 1,
+            "amountGross": 43650,
+            "amountGrossCurrency": 43650,
+            "date": "2026-03-21"
+          },
+          {
+            "amountGrossCurrency": -43650,
+            "row": 2,
+            "amountGross": -43650,
+            "account": {
+              "id": 364284611
+            },
+            "date": "2026-03-21"
+          }
+        ],
+        "date": "2026-03-21"
+      }
+    }
+  ]
+}

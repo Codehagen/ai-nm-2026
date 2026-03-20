@@ -1,0 +1,65 @@
+{
+  "timestamp": "2026-03-20T23:08:16.231Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice-payment",
+  "prompt": "Der Kunde Grünfeld GmbH (Org.-Nr. 857648307) hat eine offene Rechnung über 44550 NOK ohne MwSt. für \"Wartung\". Registrieren Sie die vollständige Zahlung dieser Rechnung.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 5,
+  "apiCalls": 5,
+  "apiErrors": 0,
+  "elapsedMs": 19845,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Grünfeld GmbH",
+        "isCustomer": true,
+        "organizationNumber": "857648307"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "name": "Wartung",
+        "vatType": {
+          "id": 3
+        },
+        "priceExcludingVatCurrency": 44550
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": true,
+      "params": {
+        "fields": "id,amount,amountIncVat,customer,isClosed",
+        "invoiceDateTo": "2030-01-01",
+        "invoiceDateFrom": "2020-01-01"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147546289/:payment",
+      "ok": true,
+      "params": {
+        "paymentTypeId": "27174975",
+        "paidAmount": "55687.5",
+        "paymentDate": "2026-03-21"
+      }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T23:10:00.286Z",
+  "prompt": "Opprett og send ein faktura til kunden Sjøbris AS (org.nr 847830840) på 7350 kr eksklusiv MVA. Fakturaen gjeld Nettverksteneste.",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

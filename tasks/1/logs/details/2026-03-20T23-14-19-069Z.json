@@ -1,0 +1,65 @@
+{
+  "timestamp": "2026-03-20T23:14:19.069Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice-payment",
+  "prompt": "The customer Blueshore Ltd (org no. 937709293) has an outstanding invoice for 5900 NOK excluding VAT for \"Consulting Hours\". Register full payment on this invoice.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 5,
+  "apiCalls": 5,
+  "apiErrors": 0,
+  "elapsedMs": 20121,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "organizationNumber": "937709293",
+        "isCustomer": true,
+        "name": "Blueshore Ltd"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "name": "Consulting Hours",
+        "vatType": {
+          "id": 3
+        },
+        "priceExcludingVatCurrency": 5900
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": true,
+      "params": {
+        "invoiceDateFrom": "2020-01-01",
+        "fields": "id,amount,amountRoundoff,customer,isClosed",
+        "invoiceDateTo": "2030-01-01"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147548803/:payment",
+      "ok": true,
+      "params": {
+        "paymentTypeId": "27209618",
+        "paymentDate": "2026-03-21",
+        "paidAmount": "7375"
+      }
+    }
+  ]
+}

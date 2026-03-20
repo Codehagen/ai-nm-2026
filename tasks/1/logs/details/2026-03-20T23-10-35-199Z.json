@@ -1,0 +1,92 @@
+{
+  "timestamp": "2026-03-20T23:10:35.199Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice",
+  "prompt": "Opprett og send ein faktura til kunden Sjøbris AS (org.nr 847830840) på 7350 kr eksklusiv MVA. Fakturaen gjeld Nettverksteneste.",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 0,
+  "elapsedMs": 34913,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "organizationNumber": "847830840",
+        "name": "Sjøbris AS",
+        "isCustomer": true
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "priceExcludingVatCurrency": 7350,
+        "name": "Nettverksteneste",
+        "vatType": {
+          "id": 3
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "deliveryDate": "2026-03-21",
+        "customer": {
+          "id": 108291474
+        },
+        "orderLines": [
+          {
+            "product": {
+              "id": 84397329
+            },
+            "unitPriceExcludingVatCurrency": 7350,
+            "count": 1,
+            "vatType": {
+              "id": 3
+            }
+          }
+        ],
+        "orderDate": "2026-03-21"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-04-04",
+        "orders": [
+          {
+            "id": 401977339
+          }
+        ],
+        "invoiceDate": "2026-03-21"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147554191/:send",
+      "ok": true,
+      "params": {
+        "sendType": "EMAIL"
+      }
+    }
+  ]
+}

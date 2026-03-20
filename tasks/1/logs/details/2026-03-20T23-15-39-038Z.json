@@ -1,0 +1,85 @@
+{
+  "timestamp": "2026-03-20T23:15:39.038Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "project",
+  "prompt": "Legen Sie einen Festpreis von 292550 NOK für das Projekt \"E-Commerce-Entwicklung\" für Brückentor GmbH (Org.-Nr. 800357314) fest. Projektleiter ist Felix Fischer (felix.fischer@example.org). Stellen Sie dem Kunden 33 % des Festpreises als Meilensteinzahlung in Rechnung.",
+  "filesCount": 0,
+  "steps": 3,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 6,
+  "elapsedMs": 14217,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      },
+      "errorMessage": "GET /employee → 403"
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "name": "Avdeling",
+        "departmentNumber": "1"
+      },
+      "errorMessage": "POST /department → 403"
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "name": "Brückentor GmbH",
+        "organizationNumber": "800357314",
+        "isCustomer": true
+      },
+      "errorMessage": "POST /customer → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      },
+      "errorMessage": "GET /ledger/account → 403"
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "name": "Milestone payment",
+        "priceExcludingVatCurrency": 96541.5,
+        "vatType": {
+          "id": 3
+        }
+      },
+      "errorMessage": "POST /product → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id",
+        "count": "1"
+      },
+      "errorMessage": "GET /employee → 403"
+    }
+  ]
+}

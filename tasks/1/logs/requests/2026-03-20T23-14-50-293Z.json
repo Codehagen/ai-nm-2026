@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T23:14:50.293Z",
+  "prompt": "Crea el producto \"Mantenimiento\" con número de producto 4508. El precio es 41500 NOK sin IVA, utilizando la tasa estándar del 25 %.",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

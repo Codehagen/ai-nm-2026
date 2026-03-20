@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-20T23:08:01.637Z",
+  "prompt": "The payment from Brightstone Ltd (org no. 993125393) for the invoice \"Data Advisory\" (27100 NOK excl. VAT) was returned by the bank. Reverse the payment so the invoice shows the outstanding amount again.",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}
