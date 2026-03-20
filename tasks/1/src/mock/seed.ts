@@ -81,6 +81,33 @@ export function seedStore(store: EntityStore): void {
     parentType: null,
   });
 
+  store.seed("vatType", 5, {
+    number: 5,
+    name: "Ingen utgående avgift (innenfor mva-loven)",
+    displayName: "Ingen utgående avgift (innenfor mva-loven)",
+    percentage: 0.0,
+    deductionPercentage: 100.0,
+    parentType: null,
+  });
+
+  store.seed("vatType", 31, {
+    number: 31,
+    name: "Utgående avgift, middels sats",
+    displayName: "Utgående avgift, middels sats",
+    percentage: 15.0,
+    deductionPercentage: 100.0,
+    parentType: null,
+  });
+
+  store.seed("vatType", 32, {
+    number: 32,
+    name: "Utgående avgift, lav sats",
+    displayName: "Utgående avgift, lav sats",
+    percentage: 12.0,
+    deductionPercentage: 100.0,
+    parentType: null,
+  });
+
   // Payment types (matches real sandbox: "Kontant" and "Betalt til bank")
   store.seed("paymentType", 30000001, {
     description: "Kontant",

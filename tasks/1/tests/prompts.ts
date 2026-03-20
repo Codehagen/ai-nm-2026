@@ -516,6 +516,74 @@ export const BENCHMARK_PROMPTS: BenchmarkPrompt[] = [
     ],
   },
 
+  // ─── Tier 2: Multi-line invoice with different VAT rates ─────────
+
+  {
+    id: "t2-invoice-multiline-es",
+    category: "invoice-multiline",
+    tier: 2,
+    lang: "es",
+    prompt: 'Crea una factura para el cliente Río Verde SL (org. nº 863477905) con tres líneas de producto: Desarrollo de sistemas (2376) a 12000 NOK con 25 % IVA, Asesoría de datos (1496) a 13450 NOK con 15 % IVA (alimentos), y Mantenimiento (4543) a 12050 NOK con 0 % IVA (exento).',
+    optimalCalls: 8, // GET ledger + PUT ledger + POST customer + POST product x3 + POST order + POST invoice
+    verify: [
+      { entity: "customer", find: { field: "name", value: "Río Verde SL" } },
+      { entity: "product", find: { field: "name", value: "Desarrollo de sistemas" } },
+      { entity: "product", find: { field: "name", value: "Asesoría de datos" } },
+      { entity: "product", find: { field: "name", value: "Mantenimiento" } },
+      { entity: "invoice", find: "any" },
+    ],
+  },
+
+  {
+    id: "t2-invoice-multiline-nb",
+    category: "invoice-multiline",
+    tier: 2,
+    lang: "nb",
+    prompt: 'Opprett en faktura for kunde Fjelltopp AS (org.nr 776655443) med tre produktlinjer: Konsulenttjenester til 8000 NOK eks. mva (25% mva), Catering til 5000 NOK eks. mva (15% mva næringsmiddel), og Frakt til 2000 NOK eks. mva (0% mva avgiftsfri).',
+    optimalCalls: 8,
+    verify: [
+      { entity: "customer", find: { field: "name", value: "Fjelltopp AS" } },
+      { entity: "product", find: { field: "name", value: "Konsulenttjenester" } },
+      { entity: "product", find: { field: "name", value: "Catering" } },
+      { entity: "product", find: { field: "name", value: "Frakt" } },
+      { entity: "invoice", find: "any" },
+    ],
+  },
+
+  // ─── Tier 2: Order → Invoice → Payment (German, product numbers) ─
+
+  {
+    id: "t2-order-invoice-payment-de",
+    category: "order-invoice-payment",
+    tier: 2,
+    lang: "de",
+    prompt: 'Erstellen Sie einen Auftrag für den Kunden Sonnental GmbH (Org.-Nr. 904562262) mit den Produkten Netzwerkdienst (5874) zu 9150 NOK und Wartung (8734) zu 22150 NOK. Wandeln Sie den Auftrag in eine Rechnung um und registrieren Sie die vollständige Zahlung.',
+    optimalCalls: 8, // POST customer + POST product x2 + POST order + GET ledger + PUT ledger + POST invoice + GET paymentType + PUT /:payment = but ledger might be set = 8
+    verify: [
+      { entity: "customer", find: { field: "name", value: "Sonnental GmbH" }, expectFields: { organizationNumber: "904562262" } },
+      { entity: "product", find: { field: "name", value: "Netzwerkdienst" } },
+      { entity: "product", find: { field: "name", value: "Wartung" } },
+      { entity: "invoice", find: "any", expectFields: { isPaid: true } },
+    ],
+  },
+
+  // ─── Tier 2/3: Project with fixed price + milestone invoice ──────
+
+  {
+    id: "t2-project-fixedprice-en",
+    category: "project-fixed-price-invoice",
+    tier: 2,
+    lang: "en",
+    prompt: 'Set a fixed price of 135300 NOK on the project "CRM Integration" for Greenfield Ltd (org no. 989358626). The project manager is Daniel Johnson (daniel.johnson@example.org). Invoice the customer for 33% of the fixed price as a milestone payment.',
+    optimalCalls: 9, // POST dept + POST employee + GET employee(admin) + POST customer + POST project + POST product + GET ledger + PUT ledger + POST order + POST invoice = 10, but can skip ledger if already set
+    verify: [
+      { entity: "project", find: { field: "name", value: "CRM Integration" } },
+      { entity: "customer", find: { field: "name", value: "Greenfield Ltd" }, expectFields: { organizationNumber: "989358626" } },
+      { entity: "employee", find: { field: "firstName", value: "Daniel" }, expectFields: { lastName: "Johnson" } },
+      { entity: "invoice", find: "any" },
+    ],
+  },
+
   // ─── Multi-language: same task, different languages ──────────────
 
   {

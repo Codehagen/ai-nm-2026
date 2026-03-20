@@ -1,0 +1,59 @@
+# Changelog — Task 1 (Tripletex Agent)
+
+Each entry tracks a system prompt or mock fix, what caused it, and the benchmark result after.
+
+## 2026-03-20
+
+### Fix: Order → invoice → payment with product numbers (competition submission — 0/8 score)
+**Trigger**: Competition task — German order with 2 products (with product numbers in parens), convert to invoice, register payment. 12 calls, 4 errors, 0/8 checks.
+**Root cause**: Agent failed `POST /product` 4 times — likely missing `vatType` field (required by real API). Product numbers in parentheses confused the agent.
+**Fix (system-prompt.ts)**:
+- Product: "ALWAYS include vatType — without it you get 422. Default to id 3 (25%)"
+- Added: "numbers in parentheses are product numbers for scoring — include as `number` field"
+**Benchmark**: Added `t2-order-invoice-payment-de`. Verified on real sandbox: 8 calls, 0 errors.
+
+### Fix: Multi-line invoice with multiple VAT rates (competition submission — 0/8 score)
+**Trigger**: Competition task — Spanish multi-line invoice with 25%, 15% (food), 0% (exempt) VAT. 19 calls, 9 errors, 0/6 checks passed.
+**Root cause**: System prompt only listed VAT type id 3 (25%) and id 6 (0%). Missing id 31 (15% food), id 32 (12%), id 5 (0% within VAT law). Agent guessed wrong IDs → products with wrong VAT → order line errors → invoice with wrong amounts.
+**Fix (system-prompt.ts)**:
+- Added complete VAT type ID table: 3=25%, 31=15%(food), 32=12%, 5=0%(exempt within), 6=0%(exempt outside)
+- Added "Do NOT guess VAT type IDs" instruction
+- Removed `priceIncludingVatCurrency` from product example (Tripletex calculates it)
+**Fix (mock/seed.ts)**: Added VAT types 5, 31, 32 to seed data
+**Benchmark**: Added `t2-invoice-multiline-es` and `t2-invoice-multiline-nb`. Result: 33/33 pass, 97% efficiency, 0 errors.
+
+### Fix: Project fixed price + milestone invoice (competition submission)
+**Trigger**: Live competition submission — 14 calls, 4 errors on "Set a fixed price on project, invoice 33%"
+**Errors**:
+- `POST /employee → 422` — missing `dateOfBirth` or `email`
+- `POST /project → 422` — missing `startDate`
+- `PUT /ledger/account → 422` (x2) — missing `name` field, version mismatch
+**Fix (system-prompt.ts)**:
+- Employee: ALWAYS include `dateOfBirth` (default "1990-01-15") and `email` (default firstname.lastname@example.org)
+- Project: Added "CRITICAL: startDate is REQUIRED" emphasis
+- Ledger account: Include `name` in PUT body, skip PUT if `bankAccountNumber` already set, re-GET on 422
+**Benchmark**: Added `t2-project-fixedprice-en`. Result: 31/31 pass, 99% efficiency, 0 errors.
+
+### Fix: Credit note — invoice GET requires date range
+**Trigger**: Benchmark run — `GET /invoice → 422` (missing `invoiceDateFrom`/`invoiceDateTo`)
+**Fix (system-prompt.ts)**: Added required date range params to invoice GET instructions
+**Benchmark**: 0 errors on `t2-credit-note-nb` (was 1 error, 3 calls → 0 errors, 2 calls)
+
+### Fix: Employee admin — wrong entitlement method
+**Trigger**: Benchmark run — `POST /employee/entitlement/:grantEntitlementsByTemplate → 404` (should be PUT)
+**Fix (system-prompt.ts)**: Added exact 3-step tested recipe: POST dept + POST employee + PUT entitlement (not POST/GET)
+**Benchmark**: 0 errors on `t1-employee-admin-nb` (was 1 error, 5 calls → 0 errors, 3 calls)
+
+### Mock conformance fixes (verified against real sandbox)
+**Trigger**: Running `SANDBOX_TOKEN=xxx pnpm test:conformance` against real Tripletex
+**Fixes (mock)**:
+- Error codes: 18000 (validation), 8000 (conflict), 12000 (not found) — was all 15000
+- Error shape: Added `developerMessage: null`, `link`, `requestId`, `path`, `rootId` fields
+- Validation messages: Norwegian text "Kan ikke være null." — was English "is required"
+- Payment types: "Kontant" + "Betalt til bank" — was "Bankoverføring"
+- Invoice/order GET: requires date range params (`invoiceDateFrom`/`invoiceDateTo`)
+- Employee DELETE: not supported (real API returns 403)
+- `fields` param: only returns requested keys, no auto-include of id/version
+- `versionDigest`: matches real API string
+- Ledger 1920 name: "Bankinnskudd" — was "Bankkonto"
+**Benchmark**: 44 unit tests, 8 conformance tests, all passing
