@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Autoresearch Command Center</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0e14;
+    color: #c9d1d9;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px;
+    background: #0d1117; border-bottom: 1px solid #1b2028;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar h1 { color: #e6edf3; font-size: 14px; font-weight: 600; letter-spacing: 0.5px; }
+  .live-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 10px;
+    background: rgba(63,185,80,0.08); border: 1px solid rgba(63,185,80,0.15);
+  }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #484f58; }
+  .live-dot.active { background: #3fb950; box-shadow: 0 0 5px rgba(63,185,80,0.6); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+  .topbar-right { font-size: 11px; color: #484f58; }
+
+  /* Task tabs */
+  .task-tabs {
+    display: flex; gap: 0; background: #0d1117; border-bottom: 1px solid #1b2028;
+    padding: 0 20px;
+  }
+  .task-tab {
+    padding: 8px 16px; font-size: 12px; font-weight: 500; color: #484f58;
+    border-bottom: 2px solid transparent; cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .task-tab:hover { color: #8b949e; }
+  .task-tab.active { color: #e6edf3; border-bottom-color: #3fb950; }
+
+  .main {
+    max-width: 1400px; margin: 0 auto;
+    padding: 16px 20px; display: flex; flex-direction: column; gap: 16px;
+  }
+
+  .section {
+    background: #0d1117; border: 1px solid #1b2028;
+    border-radius: 10px; overflow: hidden;
+  }
+  .section-header {
+    padding: 10px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #1b2028;
+  }
+  .section-title {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.7px; color: #484f58;
+  }
+  .section-meta { font-size: 11px; color: #30363d; }
+
+  .hero {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 1px; background: #1b2028; border-radius: 10px; overflow: hidden;
+  }
+  .hero-stat { background: #0d1117; padding: 16px 20px; }
+  .hero-stat.primary { padding: 16px 24px; }
+  .hero-label { font-size: 10px; color: #484f58; text-transform: uppercase; letter-spacing: 0.7px; font-weight: 600; }
+  .hero-value { font-size: 32px; font-weight: 700; color: #e6edf3; margin-top: 2px; font-variant-numeric: tabular-nums; letter-spacing: -1px; line-height: 1.1; }
+  .hero-value.green { color: #3fb950; }
+  .hero-value.sm { font-size: 22px; letter-spacing: -0.5px; }
+  .hero-sub { font-size: 11px; color: #30363d; margin-top: 3px; }
+
+  .meters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .meter {
+    background: #0d1117; border: 1px solid #1b2028; border-radius: 10px;
+    padding: 14px 16px; display: flex; align-items: center; gap: 14px;
+  }
+  .meter-ring { width: 44px; height: 44px; flex-shrink: 0; }
+  .meter-ring circle { fill: none; stroke-width: 3.5; }
+  .meter-ring .bg { stroke: #161b22; }
+  .meter-ring .fg { stroke-linecap: round; transition: stroke-dashoffset 0.6s; }
+  .meter-info { flex: 1; min-width: 0; }
+  .meter-val { font-size: 18px; font-weight: 700; color: #e6edf3; font-variant-numeric: tabular-nums; }
+  .meter-label { font-size: 10px; color: #484f58; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px; }
+
+  .live-row { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; }
+  @media (max-width: 960px) { .live-row { grid-template-columns: 1fr; } }
+
+  .terminal {
+    padding: 10px 14px;
+    font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+    font-size: 11px; line-height: 1.55;
+    white-space: pre-wrap; word-break: break-all;
+    color: #6e7681; height: 240px; overflow-y: auto;
+  }
+  .terminal .v { color: #3fb950; font-weight: 600; }
+  .terminal .s { color: #58a6ff; }
+  .terminal .e { color: #f85149; }
+  .terminal .w { color: #d29922; }
+  .terminal-empty { color: #21262d; font-style: italic; }
+
+  .checkpoint-body {
+    padding: 10px 14px; font-size: 12px; line-height: 1.6;
+    white-space: pre-wrap; color: #8b949e;
+    height: 240px; overflow-y: auto;
+  }
+  .checkpoint-empty { color: #21262d; font-style: italic; }
+
+  .chart-wrap { padding: 12px 16px 6px; height: 260px; }
+
+  .table-scroll { max-height: 280px; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; padding: 7px 14px;
+    font-size: 10px; color: #484f58;
+    text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600;
+    border-bottom: 1px solid #1b2028;
+    position: sticky; top: 0; background: #0d1117; z-index: 1;
+  }
+  td { padding: 7px 14px; font-size: 12.5px; border-bottom: 1px solid #131820; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(136,198,255,0.02); }
+  .commit { font-family: 'SF Mono', Consolas, monospace; font-size: 11.5px; color: #58a6ff; }
+  .badge { display: inline-block; padding: 1px 7px; border-radius: 8px; font-size: 10.5px; font-weight: 600; }
+  .badge-keep { background: rgba(63,185,80,0.1); color: #3fb950; }
+  .badge-discard { background: rgba(248,81,73,0.1); color: #f85149; }
+  .badge-crash { background: rgba(210,153,34,0.1); color: #d29922; }
+  .best-row td { background: rgba(63,185,80,0.03); }
+  .rej { color: #30363d; font-size: 11px; }
+  .rej.on { color: #f85149; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>AUTORESEARCH</h1>
+    <div class="live-pill">
+      <span class="live-dot" id="live-dot"></span>
+      <span id="live-status">...</span>
+    </div>
+  </div>
+  <div class="topbar-right" id="subtitle"></div>
+</div>
+
+<div class="task-tabs" id="task-tabs"></div>
+
+<div class="main">
+  <div class="hero" id="hero"></div>
+  <div class="meters" id="meters"></div>
+  <div class="live-row">
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Live Output</span>
+        <span class="section-meta" id="log-size"></span>
+      </div>
+      <div class="terminal" id="live-terminal">
+        <span class="terminal-empty">Waiting for run.log...</span>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Checkpoint Review</span>
+        <span class="section-meta" id="checkpoint-time"></span>
+      </div>
+      <div class="checkpoint-body" id="checkpoint-content">
+        <span class="checkpoint-empty">No checkpoint yet (every 10 experiments)</span>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title" id="chart-title">Metric Progression</span>
+    </div>
+    <div class="chart-wrap"><canvas id="chart"></canvas></div>
+  </div>
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Experiment Log</span>
+      <span class="section-meta" id="table-count"></span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Commit</th><th id="th-metric">val_metric</th><th>Mem</th><th>Diff</th><th>Status</th><th>Description</th><th>Reject</th>
+        </tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const SC = { keep:'#3fb950', discard:'#f85149', crash:'#d29922' };
+let chart = null;
+
+// Task discovery and selection
+const KNOWN_TASKS = ['astar-island', 'cv', 'ml', 'nlp'];
+let discoveredTasks = [];
+let activeTask = null;
+
+function taskBase() { return `tasks/${activeTask}/`; }
+
+async function discoverTasks() {
+  const available = [];
+  for (const t of KNOWN_TASKS) {
+    try {
+      const r = await fetch(`tasks/${t}/results.tsv?t=${Date.now()}`);
+      if (r.ok) available.push(t);
+    } catch(e) {
+      // Also check if the directory exists (task with no results yet)
+      try { const r2 = await fetch(`tasks/${t}/task.md?t=${Date.now()}`); if(r2.ok) available.push(t); } catch(e2){}
+    }
+  }
+  if (!available.length) available.push('lm');
+  discoveredTasks = available;
+  return available;
+}
+
+function renderTabs() {
+  document.getElementById('task-tabs').innerHTML = discoveredTasks.map(t =>
+    `<div class="task-tab ${t===activeTask?'active':''}" onclick="switchTask('${t}')">${t}</div>`
+  ).join('');
+}
+
+function switchTask(t) {
+  if (t === activeTask) return;
+  activeTask = t;
+  // Reset all state for the new task
+  if (chart) { chart.destroy(); chart = null; }
+  prevLog = '';
+  idleAt = Date.now();
+  metricName = 'val_metric';
+  metricDir = 'lower';
+  // Clear panels immediately so stale data doesn't linger
+  document.getElementById('hero').innerHTML = '';
+  document.getElementById('meters').innerHTML = '';
+  document.getElementById('table-body').innerHTML = '';
+  document.getElementById('live-terminal').innerHTML = '<span class="terminal-empty">Loading...</span>';
+  document.getElementById('checkpoint-content').innerHTML = '<span class="checkpoint-empty">Loading...</span>';
+  renderTabs();
+  fetchAll();
+}
+
+// Utilities
+function ring(pct, color) {
+  const r=18, c=2*Math.PI*r, d=c*(1-Math.max(0,Math.min(1,pct)));
+  return `<svg class="meter-ring" viewBox="0 0 44 44">
+    <circle class="bg" cx="22" cy="22" r="${r}"/>
+    <circle class="fg" cx="22" cy="22" r="${r}" stroke="${color}"
+      stroke-dasharray="${c}" stroke-dashoffset="${d}" transform="rotate(-90 22 22)"/>
+  </svg>`;
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// Chart annotation plugin
+const annotationPlugin = {
+  id:'bestLabels',
+  afterDatasetsDraw(ch) {
+    const meta=ch.getDatasetMeta(0); const ctx=ch.ctx;
+    const ann=ch._bestAnnotations||[];
+    ctx.save();
+    ann.forEach(a=>{
+      const pt=meta.data[a.idx]; if(!pt)return;
+      const x=pt.x, y=pt.y;
+      let label=a.desc.length>24?a.desc.slice(0,22)+'\u2026':a.desc;
+      ctx.beginPath(); ctx.strokeStyle='rgba(88,166,255,0.25)';
+      ctx.lineWidth=1; ctx.setLineDash([2,2]);
+      ctx.moveTo(x,y-8); ctx.lineTo(x,y-22); ctx.stroke(); ctx.setLineDash([]);
+      ctx.font='500 9.5px -apple-system,BlinkMacSystemFont,sans-serif';
+      const tw=ctx.measureText(label).width;
+      const px=5,bh=15;
+      let lx=x-(tw+px*2)/2;
+      if(lx<ch.chartArea.left)lx=ch.chartArea.left+2;
+      if(lx+tw+px*2>ch.chartArea.right)lx=ch.chartArea.right-tw-px*2-2;
+      const ly=y-22-bh;
+      ctx.fillStyle='rgba(13,17,23,0.9)';
+      ctx.beginPath(); ctx.roundRect(lx,ly,tw+px*2,bh,4); ctx.fill();
+      ctx.strokeStyle='rgba(88,166,255,0.2)'; ctx.lineWidth=0.5; ctx.stroke();
+      ctx.fillStyle='rgba(88,166,255,0.8)'; ctx.textBaseline='middle';
+      ctx.fillText(label,lx+px,ly+bh/2);
+    });
+    ctx.restore();
+  }
+};
+Chart.register(annotationPlugin);
+
+// Read task.md to get metric info
+let metricName = 'val_metric', metricDir = 'lower';
+async function loadTaskMeta() {
+  try {
+    const r = await fetch(taskBase()+'task.md?t='+Date.now());
+    if (!r.ok) return;
+    const t = await r.text();
+    const nm = t.match(/metric_name[:\s]+(\S+)/); if(nm) metricName=nm[1];
+    const dr = t.match(/metric_direction[:\s]+(\S+)/); if(dr) metricDir=dr[1];
+  } catch(e) {}
+}
+
+function isBetter(a,b) { return metricDir==='lower' ? a<b : a>b; }
+function bestVal(rows) { return metricDir==='lower' ? Math.min(...rows.map(r=>r.val)) : Math.max(...rows.map(r=>r.val)); }
+
+// Data
+async function fetchAndRender() {
+  try {
+    const resp = await fetch(taskBase()+'results.tsv?t='+Date.now());
+    if (!resp.ok) {
+      document.getElementById('hero').innerHTML = `<div class="hero-stat primary"><div class="hero-label">No results yet</div><div class="hero-value" style="font-size:18px;color:#484f58">Waiting for first experiment...</div></div>`;
+      document.getElementById('table-body').innerHTML = '';
+      document.getElementById('table-count').textContent = '0 rows';
+      document.getElementById('subtitle').textContent = `${activeTask} \xb7 no experiments \xb7 ${new Date().toLocaleTimeString()}`;
+      return;
+    }
+    const text = await resp.text();
+    const lines = text.trim().split('\n');
+    if (lines.length<2) return;
+    const rows = lines.slice(1).filter(l=>l.trim()).map((l,i)=>{
+      const c=l.split('\t'), n=c.length>=7;
+      return { num:i+1, commit:(c[0]||'').trim(), val:parseFloat(c[1]),
+        memory_gb:parseFloat(c[2]), diff_lines:n?parseInt(c[3])||0:null,
+        status:(c[n?4:3]||'').trim().toLowerCase(),
+        description:(c[n?5:4]||'').trim(),
+        reject_reason:n?(c[6]||'-').trim():'-' };
+    });
+    document.getElementById('th-metric').textContent = metricName;
+    document.getElementById('chart-title').textContent = metricName + ' Progression';
+    renderHero(rows); renderMeters(rows); renderChart(rows); renderTable(rows);
+    document.getElementById('subtitle').textContent = `${activeTask} \xb7 ${rows.length} experiments \xb7 ${new Date().toLocaleTimeString()}`;
+  } catch(e){}
+}
+
+function renderHero(rows) {
+  const best=bestVal(rows), bl=rows[0]?.val||best;
+  const imp=Math.abs((bl-best)/bl*100).toFixed(1);
+  const keeps=rows.filter(r=>r.status==='keep').length;
+  let streak=0; for(let i=rows.length-1;i>=0;i--){if(rows[i].status==='keep')streak++;else break;}
+  const arrow = metricDir==='lower' ? '\u2193' : '\u2191';
+  document.getElementById('hero').innerHTML = `
+    <div class="hero-stat primary">
+      <div class="hero-label">Best ${metricName}</div>
+      <div class="hero-value green">${best.toFixed(6)}</div>
+      <div class="hero-sub">${arrow}${imp}% from baseline ${bl.toFixed(4)}</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-label">Experiments</div>
+      <div class="hero-value sm">${rows.length}</div>
+      <div class="hero-sub">${keeps} kept, ${rows.length-keeps} discarded</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-label">Keep Streak</div>
+      <div class="hero-value sm ${streak>=3?'green':''}">${streak}</div>
+      <div class="hero-sub">consecutive</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-label">Latest</div>
+      <div class="hero-value sm">${rows[rows.length-1].val.toFixed(4)}</div>
+      <div class="hero-sub">${rows[rows.length-1].description.slice(0,30)}</div>
+    </div>`;
+}
+
+function renderMeters(rows) {
+  const last10=rows.slice(-10);
+  const l10k=last10.filter(r=>r.status==='keep').length;
+  const acceptPct=l10k/last10.length;
+  const diffs=last10.filter(r=>r.diff_lines!==null);
+  const avgDiff=diffs.length?diffs.reduce((s,r)=>s+r.diff_lines,0)/diffs.length:0;
+  const memBase=rows[0]?.memory_gb||1;
+  const memNow=rows[rows.length-1]?.memory_gb||memBase;
+  const memPct=Math.min(1,memNow/(memBase*1.3));
+  const aC=acceptPct<0.3?'#f85149':acceptPct<0.5?'#d29922':'#3fb950';
+  const dC=avgDiff>15?'#f85149':avgDiff>8?'#d29922':'#3fb950';
+  const mC=memPct>0.9?'#f85149':memPct>0.7?'#d29922':'#3fb950';
+  document.getElementById('meters').innerHTML = `
+    <div class="meter">${ring(acceptPct,aC)}<div class="meter-info"><div class="meter-val">${(acceptPct*100).toFixed(0)}%</div><div class="meter-label">Accept Rate (last 10)</div></div></div>
+    <div class="meter">${ring(Math.min(1,avgDiff/20),dC)}<div class="meter-info"><div class="meter-val">${avgDiff.toFixed(1)}</div><div class="meter-label">Avg Diff Lines (last 10)</div></div></div>
+    <div class="meter">${ring(memPct,mC)}<div class="meter-info"><div class="meter-val">${memNow.toFixed(1)} GB</div><div class="meter-label">Memory (${(memPct*100).toFixed(0)}% of cap)</div></div></div>`;
+}
+
+function renderChart(rows) {
+  const labels=rows.map(r=>r.num);
+  const pc=rows.map(r=>SC[r.status]||'#8b949e');
+  const bsf=[]; let m=metricDir==='lower'?Infinity:-Infinity;
+  const annotations=[];
+  for(let i=0;i<rows.length;i++){
+    if(isBetter(rows[i].val,m)){m=rows[i].val;annotations.push({idx:i,desc:rows[i].description,val:m});}
+    bsf.push(m);
+  }
+  const kl=rows.map(r=>r.status==='keep'?r.val:null);
+  const ds=[
+    {label:metricName,data:rows.map(r=>r.val),pointBackgroundColor:pc,pointBorderColor:pc,pointRadius:5,pointHoverRadius:8,showLine:false,order:1},
+    {label:'Keep trajectory',data:kl,borderColor:'rgba(63,185,80,0.3)',borderWidth:1.5,pointRadius:0,spanGaps:true,order:2},
+    {label:'Best so far',data:bsf,borderColor:'rgba(88,166,255,0.35)',borderWidth:1.5,borderDash:[4,3],pointRadius:0,stepped:'after',fill:false,order:3},
+    {label:'Memory (GB)',data:rows.map(r=>r.memory_gb),borderColor:'rgba(139,148,158,0.15)',borderWidth:1,pointRadius:0,yAxisID:'y2',borderDash:[2,2],order:4}
+  ];
+  const cfg={type:'line',data:{labels,datasets:ds},options:{
+    responsive:true,maintainAspectRatio:false,
+    layout:{padding:{top:30}},
+    interaction:{mode:'index',intersect:false},
+    plugins:{
+      legend:{labels:{color:'#484f58',usePointStyle:true,pointStyle:'circle',padding:16,font:{size:10}}},
+      tooltip:{
+        backgroundColor:'#161b22',titleColor:'#e6edf3',bodyColor:'#c9d1d9',
+        borderColor:'#1b2028',borderWidth:1,padding:10,titleFont:{size:11},bodyFont:{size:10},
+        callbacks:{
+          title:i=>{const r=rows[i[0].dataIndex];return`#${r.num} \u2014 ${r.status}`;},
+          afterTitle:i=>{const r=rows[i[0].dataIndex];return`${r.commit} \xb7 ${r.description}`;},
+          label:i=>{
+            if(i.datasetIndex===0)return`${metricName}: ${i.raw.toFixed(6)}`;
+            if(i.datasetIndex===2)return`best: ${i.raw.toFixed(6)}`;
+            if(i.datasetIndex===3)return`mem: ${i.raw} GB`;
+            return null;
+          }
+        }
+      }
+    },
+    scales:{
+      x:{ticks:{color:'#21262d',font:{size:10}},grid:{color:'#131820'}},
+      y:{title:{display:true,text:metricName,color:'#30363d',font:{size:10}},ticks:{color:'#30363d',font:{size:10}},grid:{color:'#131820'}},
+      y2:{position:'right',title:{display:true,text:'Memory',color:'#21262d',font:{size:10}},ticks:{color:'#21262d',font:{size:10}},grid:{drawOnChartArea:false}}
+    }
+  }};
+  if(chart){chart._bestAnnotations=annotations;chart.data=cfg.data;chart.options=cfg.options;chart.update();}
+  else{chart=new Chart(document.getElementById('chart').getContext('2d'),cfg);chart._bestAnnotations=annotations;}
+}
+
+function renderTable(rows) {
+  const best=bestVal(rows);
+  document.getElementById('table-count').textContent=rows.length+' rows';
+  document.getElementById('table-body').innerHTML=rows.slice().reverse().map(r=>`
+    <tr class="${r.val===best?'best-row':''}">
+      <td>${r.num}</td><td class="commit">${r.commit}</td>
+      <td>${r.val.toFixed(6)}</td><td>${r.memory_gb} GB</td>
+      <td>${r.diff_lines!==null?r.diff_lines:'-'}</td>
+      <td><span class="badge badge-${r.status}">${r.status}</span></td>
+      <td>${r.description}</td>
+      <td class="rej ${r.reject_reason!=='-'?'on':''}">${r.reject_reason}</td>
+    </tr>`).join('');
+}
+
+// Live log
+let prevLog='',idleAt=Date.now();
+function hl(t){return t.split('\n').slice(-70).map(l=>{
+  if(/^(val_metric|val_bpb|training_seconds|total_seconds|peak_vram_mb|mfu_percent|total_tokens_M|num_steps|num_params_M|depth):/.test(l))return`<span class="v">${esc(l)}</span>`;
+  if(/^step\s|^Step\s|^---/.test(l))return`<span class="s">${esc(l)}</span>`;
+  if(/error|Error|Traceback|exception/i.test(l))return`<span class="e">${esc(l)}</span>`;
+  if(/warning|Warning|WARN/i.test(l))return`<span class="w">${esc(l)}</span>`;
+  return esc(l);}).join('\n');}
+
+async function fetchLog(){
+  const dot=document.getElementById('live-dot'),st=document.getElementById('live-status'),
+    term=document.getElementById('live-terminal'),sz=document.getElementById('log-size');
+  // Only fetch from the active task's directory
+  let text = null;
+  try { const r=await fetch(taskBase()+'run.log?t='+Date.now()); if(r.ok) text=await r.text(); } catch(e){}
+  if (text===null) {
+    dot.className='live-dot';st.textContent='No log';st.style.color='#484f58';
+    term.innerHTML='<span class="terminal-empty">No active run</span>';return;
+  }
+  sz.textContent=(text.length/1024).toFixed(1)+' KB';
+  if(text!==prevLog){prevLog=text;idleAt=Date.now();term.innerHTML=hl(text);term.scrollTop=term.scrollHeight;}
+  const active=(Date.now()-idleAt)<15000;
+  if(!text.length){dot.className='live-dot active';st.textContent='Starting';st.style.color='#d29922';}
+  else if(active){dot.className='live-dot active';st.textContent='Running';st.style.color='#3fb950';}
+  else{dot.className='live-dot';
+    if(/^val_metric:|^val_bpb:/m.test(text)){st.textContent='Completed';st.style.color='#58a6ff';}
+    else if(/error|Traceback/i.test(text)){st.textContent='Crashed';st.style.color='#f85149';}
+    else{st.textContent='Idle';st.style.color='#484f58';}}
+}
+
+async function fetchCheckpoint(){
+  const el=document.getElementById('checkpoint-content'),t=document.getElementById('checkpoint-time');
+  let text=null;
+  try{const r=await fetch(taskBase()+'checkpoint.md?t='+Date.now());if(r.ok)text=await r.text();}catch(e){
+  }
+  if(!text||!text.trim()){el.innerHTML='<span class="checkpoint-empty">No checkpoint yet (every 10 experiments)</span>';t.textContent='';return;}
+  el.textContent=text; t.textContent=new Date().toLocaleTimeString();
+}
+
+async function fetchAll(){
+  await loadTaskMeta();
+  fetchAndRender(); fetchLog(); fetchCheckpoint();
+}
+
+async function init() {
+  const tasks = await discoverTasks();
+  activeTask = tasks[0];
+  renderTabs(tasks);
+  fetchAll();
+  setInterval(fetchAndRender,30000);
+  setInterval(fetchLog,5000);
+  setInterval(fetchCheckpoint,30000);
+}
+init();
+</script>
+</body>
+</html>
