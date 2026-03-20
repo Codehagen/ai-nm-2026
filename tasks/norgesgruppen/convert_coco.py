@@ -88,9 +88,14 @@ def main():
     random.seed(args.seed)
     image_ids = sorted(anns_by_image.keys())
     random.shuffle(image_ids)
-    val_count = max(1, int(len(image_ids) * args.val_ratio))
-    val_ids = set(image_ids[:val_count])
-    train_ids = set(image_ids[val_count:])
+    val_count = int(len(image_ids) * args.val_ratio)
+    if args.val_ratio == 0:
+        val_ids = set()
+        train_ids = set(image_ids)
+    else:
+        val_count = max(1, val_count)
+        val_ids = set(image_ids[:val_count])
+        train_ids = set(image_ids[val_count:])
     print(f"Split: {len(train_ids)} train, {len(val_ids)} val")
 
     # Create output dirs
