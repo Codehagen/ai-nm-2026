@@ -874,8 +874,8 @@ def build_prediction(
                 model_avg /= m_count
                 ratio = obs_freq / np.maximum(model_avg, 1e-6)
                 # Per-class correction strengths (LORO validated across R1/R2/R4):
-                # Aggressive correction adapts better to varying expansion rates
-                cls_strength = np.array([0.7, 0.7, 0.7, 0.7, 0.7, 0.0])
+                # Strong for settlement/ruin (most variable), moderate for others
+                cls_strength = np.array([0.4, 0.9, 0.5, 0.9, 0.6, 0.0])
                 adj = 1.0 + cls_strength * (ratio - 1.0)
                 for y in range(h):
                     for x in range(w):
