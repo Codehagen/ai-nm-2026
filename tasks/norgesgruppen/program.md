@@ -6,12 +6,14 @@ Timeout: 300 seconds inference on NVIDIA L4
 
 ## Current best
 
-| Model | Size | Local Score | Live Score | Notes |
-|-------|------|-------------|------------|-------|
-| YOLOv8l + WBF (optimized) | 84 MB | 0.8831 | 0.8966 | 3-pass WBF, precision rounding |
-| YOLOv8l + WBF | 84 MB | 0.8823 | 0.8966 | 3-pass WBF (960, 1280, 1280+TTA) |
+| Model | Size | Local (pycocotools) | Live Score | Notes |
+|-------|------|---------------------|------------|-------|
+| YOLOv8l + WBF (latest) | 84 MB | 0.8669 | 0.9007 | 3-pass WBF, precision rounding |
+| YOLOv8l + WBF | 84 MB | 0.8635 | 0.8966 | 3-pass WBF (960, 1280, 1280+TTA) |
 | YOLOv8m (tweaked) | 299 MB | — | 0.6915 | Single-scale, tweaked conf/iou |
 | YOLOv8m (initial) | 299 MB | — | 0.6894 | First submission |
+
+**Note:** Local scores use pycocotools (per-category AP, matches competition). Live is consistently ~0.03-0.04 higher than local — likely due to different test set.
 
 ## Architecture
 
@@ -39,7 +41,7 @@ python test_local.py --quick
 # Eval on val split (inflated — model saw these during training)
 python test_local.py
 
-# Honest eval on held-out test split (best predictor of live score)
+# Honest eval on held-out test split (pycocotools, matches competition)
 python test_local.py --data data/yolo-3way
 
 # Test submission zip
