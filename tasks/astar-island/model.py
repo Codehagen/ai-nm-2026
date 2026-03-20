@@ -63,11 +63,13 @@ def _extract_cell_features(
             if getattr(s, "has_port", False):
                 port_pos.append((s.x, s.y))
 
-    # Pre-compute connected components of land (not ocean, not mountain)
+    # Pre-compute grid-level features
     grid_arr = np.array(initial_grid)
     land_mask = (grid_arr != 10) & (grid_arr != 5)
+    passable_mask = land_mask.astype(np.float64)
+
+    # Connected components
     labeled, _ = ndimage.label(land_mask)
-    # Compute per-component size and settlement count
     comp_sizes = {}
     comp_settl = {}
     for y_ in range(h):
@@ -77,6 +79,26 @@ def _extract_cell_features(
                 comp_sizes[comp] = comp_sizes.get(comp, 0) + 1
                 if initial_grid[y_][x_] in {1, 2}:
                     comp_settl[comp] = comp_settl.get(comp, 0) + 1
+
+    # BFS distance from all settlements over passable terrain
+    from collections import deque
+    bfs_dist = np.full((h, w), 99, dtype=np.int32)
+    q = deque()
+    for sx, sy in settl_pos:
+        if 0 <= sy < h and 0 <= sx < w:
+            bfs_dist[sy, sx] = 0
+            q.append((sy, sx))
+    while q:
+        cy, cx = q.popleft()
+        for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            ny, nx = cy + dy, cx + dx
+            if 0 <= ny < h and 0 <= nx < w and land_mask[ny, nx] and bfs_dist[ny, nx] > bfs_dist[cy, cx] + 1:
+                bfs_dist[ny, nx] = bfs_dist[cy, cx] + 1
+                q.append((ny, nx))
+
+    # Passable cells in 5x5 window (convolution)
+    kernel5 = np.ones((5, 5))
+    passable_r2 = ndimage.convolve(passable_mask, kernel5, mode='constant', cval=0.0)
 
     features = []
     coords = []
@@ -176,6 +198,11 @@ def _extract_cell_features(
             comp_size = comp_sizes.get(comp, 0)
             comp_n_settl = comp_settl.get(comp, 0)
 
+            # New features from research agent analysis
+            dist_to_edge = min(y, x, h - 1 - y, w - 1 - x)
+            bfs_d = int(bfs_dist[y, x])
+            passable_5x5 = int(passable_r2[y, x])
+
             features.append([
                 code, dist, adj_ocean, adj_forest, adj_settl, adj_mountain,
                 int(code == 11), int(code == 4), int(code == 1), int(code == 2),
@@ -185,10 +212,11 @@ def _extract_cell_features(
                 y, x,  # map position (captures fjord/border effects)
                 settlements_r3, settl_r12, settl_r57,
                 dist_port, comp_size, comp_n_settl,
+                dist_to_edge, bfs_d, passable_5x5,
             ])
             coords.append((y, x))
 
-    return np.array(features) if features else np.empty((0, 25)), coords
+    return np.array(features) if features else np.empty((0, 28)), coords
 
 
 def load_gbt_models() -> Optional[list]:
