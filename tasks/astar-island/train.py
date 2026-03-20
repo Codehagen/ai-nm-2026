@@ -256,14 +256,37 @@ def evaluate_loro():
                                 tensor[y, x] = np.maximum(tensor[y, x], PROB_FLOOR)
                                 tensor[y, x] /= tensor[y, x].sum()
 
-            # Smoothing: blend with uniform to reduce overconfidence
-            if SMOOTH_WEIGHT > 0:
-                uniform = np.full(NUM_CLASSES, 1.0 / NUM_CLASSES)
+            # Layer 8: Per-cell empirical correction from observation grids
+            if all_observations:
                 h, w, _ = tensor.shape
+                cell_counts = np.zeros((h, w), dtype=np.int32)
+                cell_terrain = np.zeros((h, w, NUM_CLASSES))
+                for obs in all_observations:
+                    vp = obs.get("viewport", {})
+                    vy, vx = vp.get("y", 0), vp.get("x", 0)
+                    obs_grid = obs.get("grid", [])
+                    for dy in range(len(obs_grid)):
+                        for dx in range(len(obs_grid[0]) if obs_grid else 0):
+                            y2, x2 = vy + dy, vx + dx
+                            if 0 <= y2 < h and 0 <= x2 < w:
+                                cell_counts[y2, x2] += 1
+                                cls = TERRAIN_TO_CLASS.get(obs_grid[dy][dx], 0)
+                                cell_terrain[y2, x2, cls] += 1
+
+                MIN_SAMPLES = 50  # effectively disabled until repeated viewports
+                EMP_WEIGHT_PER_SAMPLE = 0.03
+                MAX_EMP_WEIGHT = 0.30
                 for y in range(h):
                     for x in range(w):
-                        if grid[y][x] not in {10, 5}:
-                            tensor[y, x] = (1 - SMOOTH_WEIGHT) * tensor[y, x] + SMOOTH_WEIGHT * uniform
+                        n = cell_counts[y, x]
+                        if n >= MIN_SAMPLES and grid[y][x] not in {10, 5}:
+                            emp = cell_terrain[y, x] / n
+                            emp = np.maximum(emp, PROB_FLOOR)
+                            emp /= emp.sum()
+                            alpha = min(MAX_EMP_WEIGHT, n * EMP_WEIGHT_PER_SAMPLE)
+                            tensor[y, x] = (1 - alpha) * tensor[y, x] + alpha * emp
+                            tensor[y, x] = np.maximum(tensor[y, x], PROB_FLOOR)
+                            tensor[y, x] /= tensor[y, x].sum()
 
             tensor = normalize_prediction(tensor)
             score = compute_score(tensor, gt)

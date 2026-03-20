@@ -139,14 +139,17 @@ def allocate_queries(
     num_seeds: int,
     viewport_placements: list[list[Viewport]],
     total_budget: int = 50,
+    repeat_strategy: str = "depth",
 ) -> list[list[tuple[Viewport, int]]]:
     """Allocate query budget across seeds and viewports.
 
     Returns: per-seed list of (viewport, num_repeats) tuples.
 
-    Strategy: distribute budget evenly across seeds, then within each seed
-    distribute across viewports. Agent research confirmed: 10/seed × 5 seeds
-    is optimal; concentrating on fewer seeds hurts.
+    Strategies:
+    - "coverage": spread queries across all viewports (old default)
+    - "depth": prioritize repeats on the most important viewports
+      (first few from greedy set-cover cover the most settlement-adjacent cells)
+      This gives per-cell Monte Carlo estimates for Bayesian blending.
     """
     per_seed_budget = total_budget // num_seeds
     remainder = total_budget % num_seeds
@@ -160,15 +163,34 @@ def allocate_queries(
             allocations.append([])
             continue
 
-        # Distribute queries across viewports
-        per_vp = seed_budget // len(vps)
-        vp_remainder = seed_budget % len(vps)
+        if repeat_strategy == "coverage":
+            # Old strategy: spread evenly
+            per_vp = seed_budget // len(vps)
+            vp_remainder = seed_budget % len(vps)
+            seed_alloc = []
+            for i, vp in enumerate(vps):
+                repeats = per_vp + (1 if i < vp_remainder else 0)
+                if repeats > 0:
+                    seed_alloc.append((vp, repeats))
+        else:
+            # Depth strategy: first viewports (highest priority from greedy
+            # set-cover) get more repeats. First covers most settlement-adjacent
+            # cells. Target: 2-3 repeats on top viewports, 1 on the rest.
+            n_vps = len(vps)
+            # Top viewports get 2 repeats, rest get 1, until budget is spent
+            seed_alloc = []
+            budget_left = seed_budget
+            for i, vp in enumerate(vps):
+                if budget_left <= 0:
+                    break
+                # First 5 viewports get 2 repeats (they cover settlement clusters)
+                if i < 5 and budget_left >= 2:
+                    seed_alloc.append((vp, 2))
+                    budget_left -= 2
+                elif budget_left >= 1:
+                    seed_alloc.append((vp, 1))
+                    budget_left -= 1
 
-        seed_alloc = []
-        for i, vp in enumerate(vps):
-            repeats = per_vp + (1 if i < vp_remainder else 0)
-            if repeats > 0:
-                seed_alloc.append((vp, repeats))
         allocations.append(seed_alloc)
 
     return allocations
