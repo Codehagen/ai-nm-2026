@@ -2,9 +2,9 @@ import { generateText, tool, stepCountIs } from "ai";
 import { createGateway } from "@ai-sdk/gateway";
 import { z } from "zod";
 import type { SolveRequest, SolveResponse } from "./dtos.js";
-import { TripletexClient } from "./tripletex.js";
+import { TripletexClient, type TxResult } from "./tripletex.js";
 import { SYSTEM_PROMPT } from "./system-prompt.js";
-import { logSolve, type SolveLog } from "./logger.js";
+import { logSolve } from "./logger.js";
 
 const gateway = createGateway({
   apiKey: process.env.AI_GATEWAY_API_KEY,
@@ -12,11 +12,80 @@ const gateway = createGateway({
     process.env.AI_GATEWAY_BASE_URL || "https://ai-gateway.vercel.sh/v1/ai",
 });
 
-const MODEL_ID = process.env.MODEL_ID || "anthropic/claude-sonnet-4-20250514";
+const MODEL_ID = process.env.MODEL_ID || "anthropic/claude-opus-4-6";
 
 /** Oslo timezone date (avoids UTC midnight drift) */
 function getOsloDate(): string {
   return new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Oslo" });
+}
+
+/** Truncate large GET list responses to prevent context overflow */
+export function truncateForLLM(result: TxResult, method: string): TxResult {
+  if (!result.ok || method !== "GET") return result;
+  const data = result.data as Record<string, unknown>;
+  if (data?.values && Array.isArray(data.values) && data.values.length > 5) {
+    return {
+      ok: true,
+      data: {
+        ...data,
+        values: data.values.slice(0, 5),
+        _truncated: true,
+        _totalCount: data.values.length,
+      },
+    };
+  }
+  return result;
+}
+
+/** Fields derived from the prompt that scoring checks exactly */
+export const PROMPT_FIELDS = [
+  "email",
+  "firstName",
+  "lastName",
+  "name",
+  "organizationNumber",
+];
+
+/** Enrich unhelpful 422 errors with actionable hints based on known failure patterns */
+export function enrichError(
+  result: TxResult & { ok: false },
+  method: string,
+  path: string
+): TxResult & { ok: false } {
+  const hint = getErrorHint(method, path, result);
+  if (!hint) return result;
+  return { ...result, message: (result.message || "Validering feilet.") + " " + hint };
+}
+
+function getErrorHint(
+  method: string,
+  path: string,
+  result: TxResult & { ok: false }
+): string | null {
+  // Bank account number must pass Norwegian MOD11 validation
+  if (method === "PUT" && path.includes("ledger/account")) {
+    return 'Use bankAccountNumber "86011117947" — it passes Norwegian MOD11 validation. Do NOT guess random numbers.';
+  }
+
+  // Email collision — employee already exists from a previous attempt
+  const vm = result.validationMessages;
+  if (vm?.some((v) => v.field === "email" && v.message.includes("allerede"))) {
+    return "The email already exists. GET /employee?email=<the email> to find the existing employee and use their ID instead of creating a new one.";
+  }
+
+  return null;
+}
+
+/** Build a retry key from path + entity identity so different entities don't collide */
+export function retryKey(path: string, body: Record<string, unknown>): string {
+  const norm = path.replace(/\/\d+/g, "");
+  const id =
+    body.firstName && body.lastName
+      ? `${body.firstName}|${body.lastName}`
+      : body.name
+        ? String(body.name)
+        : "";
+  return `${norm}:${id}`;
 }
 
 /**
@@ -30,10 +99,8 @@ export async function solve(
   const startMs = Date.now();
   const client = new TripletexClient(request.tripletex_credentials, signal);
 
-  // Track API calls for observability
-  let apiCalls = 0;
-  let apiErrors = 0;
-  const toolCallDetails: SolveLog["toolCallDetails"] = [];
+  // Track failed POST bodies per entity identity to detect value-change on retry
+  const failedPosts = new Map<string, Record<string, unknown>>();
 
   // Build user message content parts
   const content: Array<
@@ -87,34 +154,60 @@ export async function solve(
             ),
         }),
         execute: async ({ method, body, path, params }) => {
-          apiCalls++;
-          let result;
+          // Block retries that change prompt-derived fields (identity-aware)
+          if (method === "POST" && body) {
+            const key = retryKey(path, body as Record<string, unknown>);
+            const prev = failedPosts.get(key);
+            if (prev) {
+              const changed = PROMPT_FIELDS.filter(
+                (f) =>
+                  prev[f] !== undefined &&
+                  body[f] !== undefined &&
+                  prev[f] !== body[f]
+              );
+              if (changed.length > 0) {
+                return {
+                  ok: false,
+                  status: 0,
+                  message: `BLOCKED: You changed ${changed.join(", ")} from your first attempt. The scoring checks EXACT values from the prompt. Fix other fields instead, or check the error message from your first attempt.`,
+                };
+              }
+            }
+          }
+
+          let callResult: TxResult;
           switch (method) {
             case "GET":
-              result = await client.get(path, params);
+              callResult = await client.get(path, params);
               break;
             case "POST":
-              result = await client.post(path, body, params);
+              callResult = await client.post(path, body, params);
               break;
             case "PUT":
-              result = await client.put(path, body, params);
+              callResult = await client.put(path, body, params);
               break;
             case "DELETE":
-              result = await client.delete(path);
+              callResult = await client.delete(path);
               break;
           }
-          toolCallDetails!.push({
-            method,
-            path,
-            ok: result.ok,
-            status: result.ok ? undefined : result.status,
-            params: params || undefined,
-            body: body || undefined,
-            errorMessage: !result.ok ? result.message : undefined,
-            validationMessages: !result.ok ? result.validationMessages : undefined,
-          });
-          if (!result.ok) apiErrors++;
-          return result;
+
+          // Only track failed POSTs; clear on success
+          if (method === "POST" && body) {
+            const key = retryKey(path, body as Record<string, unknown>);
+            if (!callResult.ok) {
+              failedPosts.set(key, body as Record<string, unknown>);
+            } else {
+              failedPosts.delete(key);
+            }
+          }
+
+          // Enrich unhelpful 422 errors with actionable hints
+          if (!callResult.ok && callResult.status === 422) {
+            callResult = enrichError(callResult, method, path);
+          }
+
+          // Truncate large GET list responses to prevent context overflow
+          return truncateForLLM(callResult, method);
         },
       }),
     },
@@ -122,10 +215,27 @@ export async function solve(
     abortSignal: signal,
   });
 
-  const toolCalls = result.steps.reduce(
-    (n, s) => n + s.toolCalls.length,
-    0
+  // Change A: Derive logging from result.steps instead of closure variables
+  const toolCallDetails = result.steps.flatMap((step) =>
+    step.staticToolCalls.map((tc, i) => {
+      const tr = step.staticToolResults[i];
+      const res = tr?.output as TxResult | undefined;
+      return {
+        method: tc.input.method,
+        path: tc.input.path,
+        ok: res?.ok ?? false,
+        status: res && !res.ok ? res.status : undefined,
+        params: tc.input.params || undefined,
+        body: tc.input.body || undefined,
+        errorMessage: res && !res.ok ? res.message : undefined,
+        validationMessages:
+          res && !res.ok ? res.validationMessages : undefined,
+      };
+    })
   );
+
+  const apiCalls = toolCallDetails.length;
+  const apiErrors = toolCallDetails.filter((d) => !d.ok).length;
 
   logSolve({
     timestamp: new Date().toISOString(),
@@ -133,7 +243,7 @@ export async function solve(
     prompt: request.prompt,
     filesCount: request.files.length,
     steps: result.steps.length,
-    toolCalls,
+    toolCalls: apiCalls,
     apiCalls,
     apiErrors,
     elapsedMs: Date.now() - startMs,
