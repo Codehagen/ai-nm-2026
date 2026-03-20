@@ -4,6 +4,31 @@ Each entry tracks a system prompt or mock fix, what caused it, and the benchmark
 
 ## 2026-03-20
 
+### Fix: Travel expense with costs & per diem (competition submission — 10/16 errors)
+**Trigger**: Competition task — English travel expense with flight, taxi, and per diem. 16 calls, 10 errors, agent couldn't add cost items or per diem.
+**Root cause**: System prompt had no recipe for travel expense sub-endpoints (POST /travelExpense/cost, POST /travelExpense/perDiemCompensation). Agent blindly tried endpoints and failed repeatedly.
+**Fix (system-prompt.ts)**:
+- Added complete tested recipe for travel expenses with costs & per diem
+- Includes: GET costCategory, GET paymentType, POST cost, GET rateCategory, GET rate, POST perDiemCompensation
+- Documents travelDetails nested object (departureDate/returnDate go inside travelDetails, not top-level)
+- Documents overnightAccommodation enum, rate category date sensitivity, amountCurrencyIncVat field
+**Fix (mock)**:
+- Added travelExpenseCostCategory, travelExpensePaymentType, travelExpenseRateCategory, travelExpenseRate seed data
+- Added POST /travelExpense/cost, POST /travelExpense/perDiemCompensation custom routes with validation
+- Added GET endpoints for all travel expense lookups with filtering support
+**Fix (system-prompt.ts)**: Credit note Corrections section used POST instead of PUT for :createCreditNote — fixed to match tested recipe
+**Benchmark**: Added `t2-travel-expense-full-en` and `t2-travel-expense-full-nb`. Verified on real sandbox: 0 errors.
+**Tests**: 48 unit tests (was 44), all passing.
+
+### Fix: Credit note creation (competition submission — French complaint)
+**Trigger**: Competition task — French credit note for complaint. 11 calls, 4 errors.
+**Root cause**: (1) GET /invoice without date range → 400. (2) POST /invoice/:createCreditNote → 400 because invoice not sent. (3) Real API uses PUT for :createCreditNote, not POST.
+**Fix (system-prompt.ts)**:
+- Added date range params to Critical Rules section (rule #5)
+- Credit note recipe: must send invoice first (PUT /:send), then PUT /:createCreditNote (not POST)
+- Added fallback instruction: if createCreditNote returns 400, send invoice first then retry
+**Benchmark**: Added `t2-credit-note-complaint-fr`. Verified credit note creation on real sandbox.
+
 ### Fix: Supplier invoice / leverandørfaktura (competition submission — 0/8 score)
 **Trigger**: Competition task — Spanish supplier invoice: register invoice from vendor Montaña SL for 19500 NOK incl VAT to account 7300. 19 calls, 15 errors, 0/4 checks.
 **Root cause**: No supplier invoice recipe. Agent tried POST /supplierInvoice (500), POST /ledger/voucher (422 — row 0 is system-reserved), POST /expense (403).

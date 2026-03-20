@@ -115,6 +115,73 @@ export function seedStore(store: EntityStore): void {
   store.seed("salaryType", 30000004, { number: 2003, name: "Faste tillegg", description: "" });
   store.seed("salaryType", 30000005, { number: 2005, name: "Overtidsgodtgjørelse", description: "" });
 
+  // Travel expense cost categories (verified against sandbox 2026-03-20)
+  store.seed("travelExpenseCostCategory", 30000001, { description: "Fly", displayName: "Fly" });
+  store.seed("travelExpenseCostCategory", 30000002, { description: "Taxi", displayName: "Taxi" });
+  store.seed("travelExpenseCostCategory", 30000003, { description: "Tog", displayName: "Tog" });
+  store.seed("travelExpenseCostCategory", 30000004, { description: "Hotell", displayName: "Hotell" });
+  store.seed("travelExpenseCostCategory", 30000005, { description: "Mat", displayName: "Mat" });
+  store.seed("travelExpenseCostCategory", 30000006, { description: "Parkering", displayName: "Parkering" });
+  store.seed("travelExpenseCostCategory", 30000007, { description: "Buss", displayName: "Buss" });
+  store.seed("travelExpenseCostCategory", 30000008, { description: "Bomavgift", displayName: "Bomavgift" });
+  store.seed("travelExpenseCostCategory", 30000009, { description: "Drivstoff", displayName: "Drivstoff" });
+  store.seed("travelExpenseCostCategory", 30000010, { description: "Annen kontorkostnad", displayName: "Annen kontorkostnad" });
+
+  // Travel expense payment types (verified against sandbox 2026-03-20)
+  store.seed("travelExpensePaymentType", 30000001, { description: "Privat utlegg", displayName: "Privat utlegg" });
+
+  // Travel expense rate categories for per diem (domestic, 2026)
+  store.seed("travelExpenseRateCategory", 30000001, {
+    name: "Overnatting over 12 timer - innland",
+    type: "PER_DIEM",
+    isValidDayTrip: false,
+    isValidAccommodation: true,
+    isValidDomestic: true,
+    isValidForeignTravel: false,
+    isRequiresOvernightAccommodation: true,
+    fromDate: "2026-01-01",
+    toDate: "2026-12-31",
+  });
+  store.seed("travelExpenseRateCategory", 30000002, {
+    name: "Dagsreise 6-12 timer - innland",
+    type: "PER_DIEM",
+    isValidDayTrip: true,
+    isValidAccommodation: false,
+    isValidDomestic: true,
+    isValidForeignTravel: false,
+    isRequiresOvernightAccommodation: false,
+    fromDate: "2026-01-01",
+    toDate: "2026-12-31",
+  });
+  store.seed("travelExpenseRateCategory", 30000003, {
+    name: "Dagsreise over 12 timer - innland",
+    type: "PER_DIEM",
+    isValidDayTrip: true,
+    isValidAccommodation: false,
+    isValidDomestic: true,
+    isValidForeignTravel: false,
+    isRequiresOvernightAccommodation: false,
+    fromDate: "2026-01-01",
+    toDate: "2026-12-31",
+  });
+
+  // Travel expense rates (per diem rates for 2026)
+  store.seed("travelExpenseRate", 30000001, {
+    rateCategory: { id: 30000001 },
+    zone: null,
+    rate: 1012.0,
+  });
+  store.seed("travelExpenseRate", 30000002, {
+    rateCategory: { id: 30000002 },
+    zone: null,
+    rate: 200.0,
+  });
+  store.seed("travelExpenseRate", 30000003, {
+    rateCategory: { id: 30000003 },
+    zone: null,
+    rate: 400.0,
+  });
+
   // Payment types (matches real sandbox: "Kontant" and "Betalt til bank")
   store.seed("paymentType", 30000001, {
     description: "Kontant",

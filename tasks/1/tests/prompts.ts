@@ -208,6 +208,70 @@ export const BENCHMARK_PROMPTS: BenchmarkPrompt[] = [
     ],
   },
 
+  // ─── Tier 2: Travel Expense with costs and per diem ─────────────
+
+  {
+    id: "t2-travel-expense-full-en",
+    category: "travel-expense-full",
+    tier: 2,
+    lang: "en",
+    prompt:
+      'Register a travel expense for Lucy Walker (lucy.walker@example.org) for "Client visit Trondheim". The trip lasted 4 days (departure 2026-03-19, return 2026-03-22) with per diem (daily rate 800 NOK). Expenses: flight ticket 7200 NOK and taxi 650 NOK.',
+    optimalCalls: 8, // POST dept + POST employee + POST travelExpense + GET costCategory + GET paymentType + POST cost (flight) + POST cost (taxi) + GET rateCategory + GET rate + POST perDiem = 10, but can combine lookups
+    verify: [
+      {
+        entity: "employee",
+        find: { field: "firstName", value: "Lucy" },
+        expectFields: { lastName: "Walker", email: "lucy.walker@example.org" },
+      },
+      {
+        entity: "travelExpense",
+        find: { field: "title", value: "Client visit Trondheim" },
+      },
+      {
+        entity: "travelExpenseCost",
+        find: "count",
+        expectedCount: 2,
+      },
+      {
+        entity: "travelExpensePerDiem",
+        find: "count",
+        expectedCount: 1,
+      },
+    ],
+  },
+
+  {
+    id: "t2-travel-expense-full-nb",
+    category: "travel-expense-full",
+    tier: 2,
+    lang: "nb",
+    prompt:
+      'Registrer en reiseregning for Per Hansen (per.hansen@firma.no) for "Kundebesøk Bergen". Reisen varte 3 dager (avreise 2026-03-20, retur 2026-03-22) med diett (dagsats 800 NOK). Utgifter: flybillett 5400 NOK og taxi 450 NOK.',
+    optimalCalls: 8,
+    verify: [
+      {
+        entity: "employee",
+        find: { field: "firstName", value: "Per" },
+        expectFields: { lastName: "Hansen" },
+      },
+      {
+        entity: "travelExpense",
+        find: { field: "title", value: "Kundebesøk Bergen" },
+      },
+      {
+        entity: "travelExpenseCost",
+        find: "count",
+        expectedCount: 2,
+      },
+      {
+        entity: "travelExpensePerDiem",
+        find: "count",
+        expectedCount: 1,
+      },
+    ],
+  },
+
   // ─── Tier 2: Project (requires admin + customer) ─────────────────
 
   {
@@ -558,6 +622,20 @@ export const BENCHMARK_PROMPTS: BenchmarkPrompt[] = [
       { entity: "employee", find: { field: "firstName", value: "Kari" }, expectFields: { lastName: "Olsen" } },
       { entity: "employment", find: "any" },
       { entity: "salarySpecification", find: "count", expectedCount: 2 },
+    ],
+  },
+
+  // ─── Tier 2: Credit note for existing invoice (complaint) ────────
+
+  {
+    id: "t2-credit-note-complaint-fr",
+    category: "create-credit-note",
+    tier: 2,
+    lang: "fr",
+    prompt: "Le client Étoile SARL (nº org. 955361490) a réclamé concernant la facture pour Maintenance (45550 NOK HT). Émettez un avoir complet qui annule l'intégralité de la facture.",
+    optimalCalls: 2,
+    verify: [
+      { entity: "invoice", find: { field: "isCreditNote", value: true } },
     ],
   },
 
@@ -926,6 +1004,10 @@ export const PRESEED: Record<string, PreSeed[]> = {
   "t2-credit-note-pt": [
     { entity: "customer", data: { name: "CreditTest PT Lda", isCustomer: true } },
     { entity: "product", data: { name: "TestProdPT", priceExcludingVatCurrency: 1500, vatType: { id: 3 } } },
+  ],
+  "t2-credit-note-complaint-fr": [
+    { entity: "customer", data: { name: "Étoile SARL", isCustomer: true, organizationNumber: "955361490" } },
+    { entity: "product", data: { name: "Maintenance", priceExcludingVatCurrency: 45550, vatType: { id: 3 } } },
   ],
   "t2-update-customer-en": [
     { entity: "customer", data: { name: "Nordfjord AS", email: "old@nordfjord.no", isCustomer: true } },
