@@ -846,96 +846,48 @@ def build_prediction(
     if gbt_pred is not None:
         tensor = (1 - GBT_BLEND_WEIGHT) * tensor + GBT_BLEND_WEIGHT * gbt_pred
 
-    # Layer 7: Per-terrain observation ratio correction.
-    # Compute separate obs_freq/model_avg ratios for each initial terrain type.
-    # This adapts the model to each round's unique hidden parameters.
-    # Agent research: per-terrain L7 gives +0.4 pts over global L7.
+    # Layer 7: Global observation ratio correction.
+    # Uses pooled observation terrain frequencies to adapt to each round's
+    # hidden expansion rate. Confirmed optimal by 3 research agents:
+    # - Global L7 outperforms per-terrain L7 (simpler, more robust)
+    # - Post-hoc correction outperforms obs features in XGBoost
+    # - Strengths [1.38, 0.90, 0.44, 0.61, 1.16] from coordinate descent
     if all_observations:
-        h, w, _ = tensor.shape
-
-        # Collect observed terrain frequencies per initial terrain type
-        # and model's average prediction per initial terrain type
-        terrain_types = {11: "plains", 0: "plains", 4: "forest", 1: "settl", 2: "settl"}
-        obs_by_terrain = {}
-        model_by_terrain = {}
-
-        # Build initial terrain map for observed cells
+        obs_cls = np.zeros(NUM_CLASSES)
+        obs_total = 0
         for obs in all_observations:
-            vp = obs.get("viewport", {})
-            vy, vx = vp.get("y", 0), vp.get("x", 0)
-            grid_obs = obs.get("grid", [])
-            for gy, row in enumerate(grid_obs):
-                for gx, code in enumerate(row):
-                    ay, ax = vy + gy, vx + gx
-                    if 0 <= ay < h and 0 <= ax < w:
-                        init_code = initial_grid[ay][ax]
-                        if init_code in {10, 5}:
-                            continue
-                        ttype = terrain_types.get(init_code, "plains")
-                        obs_by_terrain.setdefault(ttype, np.zeros(NUM_CLASSES))
-                        obs_by_terrain[ttype][TERRAIN_TO_CLASS.get(code, 0)] += 1
+            for row in obs.get("grid", []):
+                for code in row:
+                    if code not in {10, 5}:
+                        obs_cls[TERRAIN_TO_CLASS.get(code, 0)] += 1
+                        obs_total += 1
 
-        # Compute model averages per terrain type
-        for y in range(h):
-            for x in range(w):
-                code = initial_grid[y][x]
-                if code in {10, 5}:
-                    continue
-                ttype = terrain_types.get(code, "plains")
-                model_by_terrain.setdefault(ttype, {"sum": np.zeros(NUM_CLASSES), "n": 0})
-                model_by_terrain[ttype]["sum"] += tensor[y, x]
-                model_by_terrain[ttype]["n"] += 1
-
-        # Compute per-terrain ratios
-        terrain_adj = {}
-        cls_strength = np.array([1.38, 0.90, 0.44, 0.61, 1.16, 0.0])
-        for ttype in obs_by_terrain:
-            obs_total = obs_by_terrain[ttype].sum()
-            if obs_total < 30:  # need enough observations
-                continue
-            obs_freq = obs_by_terrain[ttype] / obs_total
-            if ttype in model_by_terrain and model_by_terrain[ttype]["n"] > 0:
-                model_avg = model_by_terrain[ttype]["sum"] / model_by_terrain[ttype]["n"]
+        if obs_total > 100:
+            obs_freq = obs_cls / obs_total
+            h, w, _ = tensor.shape
+            model_avg = np.zeros(NUM_CLASSES)
+            m_count = 0
+            for y in range(h):
+                for x in range(w):
+                    if initial_grid[y][x] not in {10, 5}:
+                        model_avg += tensor[y, x]
+                        m_count += 1
+            if m_count > 0:
+                model_avg /= m_count
                 ratio = obs_freq / np.maximum(model_avg, 1e-6)
-                terrain_adj[ttype] = 1.0 + cls_strength * (ratio - 1.0)
-
-        # Fall back to global correction for terrain types without enough obs
-        if not terrain_adj:
-            # Global fallback
-            obs_cls = np.zeros(NUM_CLASSES)
-            obs_total = 0
-            for obs in all_observations:
-                for row in obs.get("grid", []):
-                    for code in row:
-                        if code not in {10, 5}:
-                            obs_cls[TERRAIN_TO_CLASS.get(code, 0)] += 1
-                            obs_total += 1
-            if obs_total > 100:
-                obs_freq = obs_cls / obs_total
-                model_avg = np.zeros(NUM_CLASSES)
-                m_count = 0
+                # Agent-optimized per-class strengths:
+                # Empty/Forest >1: high-volume classes carry strong expansion signal
+                # Settlement 0.90: key indicator, slight damping avoids overshoot
+                # Port 0.44, Ruin 0.61: rare classes, moderate to avoid noise
+                cls_strength = np.array([1.38, 0.90, 0.44, 0.61, 1.16, 0.0])
+                adj = 1.0 + cls_strength * (ratio - 1.0)
                 for y in range(h):
                     for x in range(w):
-                        if initial_grid[y][x] not in {10, 5}:
-                            model_avg += tensor[y, x]
-                            m_count += 1
-                if m_count > 0:
-                    model_avg /= m_count
-                    ratio = obs_freq / np.maximum(model_avg, 1e-6)
-                    global_adj = 1.0 + cls_strength * (ratio - 1.0)
-                    terrain_adj = {"plains": global_adj, "forest": global_adj, "settl": global_adj}
-
-        # Apply per-terrain corrections
-        for y in range(h):
-            for x in range(w):
-                code = initial_grid[y][x]
-                if code in {10, 5}:
-                    continue
-                ttype = terrain_types.get(code, "plains")
-                if ttype in terrain_adj:
-                    tensor[y, x] *= terrain_adj[ttype]
-                    tensor[y, x] = np.maximum(tensor[y, x], PROB_FLOOR)
-                    tensor[y, x] /= tensor[y, x].sum()
+                        if initial_grid[y][x] in {10, 5}:
+                            continue
+                        tensor[y, x] *= adj
+                        tensor[y, x] = np.maximum(tensor[y, x], PROB_FLOOR)
+                        tensor[y, x] /= tensor[y, x].sum()
 
     # Final normalization — CRITICAL: enforce floor + renormalize
     tensor = normalize_prediction(tensor)
