@@ -221,10 +221,11 @@ def _extract_cell_features(
                 settlements_r3, settl_r12, settl_r57,
                 dist_port, comp_size, comp_n_settl,
                 dist_to_edge, bfs_d, passable_5x5, land_r3,
+                land_r3 / (1 + bfs_d),  # interaction: dense land + close to settlement
             ])
             coords.append((y, x))
 
-    return np.array(features) if features else np.empty((0, 29)), coords
+    return np.array(features) if features else np.empty((0, 30)), coords
 
 
 def load_gbt_models() -> Optional[list]:
