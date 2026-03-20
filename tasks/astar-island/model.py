@@ -7,6 +7,8 @@ Prediction layers:
   4. CROSS-SEED — DISABLED
   5. CALIBRATION — blend with learned context priors
   6. GBT BLEND — blend with gradient-boosted tree predictions
+  6.5 SIMULATOR ENSEMBLE — Monte Carlo simulator blended with XGBoost+heuristic
+  7. OBSERVATION CORRECTION — ratio correction from pooled observations
 
 The GBT model captures feature interactions the hand-tuned tables miss.
 Trained on Round 1 GT, validated with leave-one-seed-out CV.
@@ -30,6 +32,7 @@ from dtos import (
     PROB_FLOOR,
 )
 from utils import normalize_prediction, grid_to_class_array
+from simulator import simulate_monte_carlo, fit_hidden_params
 
 
 # ──────────────────────────────────────────────────────────────
@@ -37,6 +40,7 @@ from utils import normalize_prediction, grid_to_class_array
 # ──────────────────────────────────────────────────────────────
 
 GBT_BLEND_WEIGHT = 0.30  # how much to weight GBT vs heuristic (cross-round validated)
+SIM_BLEND_WEIGHT = 0.15  # how much to weight simulator vs XGBoost+heuristic
 _gbt_models = None  # lazy-loaded
 
 
@@ -800,6 +804,17 @@ def ensemble_predictions(
     return result
 
 
+def simulator_predict(initial_grid, settlements, observations=None, n_sims=300):
+    """Generate predictions using Monte Carlo simulator only."""
+    if observations:
+        params = fit_hidden_params(initial_grid, settlements, observations)
+    else:
+        params = {"expansion_rate": 0.087, "winter_severity": 0.090, "raid_intensity": 0.03}
+    return simulate_monte_carlo(
+        initial_grid, settlements, n_sims=n_sims, **params
+    )
+
+
 # ──────────────────────────────────────────────────────────────
 # Full prediction pipeline
 # ──────────────────────────────────────────────────────────────
@@ -844,6 +859,23 @@ def build_prediction(
     gbt_pred = gbt_predict(initial_grid, settlements)
     if gbt_pred is not None:
         tensor = (1 - GBT_BLEND_WEIGHT) * tensor + GBT_BLEND_WEIGHT * gbt_pred
+
+    # Layer 6.5: Simulator ensemble — Monte Carlo simulation blended with
+    # XGBoost+heuristic predictions. Only applied to dynamic cells.
+    if SIM_BLEND_WEIGHT > 0:
+        try:
+            sim_params = fit_hidden_params(initial_grid, settlements, all_observations)
+            sim_probs = simulate_monte_carlo(
+                initial_grid, settlements, n_sims=300, **sim_params
+            )
+            grid_arr = np.array(initial_grid)
+            dynamic_mask = ~np.isin(grid_arr, [10, 5])
+            tensor[dynamic_mask] = (
+                (1 - SIM_BLEND_WEIGHT) * tensor[dynamic_mask]
+                + SIM_BLEND_WEIGHT * sim_probs[dynamic_mask]
+            )
+        except Exception:
+            pass  # gracefully fall back to no blending if simulator fails
 
     # Layer 7: Observation-based ratio correction.
     # Use pooled observations from ALL seeds to estimate the hidden expansion
