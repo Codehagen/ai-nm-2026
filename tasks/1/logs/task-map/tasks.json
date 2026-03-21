@@ -11,7 +11,7 @@
     "08": { "tier": 1, "score": 1.40, "tries": 12, "taskType": null, "description": null, "hasFiles": false },
     "09": { "tier": 2, "score": 2.50, "tries": 12, "taskType": null, "description": null, "hasFiles": false },
     "10": { "tier": 2, "score": 2.67, "tries": 9, "taskType": null, "description": null, "hasFiles": false },
-    "11": { "tier": null, "score": 0, "tries": 12, "taskType": null, "description": "BROKEN — never scores", "hasFiles": null },
+    "11": { "tier": null, "score": 0, "tries": 12, "taskType": "supplier-invoice", "description": "Receipt expense in named department. Was misclassified as 'department' because Portuguese 'departamento' in prompt. Classifier fixed: receipt+dept keywords → supplier-invoice. File hint also overrides.", "hasFiles": true },
     "12": { "tier": null, "score": 0, "tries": 12, "taskType": null, "description": "BROKEN — never scores", "hasFiles": null },
     "13": { "tier": 1, "score": 1.13, "tries": 9, "taskType": null, "description": null, "hasFiles": false },
     "14": { "tier": 2, "score": 3.00, "tries": 11, "taskType": null, "description": null, "hasFiles": false },

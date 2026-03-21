@@ -240,7 +240,15 @@
       "Bash(grep -r \"TRIPLETEX_BASE_URL\\\\|TRIPLETEX_SESSION_TOKEN\\\\|ngrok\" /Users/walgermo/Utvikling/ai-nm-2026/tasks/1 --include=*.ts --include=*.md -n)",
       "Bash(grep -n \"logSolve\\\\|logRequest\" /Users/walgermo/Utvikling/ai-nm-2026/tasks/1/src/*.ts)",
       "Bash(tar --exclude=node_modules --exclude=logs --exclude='.env*' --exclude='.git' -czf /tmp/task1.tar.gz .)",
-      "Bash(tar --exclude=node_modules --exclude=logs --exclude='.env*' -czf /tmp/task1.tar.gz .)"
+      "Bash(tar --exclude=node_modules --exclude=logs --exclude='.env*' -czf /tmp/task1.tar.gz .)",
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B goto https://app.ainm.no/submit/tripletex 2)",
+      "Bash(/dev/null sleep:*)",
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B click @e4 2)",
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B goto https://app.ainm.no/profile 2)",
+      "Bash($B cookie-import-browser:*)",
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B scroll 2)",
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B snapshot -i)",
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B click @e23 2)"
     ]
   }
 }

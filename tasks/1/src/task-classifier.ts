@@ -151,6 +151,14 @@ export function classifyTask(prompt: string): TaskType {
     return "supplier-invoice";
   }
 
+  // --- Receipt expense (before department — "departamento" in receipt prompts triggers wrong classification)
+  if (
+    has(t, "despesa", "recibo", "receipt", "kvittering", "quittung", "reçu") &&
+    has(t, "departamento", "department", "avdeling", "abteilung", "département")
+  ) {
+    return "supplier-invoice";
+  }
+
   // --- Supplier registration (no invoice)
   if (
     has(t, "leverandør", "supplier", "proveedor", "fornecedor", "fournisseur", "lieferant") &&
