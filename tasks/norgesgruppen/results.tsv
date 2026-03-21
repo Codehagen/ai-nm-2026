@@ -14,3 +14,6 @@ timestamp	name	val_metric	model_size_mb	duration_min	status	notes
 2026-03-21 01:03	yolov8l-sgd-cos-seed9	0.9040	84.1	42.9	rejected	LIVE — SGD/cosine/300ep, no improvement
 2026-03-21 09:41	yolov8l-iou065-avg	0.9126	84.1	44.8	kept	LIVE — NEW BEST! iou=0.65+conf_type=avg fix
 2026-03-21 09:52	yolov8l-variant	0.9057	84.2	45.1	rejected	LIVE — different checkpoint, worse
+2026-03-21 10:36	yolov8l-a100-9	0.9129	84.1	42.4	kept	LIVE — a100-9 model, old WBF params
+2026-03-21 11:24	3model-ensemble	0.9173	233.0	72.2	kept	LIVE — 3-model ensemble works!
+2026-03-21 12:05	3model-hybrid	0.9208	233.0	64.3	kept	LIVE — NEW BEST! hybrid ensemble, select for final

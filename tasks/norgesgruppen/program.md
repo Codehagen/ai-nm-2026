@@ -8,7 +8,9 @@ Timeout: 300 seconds inference on NVIDIA L4
 
 | Model | Size | Local (pycocotools) | Live Score | Notes |
 |-------|------|---------------------|------------|-------|
-| YOLOv8l iou=0.65+avg | 84 MB | — | **0.9126** | iou_thr fix, current live best — SELECT FOR FINAL |
+| 3-model hybrid ensemble | 233 MB | — | **0.9208** | 3×YOLOv8l, 5-pass WBF — SELECT FOR FINAL |
+| 3-model ensemble | 233 MB | — | 0.9173 | first successful ensemble |
+| YOLOv8l iou=0.65+avg | 84 MB | — | 0.9126 | single model best |
 | YOLOv8l cls=1.5 v2 | 84 MB | 0.9861* | 0.9055 | previous best |
 | YOLOv8l cls=1.5 + ConvNeXt | 201 MB | — | 0.8941 | two-stage HURT — classifier degraded cls on unseen |
 | YOLOv8l cls=1.5 full-data | 84 MB | 0.9848* | 0.9040 | cls loss boost, full dataset |
