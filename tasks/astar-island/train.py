@@ -92,7 +92,7 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 
 def enhanced_obs_stats(observations):
-    """Compute enhanced round-level obs stats (15 features: base 7 + min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate)."""
+    """Compute enhanced round-level obs stats (16 features: base 7 + min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate, food_deficit)."""
     base = compute_obs_stats(observations) if observations else np.zeros(7)
     pops, foods, defenses = [], [], []
     factions = set()
@@ -121,7 +121,10 @@ def enhanced_obs_stats(observations):
     n_factions_norm = len(factions) / 10.0  # normalize: typically 1-10 factions
     obs_settl_rate = grid_settl_count / max(grid_total, 1)
     obs_ruin_rate = grid_ruin_count / max(grid_total, 1)
-    return np.concatenate([base, [min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate]])
+    avg_food = float(np.mean(foods)) if foods else 0.0
+    avg_pop = float(np.mean(pops)) if pops else 0.0
+    food_deficit = avg_food - avg_pop  # positive = surplus, negative = deficit
+    return np.concatenate([base, [min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate, food_deficit]])
 
 
 def load_round_data(round_num):
@@ -138,7 +141,7 @@ ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6
 
 
 def train_gbt_models(train_rounds):
-    """Train terrain-specific XGBoost on given rounds (45 features: 30 cell + 15 obs stats)."""
+    """Train terrain-specific XGBoost on given rounds (46 features: 30 cell + 16 obs stats)."""
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
     W_data = {"plains": [], "forest": [], "settl": []}
