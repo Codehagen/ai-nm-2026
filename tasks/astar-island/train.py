@@ -30,6 +30,7 @@ from model import (
     build_static_prediction,
     fill_unobserved_dynamic,
     compute_obs_stats,
+    compute_cell_obs_features,
     build_round_empirical_tables,
     _dist_to_bucket,
     _is_coastal_4connected,
@@ -96,209 +97,8 @@ ROUNDS = {
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 
-def enhanced_obs_stats(observations):
-    """Compute enhanced round-level obs stats (26 features: base 7 + 19 new)."""
-    full = compute_obs_stats(observations) if observations else np.zeros(23)
-    base = full[:7]  # only use first 7 base features
-    pops, foods, defenses, wealths = [], [], [], []
-    factions = set()
-    alive_count, total_count = 0, 0
-    # Grid-level settlement/ruin rate
-    grid_settl_count, grid_ruin_count, grid_total = 0, 0, 0
-    for obs in (observations or []):
-        for s in obs.get("settlements", []):
-            total_count += 1
-            if s.get("alive", True):
-                alive_count += 1
-                pops.append(s.get("population", 0))
-                foods.append(s.get("food", 0))
-                defenses.append(s.get("defense", 0))
-                wealths.append(s.get("wealth", 0))
-                factions.add(s.get("owner_id", -1))
-        for row in obs.get("grid", []):
-            for code in row:
-                if code not in {10, 5}:  # skip ocean/mountain
-                    grid_total += 1
-                    if code in {1, 2}:  # settlement or port
-                        grid_settl_count += 1
-                    elif code == 3:  # ruin
-                        grid_ruin_count += 1
-    min_food = float(np.min(foods)) if foods else 0.0
-    max_pop = float(np.max(pops)) if pops else 0.0
-    food_std = float(np.std(foods)) if foods else 0.0
-    min_defense = float(np.min(defenses)) if defenses else 0.0
-    defense_std = float(np.std(defenses)) if defenses else 0.0
-    n_factions_norm = len(factions) / 10.0  # normalize: typically 1-10 factions
-    obs_settl_rate = grid_settl_count / max(grid_total, 1)
-    obs_ruin_rate = grid_ruin_count / max(grid_total, 1)
-    avg_food = float(np.mean(foods)) if foods else 0.0
-    avg_pop = float(np.mean(pops)) if pops else 0.0
-    food_deficit = avg_food - avg_pop  # positive = surplus, negative = deficit
-    pop_std = float(np.std(pops)) if pops else 0.0
-    max_food = float(np.max(foods)) if foods else 0.0
-    min_pop = float(np.min(pops)) if pops else 0.0
-    max_defense = float(np.max(defenses)) if defenses else 0.0
-    wealth_mean = float(np.mean(wealths)) if wealths else 0.0
-    wealth_std = float(np.std(wealths)) if wealths else 0.0
-    dead_rate = (total_count - alive_count) / max(total_count, 1)
-    # Raiding/trade/winter indicators
-    wealth_depleted_rate = sum(1 for w in wealths if w < 10) / max(len(wealths), 1)  # raiding signal
-    defense_mean = float(np.mean(defenses)) if defenses else 0.0
-    high_defense_rate = sum(1 for d in defenses if d > defense_mean + defense_std) / max(len(defenses), 1) if defenses else 0.0  # active raiding
-    food_pop_ratio = avg_food / max(avg_pop, 1.0)  # winter severity signal
-    return np.concatenate([base, [min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate, food_deficit, pop_std, max_food, min_pop, max_defense, wealth_mean, wealth_std, dead_rate, wealth_depleted_rate, high_defense_rate, food_pop_ratio]])
-
-
-def compute_cell_obs_features(observations, h, w):
-    """Compute per-cell observation features (21 features per cell):
-    [obs_settl_rate, obs_empty_rate, obs_ruin_rate, obs_freq,
-     neighbor_settl_rate_r2, neighbor_settl_count_r2, max_neighbor_settl_rate_r1,
-     nearest_obs_settl_pop, nearest_obs_settl_food, nearest_obs_settl_dist,
-     sum_settl_r2, sum_ruin_r2, dynamic_rate,
-     log_settl_count, log_total_count, log_ruin_count, log_dynamic_count,
-     sum_log_settl_r2, sum_log_ruin_r2,
-     nearest_obs_settl_wealth, nearest_obs_settl_defense]
-    """
-    cell_counts = np.zeros((h, w), dtype=np.int32)
-    cell_settl = np.zeros((h, w), dtype=np.int32)
-    cell_empty = np.zeros((h, w), dtype=np.int32)
-    cell_ruin = np.zeros((h, w), dtype=np.int32)
-    # Collect per-settlement observations: (y, x, population, food, wealth, defense) for alive settlements
-    obs_settl_list = []  # list of (y, x, pop, food, wealth, defense)
-    for obs in (observations or []):
-        vp = obs.get("viewport", {})
-        vy, vx = vp.get("y", 0), vp.get("x", 0)
-        obs_grid = obs.get("grid", [])
-        for dy in range(len(obs_grid)):
-            row = obs_grid[dy]
-            for dx in range(len(row)):
-                y2, x2 = vy + dy, vx + dx
-                if 0 <= y2 < h and 0 <= x2 < w:
-                    cell_counts[y2, x2] += 1
-                    code = row[dx]
-                    if code in {1, 2}:
-                        cell_settl[y2, x2] += 1
-                    elif code in {0, 11}:
-                        cell_empty[y2, x2] += 1
-                    elif code == 3:
-                        cell_ruin[y2, x2] += 1
-        # Collect alive settlement stats from this observation
-        for s in obs.get("settlements", []):
-            if s.get("alive", True):
-                sx, sy = s.get("x", 0), s.get("y", 0)
-                obs_settl_list.append((sy, sx, s.get("population", 0), s.get("food", 0),
-                                       s.get("wealth", 0), s.get("defense", 0)))
-    total_obs = max(len(observations or []), 1)
-    settl_rate = np.zeros((h, w), dtype=np.float32)
-    ruin_rate = np.zeros((h, w), dtype=np.float32)
-    result = np.zeros((h, w, 21), dtype=np.float32)
-    for y in range(h):
-        for x in range(w):
-            n = cell_counts[y, x]
-            if n > 0:
-                sr = cell_settl[y, x] / n
-                rr = cell_ruin[y, x] / n
-                settl_rate[y, x] = sr
-                ruin_rate[y, x] = rr
-                result[y, x, 0] = sr
-                result[y, x, 1] = cell_empty[y, x] / n
-                result[y, x, 2] = rr
-                result[y, x, 3] = n / total_obs
-    # Compute nearest observed settlement stats for each cell
-    if obs_settl_list:
-        # Build arrays for fast nearest-neighbor lookup
-        settl_ys = np.array([s[0] for s in obs_settl_list], dtype=np.float32)
-        settl_xs = np.array([s[1] for s in obs_settl_list], dtype=np.float32)
-        settl_pops = np.array([s[2] for s in obs_settl_list], dtype=np.float32)
-        settl_foods = np.array([s[3] for s in obs_settl_list], dtype=np.float32)
-        settl_wealths = np.array([s[4] for s in obs_settl_list], dtype=np.float32)
-        settl_defenses = np.array([s[5] for s in obs_settl_list], dtype=np.float32)
-        # Normalize for feature stability
-        pop_max = max(float(np.max(settl_pops)), 1.0)
-        food_max = max(float(np.max(settl_foods)), 1.0)
-        wealth_max = max(float(np.max(settl_wealths)), 1.0)
-        defense_max = max(float(np.max(settl_defenses)), 1.0)
-        for y in range(h):
-            for x in range(w):
-                dists = np.abs(settl_ys - y) + np.abs(settl_xs - x)
-                nearest_idx = int(np.argmin(dists))
-                nearest_dist = float(dists[nearest_idx])
-                result[y, x, 7] = settl_pops[nearest_idx] / pop_max
-                result[y, x, 8] = settl_foods[nearest_idx] / food_max
-                result[y, x, 9] = nearest_dist / max(h + w, 1)  # normalized distance
-                result[y, x, 19] = settl_wealths[nearest_idx] / wealth_max
-                result[y, x, 20] = settl_defenses[nearest_idx] / defense_max
-    # Compute neighbor settlement rates (radius 2) and max settl rate at radius 1
-    for y in range(h):
-        for x in range(w):
-            nbr_rates_r2 = []
-            nbr_count = 0
-            max_r1 = 0.0
-            for dy in range(-2, 3):
-                for dx in range(-2, 3):
-                    if dy == 0 and dx == 0:
-                        continue
-                    md = abs(dy) + abs(dx)
-                    if md > 2:
-                        continue
-                    ny, nx = y + dy, x + dx
-                    if 0 <= ny < h and 0 <= nx < w:
-                        nbr_rates_r2.append(settl_rate[ny, nx])
-                        if settl_rate[ny, nx] > 0.1:
-                            nbr_count += 1
-                        if md == 1 and settl_rate[ny, nx] > max_r1:
-                            max_r1 = settl_rate[ny, nx]
-            result[y, x, 4] = float(np.mean(nbr_rates_r2)) if nbr_rates_r2 else 0.0
-            result[y, x, 5] = float(nbr_count)
-            result[y, x, 6] = max_r1
-            result[y, x, 10] = float(sum(nbr_rates_r2))  # sum (not mean) of settlement rates in r2
-    # Compute sum_ruin_r2 and sum_empty_r2
-    for y in range(h):
-        for x in range(w):
-            sum_ruin = 0.0
-            for dy in range(-2, 3):
-                for dx in range(-2, 3):
-                    if dy == 0 and dx == 0:
-                        continue
-                    if abs(dy) + abs(dx) > 2:
-                        continue
-                    ny, nx = y + dy, x + dx
-                    if 0 <= ny < h and 0 <= nx < w:
-                        sum_ruin += ruin_rate[ny, nx]
-            result[y, x, 11] = sum_ruin
-            result[y, x, 12] = result[y, x, 0] + result[y, x, 2]  # self settl + ruin = dynamic rate
-    # Add absolute settlement/ruin counts (log-normalized)
-    log_settl = np.zeros((h, w), dtype=np.float32)
-    log_ruin = np.zeros((h, w), dtype=np.float32)
-    for y in range(h):
-        for x in range(w):
-            n = cell_counts[y, x]
-            ls = float(np.log1p(cell_settl[y, x]))
-            lr = float(np.log1p(cell_ruin[y, x]))
-            log_settl[y, x] = ls
-            log_ruin[y, x] = lr
-            result[y, x, 13] = ls                                  # log1p count of settl observations
-            result[y, x, 14] = float(np.log1p(n))                  # log1p total observation count
-            result[y, x, 15] = lr                                   # log1p count of ruin observations
-            result[y, x, 16] = float(np.log1p(cell_settl[y, x] + cell_ruin[y, x]))  # log1p dynamic count
-    # Neighbor sum of log-settl counts in r2
-    for y in range(h):
-        for x in range(w):
-            sum_log_settl_r2 = 0.0
-            sum_log_ruin_r2 = 0.0
-            for dy in range(-2, 3):
-                for dx in range(-2, 3):
-                    if dy == 0 and dx == 0:
-                        continue
-                    if abs(dy) + abs(dx) > 2:
-                        continue
-                    ny, nx = y + dy, x + dx
-                    if 0 <= ny < h and 0 <= nx < w:
-                        sum_log_settl_r2 += log_settl[ny, nx]
-                        sum_log_ruin_r2 += log_ruin[ny, nx]
-            result[y, x, 17] = sum_log_settl_r2
-            result[y, x, 18] = sum_log_ruin_r2
-    return result
+# enhanced_obs_stats and compute_cell_obs_features removed — now imported from model.py
+# to ensure train and inference use identical feature extractors.
 
 
 def load_round_data(round_num):
@@ -315,7 +115,7 @@ ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6
 
 
 def train_gbt_models(train_rounds):
-    """Train terrain-specific XGBoost on given rounds (73 features: 30 cell + 22 obs stats + 21 cell obs)."""
+    """Train terrain-specific XGBoost on given rounds (76 features: 30 cell + 23 obs stats + 23 cell obs)."""
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
     W_data = {"plains": [], "forest": [], "settl": []}
@@ -323,7 +123,7 @@ def train_gbt_models(train_rounds):
     for rnum in train_rounds:
         initial_states, gts = load_round_data(rnum)
         all_obs = load_observations(ROUNDS[rnum])
-        obs_stats = enhanced_obs_stats(all_obs)
+        obs_stats = compute_obs_stats(all_obs) if all_obs else np.zeros(23)
         rw = ROUND_WEIGHTS.get(rnum, 1.0)
         # Compute cell-level obs features (shared across seeds for this round)
         # Use seed 0 grid dimensions (all seeds same map size)
@@ -387,13 +187,13 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=No
     features, coords = _extract_cell_features(initial_grid, settlements)
     if len(features) == 0:
         return None
-    # Append obs stats (always 26 features — zeros if no observations)
+    # Append obs stats (always 23 features — matches model.py compute_obs_stats)
     if obs_stats is None:
-        obs_stats = np.zeros(26)
+        obs_stats = np.zeros(23)
     features = np.hstack([features, np.tile(obs_stats, (len(features), 1))])
-    # Append per-cell obs features (always 21 features — zeros if no observations)
+    # Append per-cell obs features (always 23 features — matches model.py compute_cell_obs_features)
     if cell_obs is None:
-        cell_obs = np.zeros((h, w, 21))
+        cell_obs = np.zeros((h, w, 23))
     cell_feats = np.array([cell_obs[y, x] for y, x in coords])
     features = np.hstack([features, cell_feats])
     tensor = np.zeros((h, w, NUM_CLASSES))
@@ -419,7 +219,7 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=No
 
 def evaluate_loro():
     """Run full LORO and return (avg, per_round_dict)."""
-    test_rounds = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    test_rounds = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15]  # R12 excluded: 0 observations
     results = {}
 
     for held_out in test_rounds:
@@ -441,6 +241,7 @@ def evaluate_loro():
         g0 = initial_states[0]["grid"]
         h0, w0 = len(g0), len(g0[0]) if g0 else 0
         cell_obs = compute_cell_obs_features(all_observations, h0, w0) if all_observations else None
+        obs_stats = compute_obs_stats(all_observations) if all_observations else None
 
         scores = []
         for seed in range(5):
@@ -452,9 +253,8 @@ def evaluate_loro():
             tensor = build_static_prediction(grid)
             tensor = fill_unobserved_dynamic(tensor, grid, settlements, [], seed)
 
-            # Layer 6: GBT blend (with enhanced obs stats + per-cell obs features)
+            # Layer 6: GBT blend (with obs stats + per-cell obs features from model.py)
             # Skip XGBoost for no-obs rounds: model trained on obs features gives garbage when all zeros
-            obs_stats = enhanced_obs_stats(all_observations) if all_observations else None
             has_obs = bool(all_observations)
             gbt_pred = gbt_predict_with_models(gbt_models, grid, settlements, obs_stats=obs_stats, cell_obs=cell_obs) if has_obs else None
             if gbt_pred is not None:

@@ -10,7 +10,7 @@ cd tasks/astar-island
 ASTAR_TOKEN=<token> python run.py
 ```
 This queries 50 observations, builds predictions with the current model, and submits all 5 seeds.
-Now uses ALL 50 observations across all seeds for L7 correction and empirical tables.
+Uses ALL 50 observations across all seeds for L7 correction and empirical tables.
 
 ### 2. Check observation stats (30 sec)
 ```bash
@@ -50,7 +50,7 @@ ASTAR_TOKEN=<token> python3 -c "
 from client import AstarClient
 import numpy as np, json
 c = AstarClient()
-ROUND_NUM = 11  # <-- change this
+ROUND_NUM = 16  # <-- change this
 rounds = c.get_rounds()
 round_id = [r for r in rounds if r.round_number==ROUND_NUM][0].id
 detail = c.get_round_detail(round_id)
@@ -76,44 +76,114 @@ print(f'Round {ROUND_NUM} GT saved.')
 1. Add round ID to `ROUNDS` dict in both `train.py` and `retrain_gbt.py`
 2. Add round weight to `ROUND_WEIGHTS` in both files
 3. Update `test_rounds` list in `evaluate_loro()` in `train.py`
-4. Update `weights` dict in `__main__` of `train.py`
+4. **Only add rounds with observations** — rounds with 0 obs (like R12) should be excluded
 5. Retrain: `python retrain_gbt.py`
 
-### 6. Run LORO to verify (optional, ~175 sec)
+### 6. Run LORO to verify (~8 min with 13 rounds)
 ```bash
 python train.py
 ```
 Check that val_metric improved or stayed stable with the new data.
 
-## Model Architecture (current, WAVG=87.36)
+## Model Architecture (current, WAVG=89.39 baseline, 2026-03-21)
 
 ```
-Layer 1: build_static_prediction()
-  └── Distance tables calibrated from R1-R10 GT (45 maps)
+PREDICTION PIPELINE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Layer 3: fill_unobserved_dynamic()
-  └── Context priors (adj_forests, coastal, settlement adjacency)
+  API Query (50 budget)
+       │
+       ▼
+  ┌─────────────┐     ┌──────────────────┐
+  │  Viewport   │────▶│  Observations    │
+  │  15×15 grid │     │  (JSONL files)   │
+  └─────────────┘     └────────┬─────────┘
+                               │
+    ┌──────────────────────────┘
+    ▼
+  build_prediction()
+  │
+  ├─ L1: build_static_prediction()
+  │   └── Distance tables calibrated from R1-R15 GT (65 maps)
+  │       └── Coastal/inland split, distance buckets 1-8+99
+  │
+  ├─ L3: fill_unobserved_dynamic()
+  │   └── Context priors (adj_forests, coastal, settlement adjacency)
+  │
+  ├─ L6: gbt_predict() — XGBoost blend
+  │   └── 76 features: 30 cell + 23 obs stats + 23 per-cell obs
+  │   └── Per-terrain blend: plains=0.90, forest=0.75, settl=0.80
+  │   └── Terrain-specific models (plains/forest/settlement)
+  │   └── 3 terrain × 6 class regressors = 18 XGBoost models
+  │   └── Hparams: 600 trees, depth 5, lr 0.08, subsample=0.9
+  │   └── SKIPPED for rounds with 0 observations
+  │
+  ├─ L6.7: Cross-seed empirical distance tables
+  │   └── Pool ALL observations across ALL seeds
+  │   └── Group by (initial_terrain, distance_bucket, coastal)
+  │   └── EMP_BLEND = 0.40
+  │
+  ├─ L7: Safe L7 observation ratio correction
+  │   └── Strengths: [1.20, 0.80, 0.0, 0.0, 1.30, 0.0]
+  │   └── Per-class clamp: empty [0.80-1.25], settl [0.40-1.30]
+  │   └── Obs count gating: [200, 50, 30, 20, 100, 0]
+  │   └── Zero for port (cls=2) and ruin (cls=3)
+  │
+  ├─ L8: Per-cell empirical (MIN_SAMPLES=50, effectively disabled)
+  │
+  └── normalize_prediction() → Submit
+```
 
-Layer 6: gbt_predict() with obs_stats
-  └── XGBoost (37 features: 30 cell + 7 obs stats)
-  └── Per-terrain blend: plains=0.55, forest=0.65, settl=0.75
-  └── Terrain-specific models (plains/forest/settlement)
-  └── Hparams: 300 trees, depth 5, lr 0.08, reg_alpha=0.1, reg_lambda=2.0
+### Feature alignment (CRITICAL)
 
-Layer 6.7: Cross-seed empirical distance tables
-  └── Pool ALL observations across ALL seeds
-  └── Group by (initial_terrain, distance_bucket, coastal)
-  └── EMP_BLEND = 0.40
+Train (`train.py`) and inference (`model.py`) MUST use identical feature extractors:
+- `compute_obs_stats()` from model.py → 23 features
+- `compute_cell_obs_features()` from model.py → 23 features per cell
+- `_extract_cell_features()` from model.py → 30 features per cell
+- **Total: 76 features per cell**
 
-Layer 7: Safe L7 observation ratio correction
-  └── Strengths: [1.60, 1.20, 0.0, 0.0, 1.70, 0.0]
-  └── Per-class clamp: empty [0.75-1.30], settl [0.35-1.35], forest [0.75-1.30]
-  └── Obs count gating: [200, 50, 30, 20, 100, 0]
-  └── Zero for port (cls=2) and ruin (cls=3)
+`train.py` imports these functions from `model.py` — never define duplicate extractors.
 
-Layer 8: Per-cell empirical (MIN_SAMPLES=50, effectively disabled)
+### LORO evaluation
 
-Normalize → Submit
+- **Rounds**: R1, R2, R4-R11, R13-R15 (13 rounds, R12 excluded: 0 obs)
+- **Method**: Leave-One-Round-Out — for each held-out round, train on other 12
+- **Time**: ~500s (~8 min) on Apple Silicon
+- **Metric**: `val_metric` = weighted average (1.05^(round-1))
+- **Baseline**: WAVG=89.39, unweighted=89.20 (2026-03-21)
+
+### Per-round LORO scores (baseline 2026-03-21)
+
+| Round | Score | Notes |
+|-------|-------|-------|
+| R1 | 85.55 | |
+| R2 | 92.14 | |
+| R4 | 94.26 | |
+| R5 | 86.52 | |
+| R6 | 87.56 | |
+| R7 | 72.54 | Weakest — extinction round |
+| R8 | 95.26 | Best — similar to R16 profile |
+| R9 | 93.08 | |
+| R10 | 92.99 | |
+| R11 | 87.74 | |
+| R13 | 93.89 | |
+| R14 | 85.67 | |
+| R15 | 92.42 | |
+
+### Autoresearch
+
+```bash
+# Run LORO (prints val_metric for autoresearch agent)
+cd tasks/astar-island && python train.py
+
+# Tunable parameters in train.py:
+# - BLEND_WEIGHT, BLEND_TERRAIN — XGBoost blend weights
+# - L7_STRENGTHS, L7_MIN_OBS, L7_ADJ_MIN, L7_ADJ_MAX — L7 correction
+# - XGB_HPARAMS — per-terrain XGBoost hyperparameters
+# - EMP_BLEND (in evaluate_loro) — empirical table blend weight
+
+# Retrain production model after improvements:
+python retrain_gbt.py
 ```
 
 ## Key Files
@@ -121,12 +191,12 @@ Normalize → Submit
 | File | Purpose |
 |------|---------|
 | `run.py` | Main entry: query + predict + submit |
-| `model.py` | Prediction pipeline (production) |
-| `train.py` | LORO evaluation (autoresearch) |
+| `model.py` | Prediction pipeline (production, ~1400 lines) |
+| `train.py` | LORO evaluation (autoresearch-compatible) |
 | `retrain_gbt.py` | Retrain XGBoost on all rounds |
 | `evaluate.py` | Scoring function |
-| `gen_experiments.py` | Generate fleet experiment variants |
-| `data/gbt_models.pkl` | Trained XGBoost models (37 features) |
+| `simulator.py` | Monte Carlo simulator (disabled, SIM_BLEND=0.0) |
+| `data/gbt_models.pkl` | Trained XGBoost models (76 features) |
 | `data/obs_<round_id>.jsonl` | Saved observations per round |
 | `data/gt_r<N>_seed<S>.npy` | Ground truth per round/seed |
 | `data/round<N>_initial.json` | Initial states per round |
@@ -139,8 +209,10 @@ Normalize → Submit
 3. **Use ALL 50 observations** for L7/empirical tables — same-seed only cost 13 pts on R10
 4. **Settlement stats (population, food, wealth, defense)** are 40-63% of XGBoost feature importance
 5. **Safe L7** — never correct port/ruin classes (observation under-sampling + KL asymmetry)
-6. **settl_per_obs** predicts expansion rate with r²=0.96
-7. **PROB_FLOOR=0.0001** — higher floors hurt badly
-8. Each round has 50 queries, 5 seeds, 15x15 viewport, 40x40 map
-9. Round weights: 1.05^(round-1) — later rounds worth more
-10. R8 and R10 are extinction rounds — model handles these via L7 correction
+6. **Feature alignment** — train.py MUST use same extractors as model.py (76 features)
+7. **Exclude no-obs rounds** — R12 has 0 observations, training on it pollutes XGBoost
+8. **PROB_FLOOR=0.0001** — higher floors hurt badly
+9. Each round has 50 queries, 5 seeds, 15x15 viewport, 40x40 map
+10. Round weights: 1.05^(round-1) — later rounds worth more
+11. R8 and R10 are extinction rounds — model handles these via L7 correction
+12. LORO takes ~8 min with 13 rounds on Apple Silicon
