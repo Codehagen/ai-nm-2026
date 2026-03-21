@@ -357,28 +357,59 @@ def apply_random_params(rng):
 
 # ─── Main experiment loop ───────────────────────────────────────
 
-def run_loro():
-    """Run train.py and parse val_metric."""
+def _run_train(env_override=None):
+    """Run train.py and parse val_metric + per-round scores."""
     try:
+        env = os.environ.copy()
+        if env_override:
+            env.update(env_override)
         r = subprocess.run(
             [sys.executable, str(TRAIN_PY)],
-            capture_output=True, text=True, timeout=600,
-            cwd=str(TASK_DIR),
+            capture_output=True, text=True, timeout=900,
+            cwd=str(TASK_DIR), env=env,
         )
         output = r.stdout
+        val_metric = 0.0
+        per_round = {}
         for line in output.split("\n"):
             if line.startswith("val_metric:"):
-                return float(line.split(":")[1].strip()), output
-        log(f"No val_metric. Exit code: {r.returncode}")
-        if r.stderr:
-            log(f"stderr: {r.stderr[-300:]}")
-        return 0.0, output
+                val_metric = float(line.split(":")[1].strip())
+            if line.startswith("round_") and "_score:" in line:
+                parts = line.split(":")
+                rnum = int(parts[0].replace("round_", "").replace("_score", ""))
+                per_round[rnum] = float(parts[1].strip())
+        if val_metric == 0.0:
+            log(f"No val_metric. Exit code: {r.returncode}")
+            if r.stderr:
+                log(f"stderr: {r.stderr[-300:]}")
+        return val_metric, per_round, output
     except subprocess.TimeoutExpired:
-        log("LORO timed out (>600s)")
-        return 0.0, "TIMEOUT"
+        log("LORO timed out (>900s)")
+        return 0.0, {}, "TIMEOUT"
     except Exception as e:
         log(f"LORO error: {e}")
-        return 0.0, str(e)
+        return 0.0, {}, str(e)
+
+
+# Quick screen folds: R7 (expansion), R13 (medium), R16 (recent)
+QUICK_FOLDS = [7, 13, 16]
+
+
+def run_quick_screen():
+    """Stage 1: 3-fold LORO for fast screening (~40-80s).
+
+    Returns (avg_score, per_round, output). If avg_score beats the quick baseline,
+    the experiment is worth verifying with full LORO.
+    """
+    log("STAGE 1: Quick screen (3-fold)...")
+    env = {"LORO_FOLDS": ",".join(str(f) for f in QUICK_FOLDS)}
+    return _run_train(env_override=env)
+
+
+def run_full_loro():
+    """Stage 2: Full 15-fold LORO for verification (~180-360s)."""
+    log("STAGE 2: Full LORO (15-fold)...")
+    return _run_train()
 
 
 def main():
@@ -400,6 +431,7 @@ def main():
 
     init_results()
     best_metric = get_best_metric()
+    best_quick_metric = 0.0  # quick screen baseline (updated when full LORO keeps)
     consecutive_crashes = 0
 
     for run_idx in range(MAX_RUNS):
@@ -451,36 +483,55 @@ def main():
             shutil.copy2(TRAIN_PY_BACKUP, TRAIN_PY)
             description = apply_random_params(rng)
 
-        # Run LORO
+        # ── TWO-STAGE SCREENING ──────────────────────────────────
+        # Stage 1: Quick 3-fold screen (~40-80s)
+        # Stage 2: Full 15-fold verify (only if screen passes)
         t0 = time.time()
-        val_metric, output = run_loro()
-        duration = (time.time() - t0) / 60
+        quick_metric, quick_rounds, quick_output = run_quick_screen()
+        screen_time = (time.time() - t0) / 60
 
-        # Decide: keep or discard
-        if val_metric <= 0:
-            log(f"CRASHED ({duration:.1f} min)")
-            append_result(0.0, duration, "crash", description)
+        if quick_metric <= 0:
+            log(f"CRASHED in screen ({screen_time:.1f} min)")
+            append_result(0.0, screen_time, "crash", description)
             consecutive_crashes += 1
             continue
 
         consecutive_crashes = 0
 
+        # Quick baseline: compare against quick scores of best config
+        # (approximate — if quick score is clearly worse, skip full LORO)
+        if best_quick_metric > 0 and quick_metric < best_quick_metric - 0.5:
+            delta = quick_metric - best_quick_metric
+            log(f"SCREEN REJECT: quick={quick_metric:.4f} ({delta:.4f} vs quick baseline)")
+            append_result(quick_metric, screen_time, "screen_reject", description)
+            continue
+
+        # Stage 2: Full LORO verification
+        log(f"Screen passed (quick={quick_metric:.4f}). Running full LORO...")
+        t1 = time.time()
+        val_metric, per_round, full_output = run_full_loro()
+        full_time = (time.time() - t0) / 60  # total time
+
+        if val_metric <= 0:
+            log(f"CRASHED in full LORO ({full_time:.1f} min)")
+            append_result(0.0, full_time, "crash", description)
+            consecutive_crashes += 1
+            continue
+
         if val_metric > best_metric:
             delta = val_metric - best_metric
             best_metric = val_metric
-            # Save this version as the new best
+            best_quick_metric = quick_metric  # update quick baseline too
             shutil.copy2(TRAIN_PY, TRAIN_PY_BEST)
             log(f"KEPT! val_metric={val_metric:.4f} (+{delta:.4f})")
-            append_result(val_metric, duration, "kept", description)
+            append_result(val_metric, full_time, "kept", description)
 
-            # Extract per-round scores for logging
-            for line in output.split("\n"):
-                if line.startswith("round_") and "_score:" in line:
-                    log(f"  {line.strip()}")
+            for rnum, score in sorted(per_round.items()):
+                log(f"  R{rnum}: {score:.2f}")
         else:
             delta = val_metric - best_metric
             log(f"DISCARDED. val_metric={val_metric:.4f} ({delta:.4f})")
-            append_result(val_metric, duration, "rejected", description)
+            append_result(val_metric, full_time, "rejected", description)
 
         # Push results after each experiment
         if not IS_HUB and HUB_IP:

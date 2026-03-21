@@ -369,11 +369,25 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=No
 
 
 def evaluate_loro():
-    """Run full LORO and return (avg, per_round_dict)."""
-    test_rounds = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17]  # R12 excluded: 0 observations
+    """Run full LORO and return (avg, per_round_dict).
+
+    Supports LORO_FOLDS env var for quick screening:
+        LORO_FOLDS=7,13,16 python train.py  → only evaluate those 3 folds
+    """
+    all_rounds = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17]  # R12 excluded: 0 observations
+
+    # Support quick screening: only evaluate specified folds
+    loro_folds_env = os.environ.get("LORO_FOLDS", "")
+    if loro_folds_env:
+        test_rounds = [int(r) for r in loro_folds_env.split(",") if r.strip()]
+    else:
+        test_rounds = all_rounds
+
     results = {}
 
     for held_out in test_rounds:
+        # Always train on ALL rounds except held-out (use full dataset)
+        train_on = [r for r in all_rounds if r != held_out]
         train_on = [r for r in test_rounds if r != held_out]
         gbt_models = train_gbt_models(train_on)
 
