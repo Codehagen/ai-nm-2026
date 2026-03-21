@@ -45,7 +45,7 @@ from dtos import TERRAIN_TO_CLASS, NUM_CLASSES, PROB_FLOOR
 # GBT blend weight: how much to trust XGBoost vs heuristic (0-1)
 BLEND_WEIGHT = 0.35
 # Per-terrain blend overrides (None = use BLEND_WEIGHT)
-BLEND_TERRAIN = {"plains": 0.85, "forest": 0.75, "settl": 0.80}
+BLEND_TERRAIN = {"plains": 0.90, "forest": 0.75, "settl": 0.80}
 
 # Smoothing: blend final prediction with uniform prior to reduce overconfidence
 # This helps on rounds where hidden params deviate most from training data
