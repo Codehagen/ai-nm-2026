@@ -194,6 +194,16 @@ def _extract_cell_features(
             bfs_d = int(bfs_dist[y, x])
             land_r3 = float(land_ratio_r3[y, x])
 
+            # Terrain diversity in r3
+            terrain_types = set()
+            for dy in range(-3, 4):
+                for dx in range(-3, 4):
+                    if abs(dy) + abs(dx) > 3:
+                        continue
+                    ny, nx = y + dy, x + dx
+                    if 0 <= ny < h and 0 <= nx < w:
+                        terrain_types.add(initial_grid[ny][nx])
+
             features.append([
                 code, dist, adj_ocean, adj_forest, adj_settl, adj_mountain,
                 int(code == 11), int(code == 4), int(code == 1), int(code == 2),
@@ -205,10 +215,11 @@ def _extract_cell_features(
                 dist_port, int(comp_size_arr[y, x]), int(comp_settl_arr[y, x]),
                 int(dist_to_edge_arr[y, x]), bfs_d, int(passable_r2[y, x]), land_r3,
                 land_r3 / (1 + bfs_d),
+                len(terrain_types),
             ])
             coords.append((y, x))
 
-    return np.array(features) if features else np.empty((0, 30)), coords
+    return np.array(features) if features else np.empty((0, 31)), coords
 
 
 def load_gbt_models() -> Optional[list]:
