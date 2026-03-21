@@ -970,6 +970,58 @@ describe("classifyTask — monthly closing vs salary", () => {
   });
 });
 
+// ─── Regression: Payment reversal vs normal payment ─────────────────────
+
+describe("classifyTask — payment reversal vs normal payment", () => {
+  it("classifies German payment reversal as voucher, not invoice-payment", () => {
+    expect(classifyTask(
+      "Die Zahlung von Silberberg GmbH für die Rechnung Systementwicklung wurde von der Bank zurückgebucht. Stornieren Sie die Zahlung."
+    )).toBe("voucher");
+  });
+
+  it("classifies English chargeback as voucher", () => {
+    expect(classifyTask(
+      "The payment for the invoice was charged back by the bank. Cancel the payment so the invoice shows as unpaid."
+    )).toBe("voucher");
+  });
+
+  it("classifies Norwegian payment reversal as voucher", () => {
+    expect(classifyTask(
+      "Betalingen for fakturaen ble tilbakeført. Kanseller betalingen."
+    )).toBe("voucher");
+  });
+
+  it("still classifies normal payment registration as invoice-payment", () => {
+    expect(classifyTask("Registrer betaling for faktura til Stormberg AS.")).toBe("invoice-payment");
+  });
+});
+
+// ─── Regression: German Projektzyklus lifecycle ─────────────────────────
+
+describe("classifyTask — German project lifecycle", () => {
+  it("classifies Projektzyklus with Lieferantenkosten as project, not supplier-invoice", () => {
+    expect(classifyTask(
+      "Führen Sie den vollständigen Projektzyklus für Cloud-Migration durch: 1) Budget. 2) Stunden. 3) Lieferantenkosten. 4) Kundenrechnung."
+    )).toBe("project");
+  });
+});
+
+// ─── Regression: Norwegian ASCII normalization ──────────────────────────
+
+describe("classifyTask — Norwegian ASCII normalization", () => {
+  it("classifies leverandorfaktura (without ø) as supplier-invoice", () => {
+    expect(classifyTask("Du har mottatt en leverandorfaktura. Registrer fakturaen.")).toBe("supplier-invoice");
+  });
+
+  it("classifies arsavslutning (without å) as voucher", () => {
+    expect(classifyTask("Utfor forenklet arsavslutning for 2025.")).toBe("voucher");
+  });
+
+  it("classifies lonnskjoring (without ø) as salary", () => {
+    expect(classifyTask("Kjor lonnskjoring for Ola Nordmann.")).toBe("salary");
+  });
+});
+
 // ─── Regression: Truncation limits for analytical paths ──────────────────
 
 describe("truncateForLLM — analytical path limits", () => {

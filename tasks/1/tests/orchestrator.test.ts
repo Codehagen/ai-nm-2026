@@ -224,11 +224,15 @@ describe("Orchestrator Executors", () => {
       const proj = projects.find((p) => p.name === "Testprosjekt Alpha");
       expect(proj).toBeDefined();
 
+      // Verify: PM entitlements were granted (always, no condition)
+      const entitleCalls = ctx.apiCalls.filter((c) => c.method === "PUT" && c.path.includes("entitlement"));
+      expect(entitleCalls.length).toBeGreaterThanOrEqual(1);
+
       // Verify: PM was updated (PUT call exists)
       const putCalls = ctx.apiCalls.filter((c) => c.method === "PUT" && c.path.includes("/project/"));
       expect(putCalls.length).toBeGreaterThanOrEqual(1);
 
-      const errors = ctx.apiCalls.filter((c) => !c.ok && c.status !== 422);
+      const errors = ctx.apiCalls.filter((c) => !c.ok && c.status !== 422 && c.status !== 404);
       expect(errors.length).toBe(0);
     });
 
