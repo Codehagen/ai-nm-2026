@@ -38,7 +38,7 @@ from pathlib import Path
 TASK_DIR = Path(__file__).parent.resolve()
 VM_ID = os.environ.get("VM_ID", "vm0")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
-GEMINI_MODEL = os.environ.get("MODEL_ID", "gemini-3-pro-preview")
+GEMINI_MODEL = os.environ.get("MODEL_ID", "gemini-3.1-flash-lite-preview")
 VM_FOCUS = os.environ.get("VM_FOCUS", "general")
 
 TRAIN_PY = TASK_DIR / "train.py"
