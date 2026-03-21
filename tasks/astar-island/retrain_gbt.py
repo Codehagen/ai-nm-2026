@@ -32,8 +32,25 @@ ROUNDS = {
     7: "36e581f1-73f8-453f-ab98-cbe3052b701b",
     8: "c5cdf100-a876-4fb7-b5d8-757162c97989",
     9: "2a341ace-0f57-4309-9b89-e59fe0f09179",
+    10: "75e625c3-60cb-4392-af3e-c86a98bde8c2",
 }
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+
+
+ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8}
+
+# Per-terrain XGBoost hyperparameters — must match train.py LORO-validated config
+XGB_HPARAMS = {
+    "plains": dict(n_estimators=300, max_depth=5, learning_rate=0.08,
+                   reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
+                   colsample_bytree=0.9, min_child_weight=3),
+    "forest": dict(n_estimators=300, max_depth=5, learning_rate=0.08,
+                   reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
+                   colsample_bytree=0.9, min_child_weight=3),
+    "settl":  dict(n_estimators=300, max_depth=5, learning_rate=0.08,
+                   reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
+                   colsample_bytree=0.9, min_child_weight=3),
+}
 
 
 def main():
@@ -41,6 +58,7 @@ def main():
 
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
+    W_data = {"plains": [], "forest": [], "settl": []}
 
     for rnum, round_id in sorted(ROUNDS.items()):
         init_path = os.path.join(DATA_DIR, f"round{rnum}_initial.json")
@@ -53,6 +71,7 @@ def main():
         # Load observation stats for this round (7 features)
         all_obs = load_observations(round_id)
         obs_stats = compute_obs_stats(all_obs) if all_obs else np.zeros(7)
+        rw = ROUND_WEIGHTS.get(rnum, 1.0)
 
         for seed in range(5):
             gt_path = os.path.join(DATA_DIR, f"gt_r{rnum}_seed{seed}.npy")
@@ -74,12 +93,15 @@ def main():
                 if code in {11, 0}:
                     X_data["plains"].append(feats[i])
                     Y_data["plains"].append(targets[i])
+                    W_data["plains"].append(rw)
                 elif code == 4:
                     X_data["forest"].append(feats[i])
                     Y_data["forest"].append(targets[i])
+                    W_data["forest"].append(rw)
                 elif code in {1, 2}:
                     X_data["settl"].append(feats[i])
                     Y_data["settl"].append(targets[i])
+                    W_data["settl"].append(rw)
 
         print(f"  Round {rnum}: loaded 5 seeds")
 
@@ -88,23 +110,25 @@ def main():
     for terrain_type in ["plains", "forest", "settl"]:
         X = np.array(X_data[terrain_type])
         Y = np.array(Y_data[terrain_type])
+        W = np.array(W_data[terrain_type])
+        hp = XGB_HPARAMS[terrain_type]
         print(f"  {terrain_type}: {X.shape[0]} samples, {X.shape[1]} features")
 
         terrain_models = []
         for cls in range(6):
             m = xgb.XGBRegressor(
-                n_estimators=200,
-                max_depth=4,
-                learning_rate=0.1,
-                reg_alpha=0.1,
-                reg_lambda=2.0,
-                subsample=0.9,
-                colsample_bytree=0.9,
-                min_child_weight=3,
+                n_estimators=hp["n_estimators"],
+                max_depth=hp["max_depth"],
+                learning_rate=hp["learning_rate"],
+                reg_alpha=hp["reg_alpha"],
+                reg_lambda=hp["reg_lambda"],
+                subsample=hp["subsample"],
+                colsample_bytree=hp["colsample_bytree"],
+                min_child_weight=hp["min_child_weight"],
                 random_state=42,
                 verbosity=0,
             )
-            m.fit(X, Y[:, cls])
+            m.fit(X, Y[:, cls], sample_weight=W)
             terrain_models.append(m)
         models[terrain_type] = terrain_models
 

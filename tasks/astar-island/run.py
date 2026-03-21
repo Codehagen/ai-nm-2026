@@ -155,19 +155,31 @@ def build_all_predictions(
             for s in round_info.initial_states[seed_idx].settlements
         ]
 
-        # Use same-seed observations only (cross-seed hurts score)
+        # Same-seed observations for Layer 2 (disabled) and seed-specific logic
         same_seed_obs = [
             o for o in all_observations if o["seed_index"] == seed_idx
         ]
 
+        # All settlements for empirical tables
+        all_settl = [
+            [s.model_dump() for s in round_info.initial_states[i].settlements]
+            for i in range(num_seeds)
+        ]
+
+        # TODO: Look at using all 50 observations more effectively.
+        # Previously we only passed same-seed obs to all_observations,
+        # which starved L7/empirical tables of cross-seed data.
+        # On extinction rounds like R10 this cost us ~13 points (75→88).
+        # Now we pass ALL observations so L7 can detect round-wide patterns.
         prediction = build_prediction(
             initial_grid=initial_grid,
             settlements=settlements,
             observations=same_seed_obs,
             seed_index=seed_idx,
             all_initial_grids=all_initial_grids,
-            all_observations=same_seed_obs,
+            all_observations=all_observations,  # ALL seeds for L7/empirical tables
             calibration=calibration,
+            all_settlements=all_settl,
         )
 
         # Final safety normalization
