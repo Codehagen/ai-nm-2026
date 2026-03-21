@@ -90,7 +90,7 @@ export function classifyTask(prompt: string): TaskType {
       "bank reconciliation", "bank statement",
       "conciliación bancaria", "extracto bancario",
       "reconciliação bancária", "extrato bancário",
-      "rapprochement bancaire", "relevé bancaire",
+      "rapprochement bancaire", "rapprochez", "relevé bancaire", "releve bancaire",
       // Ledger analysis / cost analysis
       "analice el libro mayor", "analyze the ledger", "analyser hovedboken",
       "analysieren sie das hauptbuch", "analysez le grand livre",
@@ -102,6 +102,8 @@ export function classifyTask(prompt: string): TaskType {
       // Year-end closing / depreciation
       "clôture annuelle", "year-end closing", "årsavslutning", "årsoppgjør",
       "amortissement", "depreciation", "avskrivning", "abschreibung",
+      "monatsabschluss", "monthly closing", "månedsavslutning",
+      "rechnungsabgrenzung", "prepaid expense", "periodisering",
       // Error correction
       "fehler im hauptbuch", "errores en el libro", "erros no livro",
       "feil i hovedbok", "erreurs dans le grand livre",

@@ -26,7 +26,7 @@
     "23": { "tier": 3, "score": 0, "tries": 1, "taskType": "voucher", "description": "Bank reconciliation — CSV bank statement, match payments to invoices", "hasFiles": true },
     "24": { "tier": 3, "score": 1.50, "tries": 2, "taskType": "voucher", "description": "Error correction in ledger — find 4 errors in vouchers. Model often times out. 2/4 checks pass.", "hasFiles": false },
     "25": { "tier": 3, "score": 0.60, "tries": 1, "taskType": "voucher", "description": "Late invoice reminder fee — create journal voucher (debit 1500, credit 8020), NOT payment registration", "hasFiles": false },
-    "26": { "tier": null, "score": null, "tries": 0, "taskType": null, "description": null, "hasFiles": null },
+    "26": { "tier": 3, "score": 0.60, "tries": 1, "taskType": "invoice-payment", "description": "Multi-product order + invoice. 1/6 checks passed.", "hasFiles": false },
     "27": { "tier": 3, "score": 0.60, "tries": 1, "taskType": "invoice-payment", "description": "Foreign currency payment — EUR invoice, exchange rate conversion. Needs forex-aware payment handling", "hasFiles": false },
     "28": { "tier": 3, "score": 0, "tries": 2, "taskType": "voucher", "description": "Cost analysis — analyze ledger, identify 3 expense accounts with largest increase. Misclassified as project.", "hasFiles": false },
     "29": { "tier": null, "score": null, "tries": 0, "taskType": null, "description": null, "hasFiles": null },
