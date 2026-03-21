@@ -54,7 +54,7 @@ SMOOTH_WEIGHT = 0.0  # disabled — hurts score
 # L7 observation-ratio correction strengths per class:
 # [empty, settlement, port, ruin, forest, mountain]
 # Safe L7: zero for rare classes (port, ruin) — prevents catastrophic KL
-L7_STRENGTHS = np.array([1.60, 1.20, 0.0, 0.0, 1.70, 0.0])
+L7_STRENGTHS = np.array([1.40, 1.00, 0.0, 0.0, 1.50, 0.0])
 L7_MIN_OBS = np.array([200, 50, 30, 20, 100, 0])  # min obs count per class
 L7_ADJ_MIN = 0.80  # hard safety clamp
 L7_ADJ_MAX = 1.25
@@ -63,13 +63,13 @@ L7_ADJ_MAX = 1.25
 XGB_HPARAMS = {
     "plains": dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.9, min_child_weight=3),
+                   colsample_bytree=0.7, min_child_weight=3),
     "forest": dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.9, min_child_weight=3),
+                   colsample_bytree=0.7, min_child_weight=3),
     "settl":  dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.9, min_child_weight=3),
+                   colsample_bytree=0.7, min_child_weight=3),
 }
 
 # ──────────────────────────────────────────────────────────────
