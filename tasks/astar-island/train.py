@@ -24,6 +24,7 @@ warnings.filterwarnings("ignore")
 
 sys.path.insert(0, os.path.dirname(__file__))
 
+from scipy.ndimage import gaussian_filter
 import xgboost as xgb
 from model import (
     _extract_cell_features,
@@ -59,6 +60,32 @@ L7_STRENGTHS = np.array([1.40, 1.00, 0.0, 0.0, 1.50, 0.0])
 L7_MIN_OBS = np.array([200, 50, 30, 20, 100, 0])  # min obs count per class
 L7_ADJ_MIN = 0.80  # hard safety clamp
 L7_ADJ_MAX = 1.25
+
+# ── Round-type adaptive parameters ──
+# Thresholds for round-type classification from obs_settl_rate
+ROUND_TYPE_THRESHOLDS = {"extinction": 0.04, "expansion": 0.12}
+# Per-round-type overrides for L7 strengths and clamps
+ROUND_TYPE_L7 = {
+    "extinction": {
+        "strengths": np.array([1.60, 0.60, 0.0, 0.0, 1.70, 0.0]),
+        "adj_min": np.array([0.70, 0.20, 1.00, 1.00, 0.70, 1.00]),
+        "adj_max": np.array([1.40, 1.20, 1.00, 1.00, 1.40, 1.00]),
+    },
+    "expansion": {
+        "strengths": np.array([1.20, 1.50, 0.0, 0.0, 1.30, 0.0]),
+        "adj_min": np.array([0.60, 0.50, 1.00, 1.00, 0.60, 1.00]),
+        "adj_max": np.array([1.20, 1.60, 1.00, 1.00, 1.20, 1.00]),
+    },
+    "normal": {
+        "strengths": np.array([1.40, 1.00, 0.0, 0.0, 1.50, 0.0]),
+        "adj_min": np.array([0.75, 0.35, 1.00, 1.00, 0.75, 1.00]),
+        "adj_max": np.array([1.30, 1.35, 1.00, 1.00, 1.30, 1.00]),
+    },
+}
+
+# Spatial smoothing sigma for settlement and forest channels
+SPATIAL_SMOOTH_SIGMA = 0.5
+SPATIAL_SMOOTH_BLEND = 0.15  # blend smoothed with original
 
 # Per-terrain XGBoost hyperparameters
 XGB_HPARAMS = {
@@ -100,6 +127,48 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 # enhanced_obs_stats and compute_cell_obs_features removed — now imported from model.py
 # to ensure train and inference use identical feature extractors.
+
+
+def classify_round_type(obs_stats):
+    """Classify round type from observation stats.
+    obs_stats layout: base[0:7] + [min_food, max_pop, food_std, min_defense, defense_std,
+      n_factions_norm, obs_settl_rate, ...] → obs_settl_rate is index 13.
+    """
+    if obs_stats is None:
+        return "normal"
+    obs_settl_rate = float(obs_stats[13])  # obs_settl_rate index in compute_obs_stats
+    if obs_settl_rate < ROUND_TYPE_THRESHOLDS["extinction"]:
+        return "extinction"
+    elif obs_settl_rate > ROUND_TYPE_THRESHOLDS["expansion"]:
+        return "expansion"
+    return "normal"
+
+
+def spatial_smooth(tensor, grid, sigma=SPATIAL_SMOOTH_SIGMA, blend=SPATIAL_SMOOTH_BLEND):
+    """Apply Gaussian spatial smoothing to settlement and forest channels.
+    Only smooth dynamic cells; preserve static ocean/mountain.
+    """
+    if sigma <= 0 or blend <= 0:
+        return tensor
+    h, w, _ = tensor.shape
+    grid_arr = np.array(grid)
+    dynamic = ~np.isin(grid_arr, [10, 5])
+
+    # Smooth settlement channel (class 1) and forest channel (class 4)
+    for ch in [1, 4]:
+        channel = tensor[:, :, ch].copy()
+        # Mask out static cells before smoothing
+        channel[~dynamic] = 0.0
+        smoothed = gaussian_filter(channel, sigma=sigma)
+        # Blend smoothed back into tensor for dynamic cells only
+        tensor[:, :, ch][dynamic] = (
+            (1 - blend) * tensor[:, :, ch][dynamic] + blend * smoothed[dynamic]
+        )
+
+    # Re-normalize dynamic cells
+    tensor[dynamic] = np.maximum(tensor[dynamic], PROB_FLOOR)
+    tensor[dynamic] /= tensor[dynamic].sum(axis=1, keepdims=True)
+    return tensor
 
 
 def load_round_data(round_num):
@@ -144,24 +213,46 @@ def train_gbt_models(train_rounds):
             targets = np.array([gt[y, x] for y, x in coords])
             for i, (y, x) in enumerate(coords):
                 code = grid[y][x]
+                sample_w = rw
                 if code in {11, 0}:
                     X_data["plains"].append(feats[i])
                     Y_data["plains"].append(targets[i])
-                    W_data["plains"].append(rw)
+                    W_data["plains"].append(sample_w)
                 elif code == 4:
                     X_data["forest"].append(feats[i])
                     Y_data["forest"].append(targets[i])
-                    W_data["forest"].append(rw)
+                    W_data["forest"].append(sample_w)
                 elif code in {1, 2}:
                     X_data["settl"].append(feats[i])
                     Y_data["settl"].append(targets[i])
-                    W_data["settl"].append(rw)
+                    W_data["settl"].append(sample_w)
 
+    # Convert to arrays
+    for tt in ["plains", "forest", "settl"]:
+        X_data[tt] = np.array(X_data[tt]) if X_data[tt] else np.empty((0, 0))
+        Y_data[tt] = np.array(Y_data[tt]) if Y_data[tt] else np.empty((0, 6))
+        W_data[tt] = np.array(W_data[tt]) if W_data[tt] else np.empty(0)
+
+    # Detect parallelism: use PARALLEL_XGB env var or default based on CPU count
+    n_workers = int(os.environ.get("PARALLEL_XGB", "0"))
+    if n_workers == 0:
+        n_workers = 1 if os.cpu_count() <= 16 else 18
+
+    if n_workers > 1:
+        return _train_gbt_parallel(X_data, Y_data, W_data, n_workers)
+    else:
+        return _train_gbt_sequential(X_data, Y_data, W_data)
+
+
+def _train_gbt_sequential(X_data, Y_data, W_data):
+    """Train 18 XGBoost models sequentially (default for <=16 cores)."""
     models = {}
     for terrain_type in ["plains", "forest", "settl"]:
-        X = np.array(X_data[terrain_type])
-        Y = np.array(Y_data[terrain_type])
-        W = np.array(W_data[terrain_type])
+        X = X_data[terrain_type]
+        Y = Y_data[terrain_type]
+        W = W_data[terrain_type]
+        if len(X) == 0:
+            continue
         hp = XGB_HPARAMS[terrain_type]
         terrain_models = []
         for cls in range(6):
@@ -182,6 +273,52 @@ def train_gbt_models(train_rounds):
     return models
 
 
+def _fit_one_model(args):
+    """Train a single XGBoost model (for parallel execution)."""
+    X, y, w, hp = args
+    m = xgb.XGBRegressor(
+        n_estimators=hp["n_estimators"],
+        max_depth=hp["max_depth"],
+        learning_rate=hp["learning_rate"],
+        reg_alpha=hp["reg_alpha"],
+        reg_lambda=hp["reg_lambda"],
+        subsample=hp["subsample"],
+        colsample_bytree=hp["colsample_bytree"],
+        min_child_weight=hp["min_child_weight"],
+        random_state=42, verbosity=0, nthread=1,
+    )
+    m.fit(X, y, sample_weight=w)
+    return m
+
+
+def _train_gbt_parallel(X_data, Y_data, W_data, n_workers=18):
+    """Train 18 XGBoost models in parallel (for high-core-count machines)."""
+    from concurrent.futures import ProcessPoolExecutor
+
+    tasks = []
+    task_keys = []  # (terrain_type, cls)
+    for terrain_type in ["plains", "forest", "settl"]:
+        X = X_data[terrain_type]
+        Y = Y_data[terrain_type]
+        W = W_data[terrain_type]
+        if len(X) == 0:
+            continue
+        hp = XGB_HPARAMS[terrain_type]
+        for cls in range(6):
+            tasks.append((X, Y[:, cls], W, hp))
+            task_keys.append((terrain_type, cls))
+
+    with ProcessPoolExecutor(max_workers=min(n_workers, len(tasks))) as pool:
+        fitted = list(pool.map(_fit_one_model, tasks))
+
+    models = {}
+    for (tt, cls), model in zip(task_keys, fitted):
+        if tt not in models:
+            models[tt] = [None] * 6
+        models[tt][cls] = model
+    return models
+
+
 def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=None, cell_obs=None):
     h = len(initial_grid)
     w = len(initial_grid[0]) if h > 0 else 0
@@ -194,7 +331,7 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=No
     features = np.hstack([features, np.tile(obs_stats, (len(features), 1))])
     # Append per-cell obs features (always 23 features — matches model.py compute_cell_obs_features)
     if cell_obs is None:
-        cell_obs = np.zeros((h, w, 23))
+        cell_obs = np.zeros((h, w, 24))
     cell_feats = np.array([cell_obs[y, x] for y, x in coords])
     features = np.hstack([features, cell_feats])
 
@@ -300,7 +437,7 @@ def evaluate_loro():
                         if key in round_empirical:
                             tensor[y, x] = (1 - EMP_BLEND) * tensor[y, x] + EMP_BLEND * round_empirical[key]
 
-            # Layer 7: Observation ratio correction (vectorized)
+            # Layer 7: Round-type-adaptive observation ratio correction (vectorized)
             if all_observations:
                 obs_cls = np.zeros(NUM_CLASSES)
                 obs_total = 0
@@ -317,13 +454,16 @@ def evaluate_loro():
                     dynamic = ~np.isin(grid_arr, [10, 5])
                     model_avg = tensor[dynamic].mean(axis=0)
                     ratio = obs_freq / np.maximum(model_avg, 1e-6)
-                    strengths = L7_STRENGTHS.copy()
+                    # Use round-type-adaptive L7 parameters
+                    round_type = classify_round_type(obs_stats)
+                    rt_params = ROUND_TYPE_L7[round_type]
+                    strengths = rt_params["strengths"].copy()
                     for c in range(NUM_CLASSES):
                         if obs_cls[c] < L7_MIN_OBS[c]:
                             strengths[c] = 0.0
                     adj = 1.0 + strengths * (ratio - 1.0)
-                    adj_min = np.array([0.75, 0.35, 1.00, 1.00, 0.75, 1.00])
-                    adj_max = np.array([1.30, 1.35, 1.00, 1.00, 1.30, 1.00])
+                    adj_min = rt_params["adj_min"]
+                    adj_max = rt_params["adj_max"]
                     adj = np.clip(adj, adj_min, adj_max)
                     # Apply to all dynamic cells at once
                     tensor[dynamic] *= adj[np.newaxis, :]
@@ -363,6 +503,8 @@ def evaluate_loro():
                     tensor[enough] = np.maximum(tensor[enough], PROB_FLOOR)
                     tensor[enough] /= tensor[enough].sum(axis=1, keepdims=True)
 
+            # Spatial smoothing DISABLED for isolation test
+            # tensor = spatial_smooth(tensor, grid)
             tensor = normalize_prediction(tensor)
             score = compute_score(tensor, gt)
             scores.append(score)
