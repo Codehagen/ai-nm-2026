@@ -225,7 +225,8 @@
       "Bash(bash << 'HEREDOC'\nPROJECT=\"ai-nm26osl-1823\"\n\n# Re-strip final cls10 and download\necho \"=== Stripping final cls10 ===\"\ngcloud compute ssh ainm-norgesgruppen-a100 --zone=us-central1-f --project=\"$PROJECT\" --command=\"\ncd /root/task\npython3 strip_model.py runs/cls10/weights/best.pt -o models/best_cls10_final.pt 2>&1\n\" 2>/dev/null\n\necho \"=== Downloading ===\"\ngcloud compute scp ainm-norgesgruppen-a100:/root/task/models/best_cls10_final.pt /Users/walgermo/Utvikling/ai-nm-2026/tasks/norgesgruppen/models/best_cls10_final.pt --zone=us-central1-f --project=\"$PROJECT\" 2>/dev/null\n\nls -la /Users/walgermo/Utvikling/ai-nm-2026/tasks/norgesgruppen/models/best_cls10_final.pt\nHEREDOC)",
       "Bash(bash package_ensemble.sh models/best_cls10_final.pt models/fleet/best_a100_9_s35.pt models/fleet/best_a100_3_s25.pt)",
       "Bash(bash:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }
