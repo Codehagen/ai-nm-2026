@@ -30,9 +30,15 @@ export async function executeTimesheet(ctx: OrchestratorContext, data: Timesheet
     departmentId: deptId,
   });
 
-  // 2. Customer + Project (with PM dance)
+  // 2. Customer + Project (with PM dance + entitlements)
   const adminId = await getAdminEmployee(ctx);
   const custId = await createCustomer(ctx, data.customer);
+
+  // Grant PM entitlements before creating project
+  await ctx.put("/employee/entitlement/:grantEntitlementsByTemplate", {}, {
+    employeeId: String(empId),
+    template: "ALL_PRIVILEGES",
+  });
 
   const projRes = await ctx.post("/project", {
     name: data.project.name,
