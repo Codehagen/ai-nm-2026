@@ -54,7 +54,7 @@ const TASK_SCHEMAS: Record<string, ZodSchema> = {
 // Task-specific extraction instructions
 const TASK_INSTRUCTIONS: Record<string, string> = {
   "invoice": "Extract customer, products, and whether to send/register payment. If no VAT rate is specified, default to 25%.",
-  "invoice-payment": "This is about registering a PAYMENT on an invoice. Set registerPayment=true. If the invoice already exists (the task mentions finding/locating it), set isExistingInvoice=true. Extract the payment amount INCLUDING VAT.",
+  "invoice-payment": "This is about registering a PAYMENT on an invoice. Set registerPayment=true. If the invoice already exists (the task mentions finding/locating it or says 'has an outstanding invoice'), set isExistingInvoice=true. For FULL payment (prompt says 'full payment'/'full betaling'/'paiement intégral'/'vollständige Zahlung'/'pago completo'), do NOT set paymentAmount — the system will use the invoice's actual amount. Only set paymentAmount if a SPECIFIC different amount is mentioned.",
   "invoice-send": "Extract customer, products. Set sendInvoice=true since the task asks to send the invoice.",
   "salary": `Extract employee name and salary components. Map: 'fastlønn/fast lønn/base salary/grunnlønn' → fastlonn, 'bonus' → bonus, 'timelønn/hourly' → timelonn, 'faste tillegg/fixed supplement/tillegg' → faste_tillegg, 'overtid/overtime' → overtid. If unclear, use 'fastlonn'. The 'amount' is the NOK value. 'count' is 1 for monthly salary or number of hours for hourly.
 
