@@ -255,6 +255,22 @@ export function classifyTask(prompt: string): TaskType {
     return "travel-expense";
   }
 
+  // --- Payment reversal / chargeback (BEFORE invoice-payment — these need voucher/reverse, not new payment)
+  if (
+    has(t, "faktura", "invoice", "factura", "fatura", "rechnung", "facture") &&
+    has(
+      t,
+      "zurückgebucht", "zuruckgebucht", "stornieren", "storniert",
+      "charged back", "chargeback", "reverse payment", "cancel payment",
+      "tilbakeført", "tilbakeforing", "kanseller",
+      "annuler le paiement", "annulé", "rejeté",
+      "anular el pago", "devuelto", "estorno",
+      "anular o pagamento", "estornado",
+    )
+  ) {
+    return "voucher";
+  }
+
   // --- Invoice + payment (but not when project is the primary entity)
   if (
     has(t, "faktura", "invoice", "factura", "fatura", "rechnung", "facture") &&

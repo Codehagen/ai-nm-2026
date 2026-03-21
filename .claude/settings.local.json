@@ -264,7 +264,10 @@
       "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" echo \"=== Account 6500 ===\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/ledger/account?number=6500&fields=number,name,vatType\\(percentage\\),vatLocked\")",
       "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" echo \"=== ALL supplier invoices ===\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/supplierInvoice?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01&fields=id,invoiceNumber,invoiceDate,supplier\\(name\\),amount,voucher\\(postings\\(account\\(number\\),department\\(name\\),vatType\\(percentage\\),amountGross\\)\\)&count=10&sorting=-id\")",
       "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/supplierInvoice?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01&fields=id,invoiceNumber,invoiceDate,supplier\\(name\\),amount&count=15&sorting=-id\")",
-      "Bash(/dev/null __NEW_LINE_de68253e27cd0552__ echo echo '=== Book the voucher ===' curl -s -H 'Authorization: $AUTH' -H 'Content-Type: application/json' -X PUT https://kkpqfuj-amager.tripletex.dev/v2/ledger/voucher/609135192/:sendToLedger -d {})"
+      "Bash(/dev/null __NEW_LINE_de68253e27cd0552__ echo echo '=== Book the voucher ===' curl -s -H 'Authorization: $AUTH' -H 'Content-Type: application/json' -X PUT https://kkpqfuj-amager.tripletex.dev/v2/ledger/voucher/609135192/:sendToLedger -d {})",
+      "WebFetch(domain:ai.google.dev)",
+      "Bash(ssh -i ~/.ssh/gcp_ainm -o StrictHostKeyChecking=no walgermo@34.158.87.44 'curl -s http://localhost:9053/ && echo \"\"\"\" && head -1 /tmp/api.log')",
+      "Skill(codex)"
     ]
   }
 }
