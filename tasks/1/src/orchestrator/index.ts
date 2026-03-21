@@ -74,6 +74,27 @@ export async function orchestrate(
   signal?: AbortSignal,
 ): Promise<SolveResponse> {
   const startMs = Date.now();
+
+  // Pre-flight credential check — catch 403 before wasting LLM calls
+  const preflight = new TripletexClient(request.tripletex_credentials, signal);
+  const health = await preflight.get("/employee", { fields: "id", count: "1" });
+  if (!health.ok && health.status === 403) {
+    console.error(`[orchestrator] Pre-flight failed: 403 Forbidden. Credentials invalid.`);
+    logSolve({
+      timestamp: new Date().toISOString(),
+      prompt: request.prompt,
+      filesCount: request.files.length,
+      steps: 0,
+      toolCalls: 1,
+      apiCalls: 1,
+      apiErrors: 1,
+      elapsedMs: Date.now() - startMs,
+      status: "error",
+      error: "Pre-flight 403: credentials invalid",
+    });
+    return { status: "completed" };
+  }
+
   let taskType = classifyTask(request.prompt);
 
   // File hints override weak text classifications (e.g. "department" when a receipt PDF is attached)
@@ -151,8 +172,16 @@ export async function orchestrate(
         toolCallDetails: ctx.apiCalls,
       });
 
-      // Fallback to LLM agent
-      return solve(request, signal);
+      // Fallback to LLM agent — pass partial state so it doesn't redo work
+      const partialState = ctx.apiCalls
+        .filter((c) => c.ok)
+        .map((c) => `${c.method} ${c.path} → OK`)
+        .join("\n");
+      const failedStep = ctx.apiCalls.find((c) => !c.ok);
+      const fallbackHint = partialState
+        ? `\n\n## PARTIAL STATE FROM PREVIOUS ATTEMPT\nThe following API calls already succeeded (do NOT recreate these entities):\n${partialState}${failedStep ? `\n\nThe step that failed: ${failedStep.method} ${failedStep.path} → ${failedStep.status} ${failedStep.errorMessage || ""}` : ""}\nContinue from where this left off.`
+        : undefined;
+      return solve(request, signal, fallbackHint);
     }
   }
 

@@ -11,6 +11,8 @@ import type { ZodSchema } from "zod";
 import type { SolveRequest } from "../dtos.js";
 import { preprocessFiles } from "../file-utils.js";
 
+import { getOsloDate } from "./helpers.js";
+
 import { InvoiceSchema } from "./schemas/invoice.js";
 import { SalarySchema } from "./schemas/salary.js";
 import { ProjectSchema } from "./schemas/project.js";
@@ -26,7 +28,9 @@ const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const EXTRACT_MODEL_ID = process.env.EXTRACT_MODEL_ID || "gemini-2.5-pro";
+const EXTRACT_MODEL_ID = process.env.EXTRACT_MODEL_ID || "gemini-3.1-pro-preview";
+const FALLBACK_MODEL_ID = process.env.FALLBACK_MODEL_ID || "gemini-3.1-flash-lite-preview";
+const EXTRACT_TIMEOUT_MS = 45_000; // 45s before falling back to faster model
 
 function getModel(modelId: string) {
   if (modelId.startsWith("claude-") || modelId.startsWith("anthropic/")) {
@@ -103,6 +107,37 @@ PROMPT:
 ${request.prompt}`;
 }
 
+/** Known date field names across all schemas */
+const DATE_FIELDS = new Set([
+  "dueDate", "invoiceDate", "startDate", "dateOfBirth", "date",
+  "invoiceDueDate", "orderDate", "deliveryDate", "municipalityDate",
+]);
+
+/**
+ * Recursively replace empty-string date fields with today's date.
+ * Prevents 422 errors from Tripletex when extraction returns "" for dates.
+ */
+function sanitizeDates(data: unknown): unknown {
+  if (data === null || data === undefined) return data;
+  if (Array.isArray(data)) return data.map(sanitizeDates);
+  if (typeof data === "object") {
+    const today = getOsloDate();
+    const obj = data as Record<string, unknown>;
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (DATE_FIELDS.has(key) && typeof value === "string" && value.trim() === "") {
+        result[key] = today;
+      } else if (typeof value === "object" && value !== null) {
+        result[key] = sanitizeDates(value);
+      } else {
+        result[key] = value;
+      }
+    }
+    return result;
+  }
+  return data;
+}
+
 export async function extractForTask(taskType: string, request: SolveRequest, signal?: AbortSignal): Promise<unknown> {
   const schema = TASK_SCHEMAS[taskType];
   if (!schema) throw new Error(`No schema for task type: ${taskType}`);
@@ -143,16 +178,42 @@ export async function extractForTask(taskType: string, request: SolveRequest, si
     }
   }
 
-  const { experimental_output } = await generateText({
-    model: getModel(EXTRACT_MODEL_ID),
-    output: Output.object({ schema }),
-    messages,
-    temperature: 0,
-    abortSignal: signal,
-  });
+  // Try primary model with timeout, fallback to faster model
+  let experimental_output: unknown = null;
+  try {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), EXTRACT_TIMEOUT_MS);
+    // Respect parent abort signal
+    signal?.addEventListener("abort", () => ac.abort(), { once: true });
+
+    const result = await generateText({
+      model: getModel(EXTRACT_MODEL_ID),
+      output: Output.object({ schema }),
+      messages,
+      temperature: 0,
+      abortSignal: ac.signal,
+    });
+    clearTimeout(timer);
+    experimental_output = result.experimental_output;
+  } catch (e: unknown) {
+    // Re-throw if parent signal aborted (real timeout)
+    if (signal?.aborted) throw e;
+    const isTimeout = e instanceof Error && e.name === "AbortError";
+    if (!isTimeout) throw e;
+
+    console.warn(`[extract] Primary model timed out after ${EXTRACT_TIMEOUT_MS}ms, falling back to ${FALLBACK_MODEL_ID}`);
+    const result = await generateText({
+      model: getModel(FALLBACK_MODEL_ID),
+      output: Output.object({ schema }),
+      messages,
+      temperature: 0,
+      abortSignal: signal,
+    });
+    experimental_output = result.experimental_output;
+  }
 
   if (!experimental_output) throw new Error("LLM extraction returned no structured output");
-  return experimental_output;
+  return sanitizeDates(experimental_output);
 }
 
 export function hasSchema(taskType: string): boolean {

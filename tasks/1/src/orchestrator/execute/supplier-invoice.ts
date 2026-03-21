@@ -52,12 +52,23 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
   // 2. Create supplier
   const supplierId = await createSupplier(ctx, data.supplier);
 
-  // 3. Get ledger accounts
+  // 3. Get ledger accounts (check VAT lock on expense account)
   const expenseAccountId = await getLedgerAccount(ctx, data.expenseAccount);
   const supplierAccountId = await getLedgerAccount(ctx, "2400"); // Leverandørgjeld
 
-  // 4. Create supplier invoice with voucher
-  const vatTypeId = INPUT_VAT_MAP[data.vatPercent] ?? 1;
+  // Check if expense account has a locked VAT type — use it instead of extracted VAT
+  let vatTypeId = INPUT_VAT_MAP[data.vatPercent] ?? 1;
+  const acctRes = await ctx.get(`/ledger/account/${expenseAccountId}`, {
+    fields: "id,vatType,vatLocked",
+  });
+  if (acctRes.ok) {
+    const acctVal = (acctRes.data as Record<string, unknown>)?.value as Record<string, unknown> | undefined;
+    const vatLocked = acctVal?.vatLocked as boolean | undefined;
+    const acctVatType = acctVal?.vatType as Record<string, unknown> | undefined;
+    if (vatLocked && acctVatType?.id) {
+      vatTypeId = acctVatType.id as number;
+    }
+  }
   const voucherDescription = data.invoiceNumber
     ? `Faktura ${data.invoiceNumber} fra ${data.supplier.name}`
     : `${data.description} - ${data.supplier.name}`;

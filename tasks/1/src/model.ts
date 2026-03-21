@@ -19,6 +19,7 @@ const anthropic = createAnthropic({
 });
 
 const MODEL_ID = process.env.MODEL_ID || "gemini-3.1-pro-preview";
+const FALLBACK_MODEL_ID = process.env.FALLBACK_MODEL_ID || "gemini-3.1-flash-lite-preview";
 
 /** Select the right provider based on model ID */
 function getModel(modelId: string) {
@@ -291,7 +292,8 @@ export function applyDateRangeDefaults(
  */
 export async function solve(
   request: SolveRequest,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  fallbackHint?: string,
 ): Promise<SolveResponse> {
   const startMs = Date.now();
   const client = new TripletexClient(request.tripletex_credentials, signal);
@@ -326,10 +328,11 @@ export async function solve(
 
   // Phase 2: Composable prompt — classify task and build focused prompt
   const taskType = classifyTask(request.prompt);
-  const baseSystem = buildSystemPrompt(taskType) + `\n\nToday's date: ${today}`;
+  const baseSystem = buildSystemPrompt(taskType) + `\n\nToday's date: ${today}` + (fallbackHint || "");
 
-  const result = await generateText({
-    model: getModel(MODEL_ID),
+  let selectedModel = MODEL_ID;
+  const doGenerate = (modelId: string) => generateText({
+    model: getModel(modelId),
     temperature: 0, // Deterministic: reduces random errors on tool calls
     system: baseSystem,
     messages: [{ role: "user", content }],
@@ -581,9 +584,27 @@ export async function solve(
     abortSignal: signal,
   });
 
-  // Change A: Derive logging from result.steps instead of closure variables
-  const toolCallDetails = result.steps.flatMap((step) =>
-    step.staticToolCalls.map((tc, i) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let result: any;
+  try {
+    result = await doGenerate(selectedModel);
+  } catch (e: unknown) {
+    // If parent signal aborted (real timeout from api.ts), re-throw
+    if (signal?.aborted) throw e;
+    // If the model timed out on first step with 0 work done, try fallback model
+    const isTimeout = e instanceof Error && (e.name === "AbortError" || e.message.includes("timeout"));
+    if (isTimeout && FALLBACK_MODEL_ID !== selectedModel) {
+      console.warn(`[solve] Primary model timed out, retrying with ${FALLBACK_MODEL_ID}`);
+      selectedModel = FALLBACK_MODEL_ID;
+      result = await doGenerate(selectedModel);
+    } else {
+      throw e;
+    }
+  }
+
+  // Derive logging from result.steps
+  const toolCallDetails = (result.steps as any[]).flatMap((step: any) =>
+    step.staticToolCalls.map((tc: any, i: number) => {
       const tr = step.staticToolResults[i];
       const res = tr?.output as TxResult | undefined;
       return {
@@ -601,11 +622,11 @@ export async function solve(
   );
 
   const apiCalls = toolCallDetails.length;
-  const apiErrors = toolCallDetails.filter((d) => !d.ok).length;
+  const apiErrors = toolCallDetails.filter((d: any) => !d.ok).length;
 
   logSolve({
     timestamp: new Date().toISOString(),
-    model: MODEL_ID,
+    model: selectedModel,
     taskType,
     prompt: request.prompt,
     filesCount: request.files.length,

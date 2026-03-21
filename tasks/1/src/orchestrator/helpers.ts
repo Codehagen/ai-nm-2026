@@ -87,11 +87,17 @@ export class OrchestratorContext {
   async post(path: string, body: unknown, params?: Record<string, string>): Promise<TxResult> {
     const result = await this.client.post(path, body, params);
     this.logCall("POST", path, result, params, body);
-    // Auto-retry 409
-    if (!result.ok && result.status === 409) {
+    // Auto-retry transient 409/500
+    if (!result.ok && (result.status === 409 || result.status === 500)) {
       await sleep(800);
       const retry = await this.client.post(path, body, params);
       this.logCall("POST", path, retry, params, body);
+      if (!retry.ok && (retry.status === 409 || retry.status === 500)) {
+        await sleep(1200);
+        const retry2 = await this.client.post(path, body, params);
+        this.logCall("POST", path, retry2, params, body);
+        return retry2;
+      }
       return retry;
     }
     return result;
@@ -100,11 +106,17 @@ export class OrchestratorContext {
   async put(path: string, body: unknown, params?: Record<string, string>): Promise<TxResult> {
     const result = await this.client.put(path, body, params);
     this.logCall("PUT", path, result, params, body);
-    // Auto-retry 409
-    if (!result.ok && result.status === 409) {
+    // Auto-retry transient 409/500
+    if (!result.ok && (result.status === 409 || result.status === 500)) {
       await sleep(800);
       const retry = await this.client.put(path, body, params);
       this.logCall("PUT", path, retry, params, body);
+      if (!retry.ok && (retry.status === 409 || retry.status === 500)) {
+        await sleep(1200);
+        const retry2 = await this.client.put(path, body, params);
+        this.logCall("PUT", path, retry2, params, body);
+        return retry2;
+      }
       return retry;
     }
     return result;
