@@ -64,6 +64,9 @@ export function classifyTask(prompt: string): TaskType {
       "analysieren sie das hauptbuch", "analysez le grand livre",
       "costos totales", "total costs increased",
       "kostnadene økte", "kosten gestiegen",
+      "kostnadskonto", "hovudboka", "totalkostnadene auka",
+      "analyser hovudboka", "analyser hovedboka",
+      "analise o livro razão", "analyse the general ledger",
       // Reminder fees / late fees (voucher, not payment)
       "frais de rappel", "purrerente", "purregebyr", "inkassogebyr",
       "reminder fee", "late fee", "reminder",
@@ -80,6 +83,8 @@ export function classifyTask(prompt: string): TaskType {
       "fehler im hauptbuch", "errores en el libro", "erros no livro",
       "feil i hovedbok", "erreurs dans le grand livre",
       "korrigere", "correct errors", "corrigir",
+      // Nynorsk ledger terms
+      "hovudboka", "hovudbok", "kostnadskonto",
     ) ||
     (has(t, "kontoauszug", "kontoutskrift", "bank statement", "relevé") &&
       has(t, "abgleich", "abstimm", "reconcil", "avstemm"))

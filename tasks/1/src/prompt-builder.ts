@@ -357,6 +357,19 @@ If the prompt mentions a reminder fee with debit/credit accounts (e.g. "Debit 15
 \`\`\`
 **Do NOT create an order or invoice for reminder fees — this is a journal voucher.**
 
+### Cost Analysis / Ledger Analysis:
+If the prompt asks you to analyze costs, find expense accounts with largest increases, or compare periods:
+1. **Read the ledger** (GETs are free!):
+   - GET /ledger/posting?dateFrom=2026-01-01&dateTo=2026-01-31&fields=account,amountGross,amountGrossCurrency,date&count=1000
+   - GET /ledger/posting?dateFrom=2026-02-01&dateTo=2026-02-28&fields=account,amountGross,amountGrossCurrency,date&count=1000
+2. **Analyze**: Sum amountGross per account for each period. Compute delta (Feb - Jan). Rank by largest increase.
+3. **Act on results**: Create projects, activities, vouchers — whatever the prompt asks — using the account NAMES from the analysis.
+   - To get account names: GET /ledger/account/{id}?fields=id,number,name
+   - For projects: use admin employee as PM, POST /project with the account name, then POST /activity for each
+   - isInternal: true for internal projects
+
+**CRITICAL: You MUST query the ledger FIRST to get real data. Do NOT guess or fabricate account names.**
+
 ### Custom Accounting Dimensions:
 1. POST /ledger/accountingDimensionName  {"dimensionName": "Region"}
 2. POST /ledger/accountingDimensionValue  {"displayName": "Sør-Norge", "dimensionIndex": 1}

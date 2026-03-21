@@ -12,6 +12,11 @@ export function getOsloDate(): string {
   return new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Oslo" });
 }
 
+/** Strip diacritics for safe email generation (e.g. Gonçalo → Goncalo) */
+export function stripDiacritics(s: string): string {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 /** Add days to a YYYY-MM-DD date string */
 export function addDays(dateStr: string, days: number): string {
   const d = new Date(dateStr + "T12:00:00"); // noon to avoid DST issues
@@ -203,7 +208,7 @@ export async function ensureEmployee(
     departmentId: number;
   },
 ): Promise<number> {
-  const email = data.email || `${data.firstName.toLowerCase()}.${data.lastName.toLowerCase()}@example.org`;
+  const email = data.email || `${stripDiacritics(data.firstName).toLowerCase()}.${stripDiacritics(data.lastName).toLowerCase()}@example.org`;
   const res = await ctx.post("/employee", {
     firstName: data.firstName,
     lastName: data.lastName,

@@ -233,7 +233,14 @@
       "WebFetch(domain:api.github.com)",
       "WebFetch(domain:kenhuangus.substack.com)",
       "WebFetch(domain:deepwiki.com)",
-      "WebFetch(domain:www.the-ai-corner.com)"
+      "WebFetch(domain:www.the-ai-corner.com)",
+      "Bash(find /Users/walgermo/Utvikling/ai-nm-2026/.claude/skills -type f -name *.md)",
+      "Bash(find /Users/walgermo/Utvikling/ai-nm-2026/tasks/1 -name *.env* -o -name sandbox* -o -name *sandbox*)",
+      "Bash(grep -r \"ngrok\\\\|sandbox\\\\|SANDBOX\" /Users/walgermo/Utvikling/ai-nm-2026/tasks/1/src --include=*.ts -l)",
+      "Bash(grep -r \"TRIPLETEX_BASE_URL\\\\|TRIPLETEX_SESSION_TOKEN\\\\|ngrok\" /Users/walgermo/Utvikling/ai-nm-2026/tasks/1 --include=*.ts --include=*.md -n)",
+      "Bash(grep -n \"logSolve\\\\|logRequest\" /Users/walgermo/Utvikling/ai-nm-2026/tasks/1/src/*.ts)",
+      "Bash(tar --exclude=node_modules --exclude=logs --exclude='.env*' --exclude='.git' -czf /tmp/task1.tar.gz .)",
+      "Bash(tar --exclude=node_modules --exclude=logs --exclude='.env*' -czf /tmp/task1.tar.gz .)"
     ]
   }
 }

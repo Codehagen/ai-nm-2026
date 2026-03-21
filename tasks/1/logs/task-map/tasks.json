@@ -28,7 +28,7 @@
     "25": { "tier": 3, "score": 0.60, "tries": 1, "taskType": "voucher", "description": "Late invoice reminder fee — create journal voucher (debit 1500, credit 8020), NOT payment registration", "hasFiles": false },
     "26": { "tier": 3, "score": 0.60, "tries": 1, "taskType": "invoice-payment", "description": "Multi-product order + invoice. 1/6 checks passed.", "hasFiles": false },
     "27": { "tier": 3, "score": 0.60, "tries": 1, "taskType": "invoice-payment", "description": "Foreign currency payment — EUR invoice, exchange rate conversion. Needs forex-aware payment handling", "hasFiles": false },
-    "28": { "tier": 3, "score": 0, "tries": 2, "taskType": "voucher", "description": "Cost analysis — analyze ledger, identify 3 expense accounts with largest increase. Misclassified as project.", "hasFiles": false },
+    "28": { "tier": 3, "score": 0, "tries": 2, "taskType": "voucher", "description": "Cost analysis — GET /ledger/posting for Jan+Feb, compute deltas, find top 3 expense accounts, create internal project + activity for each. Classifier fixed (was misrouted to project). Prompt recipe added.", "hasFiles": false },
     "29": { "tier": 3, "score": 0.55, "tries": 1, "taskType": "project", "description": "Project lifecycle — create project, fixed price, invoice. Misclassified as supplier-invoice, now fixed.", "hasFiles": false },
     "30": { "tier": 3, "score": 0, "tries": 1, "taskType": null, "description": "Unknown T3 — 1 try, failed", "hasFiles": null }
   }

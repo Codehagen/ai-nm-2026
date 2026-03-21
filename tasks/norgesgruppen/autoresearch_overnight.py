@@ -1,7 +1,8 @@
-"""Overnight autonomous hyperparameter search for NorgesGruppen.
+"""Overnight autoresearch: fine-tune from best model for max progression.
 
-Runs continuously on GPU VMs, sampling random configs from search space.
-Each VM explores different configs via VM_ID-seeded RNG.
+Iterates on our best competition model (0.9221 live) with short fine-tuning
+bursts. Each experiment: 20-50 epochs, ~15-30 min on A100, ~30-60 min on L4.
+Keeps improvements, discards regressions.
 
 Usage on each VM:
     VM_ID=a100-0 GPU_TYPE=a100 nohup python3 autoresearch_overnight.py > overnight.log 2>&1 &
@@ -32,46 +33,52 @@ MODELS_DIR.mkdir(exist_ok=True)
 VM_ID = os.environ.get("VM_ID", "vm0")
 GPU_TYPE = os.environ.get("GPU_TYPE", "l4").lower()
 
-# Timeout per experiment: A100 ~2.5h for 300ep, L4 ~6h
-TIMEOUT_HOURS = 3.5 if GPU_TYPE == "a100" else 8.0
+# Timeout: fine-tuning is much faster than from-scratch
+TIMEOUT_HOURS = 1.5 if GPU_TYPE == "a100" else 3.0
 
 RESULTS_TSV = TASK_DIR / f"overnight_results_{VM_ID}.tsv"
 BEST_MODEL = MODELS_DIR / f"best_overnight_{VM_ID}.pt"
 
-# Data: 80/20 split for honest eval during search
+# Data: 80/20 split for eval
 DATA_YAML = TASK_DIR / "data" / "yolo" / "data.yaml"
+
+# Base model: our best competition model (scored 0.9221 live)
+# Falls back to yolov8l.pt if best.pt doesn't exist
+BASE_MODEL = MODELS_DIR / "best.pt"
+if not BASE_MODEL.exists():
+    BASE_MODEL = TASK_DIR / "yolov8l.pt"
 
 # Seed RNG from VM_ID for different exploration per VM
 SEED = int(hashlib.md5(VM_ID.encode()).hexdigest()[:8], 16) % (2**31)
 
-# ─── Search space ────────────────────────────────────────────────────────
-# Bold = weighted toward proven-best (70% exploitation / 30% exploration)
+# ─── Search space: fine-tuning from best model ─────────────────────────
+# Short epoch bursts with varied LR, augmentation, and loss weights.
+# Each experiment fine-tunes the CURRENT best (iterative improvement).
 SEARCH_SPACE = {
+    "epochs":         [20, 30, 30, 40, 50],
+    "lr0":            [0.0005, 0.001, 0.001, 0.002, 0.005],
+    "lrf":            [0.001, 0.01, 0.01, 0.1],
+    "cos_lr":         [True, True, False],
+    "warmup_epochs":  [1.0, 2.0, 3.0],
     "cls":            [0.8, 0.9, 1.0, 1.0, 1.0, 1.1, 1.2],
     "box":            [5.0, 7.5, 7.5, 10.0],
     "dfl":            [1.0, 1.5, 1.5, 2.0],
-    "mosaic":         [0.8, 0.9, 1.0],
-    "mixup":          [0.05, 0.1, 0.15, 0.2],
-    "copy_paste":     [0.05, 0.1, 0.15],
-    "degrees":        [5.0, 10.0, 15.0],
-    "scale":          [0.3, 0.5, 0.7],
-    "epochs":         [280, 300, 300, 350],
-    "close_mosaic":   [10, 15, 20, 30],
-    "warmup_epochs":  [3.0, 5.0],
-    "freeze":         [None, None, None, 5, 10],
-    "label_smoothing": [0.0, 0.0, 0.0, 0.05, 0.1],
+    "mosaic":         [0.0, 0.3, 0.5, 0.8, 1.0],
+    "mixup":          [0.0, 0.05, 0.1, 0.15],
+    "copy_paste":     [0.0, 0.05, 0.1],
+    "degrees":        [0.0, 5.0, 10.0],
+    "scale":          [0.3, 0.5, 0.5],
+    "close_mosaic":   [3, 5, 10],
+    "freeze":         [None, None, None, 10, 15],
+    "label_smoothing": [0.0, 0.0, 0.05, 0.1],
 }
 
-# Fixed (proven best)
+# Fixed
 FIXED = {
-    "model":     "yolov8l.pt",
     "imgsz":     1280,
     "optimizer": "SGD",
-    "cos_lr":    True,
-    "lr0":       0.005,
-    "lrf":       0.01,
-    "batch":     -1,
-    "patience":  50,
+    "batch":     2,
+    "patience":  20,
 }
 
 
@@ -133,8 +140,21 @@ def config_to_name(config, run_idx):
     return f"overnight_{VM_ID}_r{run_idx}"
 
 
+def get_current_best_model():
+    """Return path to the current best model for fine-tuning.
+
+    Uses iterative improvement: if we've found a better model during
+    autoresearch, fine-tune from that. Otherwise use the base model.
+    """
+    if BEST_MODEL.exists():
+        return str(BEST_MODEL)
+    return str(BASE_MODEL)
+
+
 def generate_train_script(config, exp_name):
     """Generate an inline training script for this config."""
+    model_path = get_current_best_model()
+
     freeze_line = ""
     if config["freeze"] is not None:
         freeze_line = f"    freeze={config['freeze']},"
@@ -159,7 +179,7 @@ torch.load = _patched
 from ultralytics import YOLO
 from pathlib import Path
 
-model = YOLO("{FIXED['model']}")
+model = YOLO("{model_path}")
 results = model.train(
     data="{DATA_YAML}",
     imgsz={FIXED['imgsz']},
@@ -171,18 +191,15 @@ results = model.train(
     name="{exp_name}",
     exist_ok=True,
     seed={config['seed']},
-    # Optimizer (fixed proven-best)
     optimizer="{FIXED['optimizer']}",
-    cos_lr={FIXED['cos_lr']},
-    lr0={FIXED['lr0']},
-    lrf={FIXED['lrf']},
+    cos_lr={config['cos_lr']},
+    lr0={config['lr0']},
+    lrf={config['lrf']},
     warmup_epochs={config['warmup_epochs']},
     close_mosaic={config['close_mosaic']},
-    # Loss weights (search)
     box={config['box']},
     cls={config['cls']},
     dfl={config['dfl']},
-    # Augmentation (search)
     mosaic={config['mosaic']},
     mixup={config['mixup']},
     copy_paste={config['copy_paste']},
@@ -195,7 +212,6 @@ results = model.train(
     hsv_v=0.3,
 {freeze_line}
 {label_smoothing_line}
-    # Save
     save=True,
     save_period=-1,
     plots=False,
@@ -222,11 +238,14 @@ except: pass
 def run_experiment(config, run_idx):
     """Run a single experiment. Returns val_metric or None on failure."""
     exp_name = config_to_name(config, run_idx)
+    model_path = get_current_best_model()
     log(f"--- Run {run_idx}: {exp_name} ---")
-    log(f"Config: seed={config['seed']} cls={config['cls']} box={config['box']} "
-        f"dfl={config['dfl']} mosaic={config['mosaic']} mixup={config['mixup']} "
-        f"cp={config['copy_paste']} deg={config['degrees']} scale={config['scale']} "
-        f"ep={config['epochs']} cm={config['close_mosaic']} wu={config['warmup_epochs']} "
+    log(f"Fine-tuning from: {Path(model_path).name}")
+    log(f"Config: seed={config['seed']} ep={config['epochs']} lr0={config['lr0']} "
+        f"lrf={config['lrf']} cos={config['cos_lr']} cls={config['cls']} "
+        f"box={config['box']} dfl={config['dfl']} mosaic={config['mosaic']} "
+        f"mixup={config['mixup']} cp={config['copy_paste']} deg={config['degrees']} "
+        f"scale={config['scale']} cm={config['close_mosaic']} wu={config['warmup_epochs']} "
         f"freeze={config['freeze']} ls={config['label_smoothing']}")
 
     start = time.time()

@@ -123,9 +123,9 @@ function getErrorHint(
     return 'Salary specification requires an active employment. POST /employee/employment first with employee.id, startDate, and division.id. Also check that year and month match the current payroll period.';
   }
 
-  // Employee standard time — format hint
+  // Employee standard time — BLOCK POST, require PUT
   if (method === "POST" && path.includes("employee/standardTime")) {
-    return 'Standard time requires: GET /employee/standardTime?employeeId=<id>&fields=* first to see existing entries. Then PUT /employee/standardTime/{id} to update (not POST). Set workHoursPerDay to the desired hours. Do NOT keep retrying POST — use PUT on the existing entry.';
+    return 'STOP: POST /employee/standardTime does NOT work. You MUST use PUT. Steps: (1) GET /employee/standardTime?employeeId=<id>&fields=* to find existing entries and see the field names. (2) PUT /employee/standardTime/{id} with the fields from the GET response. Do NOT guess field names — copy them from the GET response exactly.';
   }
 
   // Voucher postings invalid field (type, isDebit, etc.)

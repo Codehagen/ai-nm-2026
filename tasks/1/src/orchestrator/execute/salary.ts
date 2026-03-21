@@ -12,6 +12,7 @@ import {
   extractId,
   extractValues,
   getOsloDate,
+  stripDiacritics,
 } from "../helpers.js";
 
 /** Map salary type names to Tripletex salary type numbers */
@@ -48,7 +49,7 @@ export async function executeSalary(ctx: OrchestratorContext, data: SalaryData):
 
   if (needsUpdate) {
     // GET current employee to get version
-    const email = data.employee.email || `${data.employee.firstName.toLowerCase()}.${data.employee.lastName.toLowerCase()}@example.org`;
+    const email = data.employee.email || `${stripDiacritics(data.employee.firstName).toLowerCase()}.${stripDiacritics(data.employee.lastName).toLowerCase()}@example.org`;
     const getRes = await ctx.get("/employee", {
       email,
       fields: "id,version,dateOfBirth,nationalIdentityNumber,bankAccountNumber,firstName,lastName",
@@ -103,7 +104,7 @@ export async function executeSalary(ctx: OrchestratorContext, data: SalaryData):
       (v) => v.field?.includes("dateOfBirth")
     );
     if (isDobError) {
-      const email = data.employee.email || `${data.employee.firstName.toLowerCase()}.${data.employee.lastName.toLowerCase()}@example.org`;
+      const email = data.employee.email || `${stripDiacritics(data.employee.firstName).toLowerCase()}.${stripDiacritics(data.employee.lastName).toLowerCase()}@example.org`;
       const getEmp = await ctx.get("/employee", {
         email,
         fields: "id,version,dateOfBirth,firstName,lastName",
