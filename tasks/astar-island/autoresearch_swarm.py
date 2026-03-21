@@ -39,12 +39,76 @@ from pathlib import Path
 TASK_DIR = Path(__file__).parent.resolve()
 VM_ID = os.environ.get("VM_ID", "vm0")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
-GEMINI_MODEL = os.environ.get("MODEL_ID", "gemini-2.5-flash")
+GEMINI_MODEL = os.environ.get("MODEL_ID", "gemini-3.1-pro-preview")
 MAX_RUNS = int(os.environ.get("MAX_RUNS", "200"))
 
 IS_HUB = os.environ.get("IS_HUB", "0") == "1"
 FLEET_IPS = [ip.strip() for ip in os.environ.get("FLEET_IPS", "").split(",") if ip.strip()]
 HUB_IP = os.environ.get("HUB_IP", "")
+VM_FOCUS = os.environ.get("VM_FOCUS", "general")
+
+# VM specialization prompts — each VM gets a focused research direction
+FOCUS_PROMPTS = {
+    "r7_adaptive": """FOCUS: Fix R7 (72.5 — weakest round, extreme expansion).
+Try: round-type detection from obs_stats (obs_settl_rate > 0.15 = expansion),
+per-type blend weights, per-type L7 strengths, adaptive EMP_BLEND based on expansion rate.
+The key insight: expansion rounds need LESS heuristic (lower blend weight = more XGB)
+and STRONGER L7 settlement correction.""",
+
+    "distance_decay": """FOCUS: Non-linear distance decay for expansion rounds.
+Current distance tables use linear buckets (1-8, 99). Expansion rounds may need
+exponential or quadratic decay. Try: distance**0.5, log(1+distance), or per-round
+distance scaling based on obs_settl_rate. Also try different distance bucket boundaries.""",
+
+    "expansion_features": """FOCUS: New features that capture settlement expansion pressure.
+Try: settlement cluster density (how many settlements within r5),
+expansion front detection (cells where obs_settl_rate transitions from high to low),
+settlement momentum (rate of change of settlement count across observations),
+food pressure (forests_r3 / settlements_r3).""",
+
+    "faction_analysis": """FOCUS: Use faction/owner_id data from observations.
+Each observation includes owner_id per settlement. Try features like:
+faction count in r3, faction diversity index, dominant faction strength,
+cells between different factions (conflict zone indicator),
+faction territory boundary distance.""",
+
+    "port_trade": """FOCUS: Port and trade corridor features.
+Ports enable long-range trade and raiding. Try: BFS distance to nearest port,
+port cluster density, cells between two ports (trade corridor),
+coastal path length, port-to-port connectivity features.""",
+
+    "winter_raiding": """FOCUS: Winter severity and raiding signal features.
+Try: defense variance across observations (high = active raiding),
+wealth depletion rate (fraction with wealth < 10), food deficit severity,
+population crash proxy (max_pop - min_pop), dead_rate correlation features.""",
+
+    "terrain_interaction": """FOCUS: Terrain transition and interaction features.
+Try: number of terrain boundaries in r2 (edge-of-biome cells behave differently),
+forest-to-plains transition count, ocean adjacency patterns,
+mountain blocking features (cells behind mountains from settlements).""",
+
+    "directional": """FOCUS: Directional expansion features.
+Settlements don't expand uniformly — they follow terrain. Try:
+direction to nearest settlement (N/S/E/W quadrant encoding),
+coastal direction (which side has ocean), expansion vector from settlement centroid,
+asymmetric distance features (distance along passable terrain vs Manhattan).""",
+
+    "l7_tuning": """FOCUS: L7 observation ratio correction optimization.
+Try: per-class L7 strengths (sweep each independently),
+round-type-adaptive L7 (different strengths for expansion vs extinction),
+wider/narrower clamp bounds per class, dynamic MIN_OBS thresholds,
+L7 applied before vs after empirical blend.""",
+
+    "xgb_tuning": """FOCUS: XGBoost hyperparameter optimization.
+Try: per-terrain n_estimators (plains might need more than settlement),
+per-terrain max_depth, per-terrain learning_rate, colsample sweep,
+subsample sweep, reg_alpha/reg_lambda combinations,
+min_child_weight per terrain.""",
+
+    "general": """FOCUS: Creative exploration — try anything that might improve the score.
+Look at what worked and failed in past experiments, and try new angles.""",
+}
+
 
 TRAIN_PY = TASK_DIR / "train.py"
 TRAIN_PY_BACKUP = TASK_DIR / "train.py.backup"
@@ -223,13 +287,18 @@ R7=72.5 (extreme expansion), R1=85.5, R14=85.7, R5=86.5, R6=87.6, R11=87.7,
 R2=92.1, R15=92.4, R10=93.0, R9=93.1, R13=93.7, R4=94.3, R8=95.2, R16=88.8
 Pattern: STRONG on extinction rounds, WEAK on expansion rounds."""
 
+    focus = FOCUS_PROMPTS.get(VM_FOCUS, FOCUS_PROMPTS["general"])
+
     prompt = f"""You are an ML researcher doing autonomous autoresearch on a probabilistic terrain prediction model.
 The model predicts P(terrain class) on a 40x40 grid after 50 years of Norse civilization simulation.
 Metric: entropy-weighted KL divergence, score=100*exp(-3*weighted_kl). Higher=better. Max=100.
 
 {per_round_info}
 
-FLEET EXPERIMENT HISTORY:
+YOUR SPECIALIZATION (this VM's research direction):
+{focus}
+
+FLEET EXPERIMENT HISTORY (from ALL VMs):
 {fleet_summary}
 
 CURRENT train.py (the ONLY file you can edit):
@@ -238,6 +307,7 @@ CURRENT train.py (the ONLY file you can edit):
 ```
 
 YOUR TASK: Generate ONE code change to train.py that might improve val_metric.
+Stay focused on your specialization above. Don't repeat experiments that failed in the fleet history.
 
 IDEAS TO EXPLORE (pick one, or invent your own):
 - New features in _extract_cell_features (add to the features list, update empty array size)
