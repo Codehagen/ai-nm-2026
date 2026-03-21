@@ -266,7 +266,7 @@ Respond with ONLY a JSON object:
 
         text = body["candidates"][0]["content"]["parts"][0]["text"].strip()
 
-        # Try parsing raw first, then clean if needed
+        # Try parsing: raw first, then cleaned, then regex extraction
         raw = None
         for attempt_text in [text, _clean_json(text)]:
             try:
@@ -275,14 +275,18 @@ Respond with ONLY a JSON object:
             except (json.JSONDecodeError, ValueError):
                 continue
 
-        # Last resort: extract JSON object with regex
+        # Last resort: find JSON between first { and last }
         if raw is None:
-            match = re.search(r'\{[^}]+\}', text, re.DOTALL)
-            if match:
-                raw = json.loads(match.group())
+            start = text.find("{")
+            end = text.rfind("}")
+            if start != -1 and end != -1 and end > start:
+                try:
+                    raw = json.loads(text[start:end + 1])
+                except (json.JSONDecodeError, ValueError):
+                    pass
 
         if raw is None:
-            log(f"Gemini returned unparseable: {text[:100]}")
+            log(f"Gemini returned unparseable: {text[:200]}")
             return None
 
         # Log Gemini's reasoning
