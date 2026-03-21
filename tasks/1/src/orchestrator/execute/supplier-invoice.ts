@@ -112,14 +112,6 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
         },
       ],
     },
-  });
+  }, { sendToLedger: "true" });
   if (!res.ok) throw new Error(`Failed to create supplier invoice: ${res.message}`);
-
-  // 5. Book the voucher to the ledger
-  const val = extractValue(res);
-  const voucher = val.voucher as Record<string, unknown> | undefined;
-  const voucherId = voucher?.id;
-  if (voucherId) {
-    await ctx.put(`/ledger/voucher/${voucherId}/:sendToLedger`, {});
-  }
 }

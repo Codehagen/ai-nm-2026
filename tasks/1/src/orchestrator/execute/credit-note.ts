@@ -16,8 +16,15 @@ import {
 export async function executeCreditNote(ctx: OrchestratorContext, data: CreditNoteData): Promise<void> {
   const today = getOsloDate();
 
-  // 1. Customer (scoring checks it exists)
-  const custId = await createCustomer(ctx, data.customer);
+  // 1. Customer — try GET first (pre-populated on competition instances), only POST if not found
+  let custId: number;
+  const getCustomer = await ctx.get("/customer", { name: data.customer.name, fields: "id" });
+  const existingCustomers = extractValues(getCustomer);
+  if (existingCustomers[0]?.id) {
+    custId = existingCustomers[0].id as number;
+  } else {
+    custId = await createCustomer(ctx, data.customer);
+  }
 
   // 2. Products (scoring checks they exist) — capture IDs for reuse
   const products: Array<{ id: number; price: number; quantity: number; vatPercent: string }> = [];

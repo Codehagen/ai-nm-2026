@@ -290,7 +290,8 @@
       "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" __NEW_LINE_b81af726e1030b8f__ echo \"=== What does GET /employee?count=1 return? ===\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/employee?fields=id,firstName,lastName&count=1\")",
       "Bash(/dev/null __NEW_LINE_b81af726e1030b8f__ echo echo '=== And employee 18686654 ===' curl -s -u 0:$TOKEN https://kkpqfuj-amager.tripletex.dev/v2/employee/18686654?fields=id,firstName,lastName)",
       "Bash(/dev/null __NEW_LINE_b81af726e1030b8f__ echo echo '=== Check compiled code for the condition ===' grep -B2 -A3 'pmId !== adminId' dist/orchestrator/execute/project.js)",
-      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\")"
+      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\")",
+      "Bash(TOKEN=\"ff7102f0-5672-4ee2-8935-888b49fde285\" BASE=\"https://kkpqfuj-amager.tripletex.dev/v2\" curl -s -u \"0:$TOKEN\" \"$BASE/employee?fields=id&count=1\")"
     ]
   }
 }
