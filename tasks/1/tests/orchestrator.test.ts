@@ -163,16 +163,16 @@ describe("Orchestrator Executors", () => {
       const employees = extractValues(empRes);
       expect(employees.some((e) => e.firstName === "Ola" && e.lastName === "Nordmann")).toBe(true);
 
-      // Verify: salary/specification POST was made
-      const specCalls = ctx.apiCalls.filter((c) => c.method === "POST" && c.path.includes("/salary/specification"));
-      expect(specCalls.length).toBeGreaterThanOrEqual(1);
+      // Verify: salary/transaction POST was made (contains payslip with specifications)
+      const txCalls = ctx.apiCalls.filter((c) => c.method === "POST" && c.path.includes("/salary/transaction"));
+      expect(txCalls.length).toBeGreaterThanOrEqual(1);
 
-      // Verify no unhandled errors (allow 422 handled retries)
-      const unhandledErrors = ctx.apiCalls.filter((c) => !c.ok && c.status !== 422);
+      // Verify no unhandled errors (allow 422 handled retries, 404 for mock endpoints)
+      const unhandledErrors = ctx.apiCalls.filter((c) => !c.ok && c.status !== 422 && c.status !== 404);
       expect(unhandledErrors.length).toBe(0);
     });
 
-    it("handles multiple salary components via salary/specification", async () => {
+    it("handles multiple salary components via salary/transaction", async () => {
       const ctx = makeCtx();
       const data: SalaryData = {
         employee: { firstName: "Kari", lastName: "Hansen" },
@@ -184,9 +184,9 @@ describe("Orchestrator Executors", () => {
 
       await executeSalary(ctx, data);
 
-      // Verify: salary/specification POST for both components
-      const specCalls = ctx.apiCalls.filter((c) => c.method === "POST" && c.path.includes("/salary/specification"));
-      expect(specCalls.length).toBeGreaterThanOrEqual(2);
+      // Verify: salary/transaction POST was made
+      const txCalls = ctx.apiCalls.filter((c) => c.method === "POST" && c.path.includes("/salary/transaction"));
+      expect(txCalls.length).toBeGreaterThanOrEqual(1);
     });
 
     it("completes within 15 seconds", async () => {

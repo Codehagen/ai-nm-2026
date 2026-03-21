@@ -152,7 +152,8 @@ export async function executeSalary(ctx: OrchestratorContext, data: SalaryData):
     typeByNumber.set(st.number as number, st.id as number);
   }
 
-  // 7. Create salary specifications for ALL components
+  // 7. Build salary specifications for ALL components
+  const specifications: Array<{ salaryType: { id: number }; rate: number; count: number }> = [];
   for (const comp of data.components) {
     let typeId: number | undefined;
 
@@ -187,23 +188,21 @@ export async function executeSalary(ctx: OrchestratorContext, data: SalaryData):
 
     // Convert annual salary to monthly
     const rate = comp.isAnnual ? Math.round(comp.amount / 12) : comp.amount;
+    specifications.push({ salaryType: { id: typeId }, rate, count: comp.count });
+  }
 
-    // Use client directly to avoid auto-retry on 500 (salary/specification often returns 500)
-    const specRes = await ctx.client.post("/salary/specification", {
+  // 8. Create salary transaction with embedded payslip + specifications
+  // This is the correct Tripletex API flow (not POST /salary/specification which returns 500)
+  await ctx.post("/salary/transaction", {
+    date: today,
+    year,
+    month,
+    payslips: [{
       employee: { id: empId },
-      salaryType: { id: typeId },
+      date: today,
       year,
       month,
-      count: comp.count,
-      rate,
-    });
-    ctx.apiCalls.push({
-      method: "POST",
-      path: "/salary/specification",
-      ok: specRes.ok,
-      status: specRes.ok ? undefined : (specRes as { status: number }).status,
-      body: { employee: { id: empId }, salaryType: { id: typeId }, year, month, count: comp.count, rate },
-    });
-    // Don't throw on failure — employee/employment are already created
-  }
+      specifications,
+    }],
+  });
 }

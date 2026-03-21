@@ -275,7 +275,10 @@
       "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" __NEW_LINE_751eb7a89b54151a__ echo \"=== Check available modules ===\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/company/modules?fields=*\")",
       "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" __NEW_LINE_216df3191927c50d__ echo \"=== Test salary/specification NOW ===\" curl -s -u \"0:$TOKEN\" -H \"Content-Type: application/json\" -X POST \"https://kkpqfuj-amager.tripletex.dev/v2/salary/specification\" -d '{\"\"\"\"employee\"\"\"\":{\"\"\"\"id\"\"\"\":18675346},\"\"\"\"salaryType\"\"\"\":{\"\"\"\"id\"\"\"\":69137810},\"\"\"\"year\"\"\"\":2026,\"\"\"\"month\"\"\"\":3,\"\"\"\"count\"\"\"\":1,\"\"\"\"rate\"\"\"\":45000}')",
       "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" __NEW_LINE_b1116f2de807616b__ echo \"=== Test salary/specification ===\" curl -s -u \"0:$TOKEN\" -H \"Content-Type: application/json\" -X POST \"https://kkpqfuj-amager.tripletex.dev/v2/salary/specification\" -d '{\"\"\"\"employee\"\"\"\":{\"\"\"\"id\"\"\"\":18675346},\"\"\"\"salaryType\"\"\"\":{\"\"\"\"id\"\"\"\":69137810},\"\"\"\"year\"\"\"\":2026,\"\"\"\"month\"\"\"\":3,\"\"\"\"count\"\"\"\":1,\"\"\"\"rate\"\"\"\":45000}')",
-      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B network)"
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B network)",
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B click @e58 2)",
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B url 2)",
+      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" __NEW_LINE_4e42da197253381c__ echo \"=== Test POST /salary/transaction ===\" curl -s -u \"0:$TOKEN\" -H \"Content-Type: application/json\" -X POST \"https://kkpqfuj-amager.tripletex.dev/v2/salary/transaction\" -d '{\"\"\"\"employee\"\"\"\":{\"\"\"\"id\"\"\"\":18675346},\"\"\"\"year\"\"\"\":2026,\"\"\"\"month\"\"\"\":3}')"
     ]
   }
 }
