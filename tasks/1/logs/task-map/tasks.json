@@ -23,7 +23,7 @@
     "20": { "tier": null, "score": null, "tries": 0, "taskType": null, "description": null, "hasFiles": null },
     "21": { "tier": null, "score": null, "tries": 0, "taskType": null, "description": null, "hasFiles": null },
     "22": { "tier": null, "score": null, "tries": 0, "taskType": null, "description": null, "hasFiles": null },
-    "23": { "tier": null, "score": null, "tries": 0, "taskType": null, "description": null, "hasFiles": null },
+    "23": { "tier": 3, "score": 0, "tries": 1, "taskType": "voucher", "description": "Bank reconciliation — CSV bank statement, match payments to invoices", "hasFiles": true },
     "24": { "tier": null, "score": null, "tries": 0, "taskType": null, "description": null, "hasFiles": null },
     "25": { "tier": null, "score": null, "tries": 0, "taskType": null, "description": null, "hasFiles": null },
     "26": { "tier": null, "score": null, "tries": 0, "taskType": null, "description": null, "hasFiles": null },

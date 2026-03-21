@@ -221,7 +221,9 @@
       "Bash(bash -c '\nsleep 15\ngcloud compute ssh ainm-norgesgruppen-a100-9 --zone=us-central1-b --project=ai-nm26osl-1823 --command=\"tail -10 /tmp/train.log 2>/dev/null; echo ---; ps aux | grep python3 | grep -v grep | head -3\" 2>/dev/null\n')",
       "Bash(tar --exclude='node_modules' --exclude='logs' --exclude='.env*' --exclude='models' -czf /tmp/task1.tar.gz .)",
       "Bash(scp -i ~/.ssh/gcp_ainm -o StrictHostKeyChecking=no /tmp/task1.tar.gz walgermo@34.158.87.44:~/task1.tar.gz)",
-      "Bash(scp:*)"
+      "Bash(scp:*)",
+      "Bash(bash << 'HEREDOC'\nPROJECT=\"ai-nm26osl-1823\"\n\n# Re-strip final cls10 and download\necho \"=== Stripping final cls10 ===\"\ngcloud compute ssh ainm-norgesgruppen-a100 --zone=us-central1-f --project=\"$PROJECT\" --command=\"\ncd /root/task\npython3 strip_model.py runs/cls10/weights/best.pt -o models/best_cls10_final.pt 2>&1\n\" 2>/dev/null\n\necho \"=== Downloading ===\"\ngcloud compute scp ainm-norgesgruppen-a100:/root/task/models/best_cls10_final.pt /Users/walgermo/Utvikling/ai-nm-2026/tasks/norgesgruppen/models/best_cls10_final.pt --zone=us-central1-f --project=\"$PROJECT\" 2>/dev/null\n\nls -la /Users/walgermo/Utvikling/ai-nm-2026/tasks/norgesgruppen/models/best_cls10_final.pt\nHEREDOC)",
+      "Bash(bash package_ensemble.sh models/best_cls10_final.pt models/fleet/best_a100_9_s35.pt models/fleet/best_a100_3_s25.pt)"
     ]
   }
 }

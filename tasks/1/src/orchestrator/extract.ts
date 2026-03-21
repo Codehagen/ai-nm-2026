@@ -52,7 +52,12 @@ const TASK_INSTRUCTIONS: Record<string, string> = {
   "invoice": "Extract customer, products, and whether to send/register payment. If no VAT rate is specified, default to 25%.",
   "invoice-payment": "This is about registering a PAYMENT on an invoice. Set registerPayment=true. If the invoice already exists (the task mentions finding/locating it), set isExistingInvoice=true. Extract the payment amount INCLUDING VAT.",
   "invoice-send": "Extract customer, products. Set sendInvoice=true since the task asks to send the invoice.",
-  "salary": "Extract employee name and salary components. Map: 'fastlønn/fast lønn/base salary/grunnlønn' → fastlonn, 'bonus' → bonus, 'timelønn/hourly' → timelonn, 'faste tillegg/fixed supplement/tillegg' → faste_tillegg, 'overtid/overtime' → overtid. If unclear, use 'fastlonn'. The 'amount' is the NOK value. 'count' is 1 for monthly salary or number of hours for hourly.",
+  "salary": `Extract employee name and salary components. Map: 'fastlønn/fast lønn/base salary/grunnlønn' → fastlonn, 'bonus' → bonus, 'timelønn/hourly' → timelonn, 'faste tillegg/fixed supplement/tillegg' → faste_tillegg, 'overtid/overtime' → overtid. If unclear, use 'fastlonn'. The 'amount' is the NOK value. 'count' is 1 for monthly salary or number of hours for hourly.
+
+IF A PDF/IMAGE IS ATTACHED (employment contract / arbeidskontrakt):
+- Extract ALL fields from the document: dateOfBirth (fødselsdato → convert DD.MM.YYYY to YYYY-MM-DD), nationalIdentityNumber (personnummer, 11 digits), bankAccountNumber (bankkonto), departmentName (avdeling), occupationCode (stillingskode/STYRK, 4 digits), percentageOfFullTimeEquivalent (stillingsprosent, e.g. 80.0), startDate (tiltredelse → convert DD.MM.YYYY to YYYY-MM-DD).
+- CRITICAL: If the salary is listed as 'årslønn' (annual salary), set isAnnual=true. The executor will divide by 12 to get monthly rate. Do NOT divide yourself.
+- Use the exact department name from the document (e.g. 'Lager', 'IT'), not a generic name.`,
   "project": "Extract project details, project manager (employee), and customer. If the prompt mentions invoicing, set invoice.create=true and extract products.",
   "supplier-invoice": "Extract supplier details, invoice number, dates, amounts, and description. Figure out the appropriate expense account (7300=office services, 6300=insurance/rent, 4300=goods for resale, 6800=IT/software). Calculate amount including VAT from amount excluding VAT if needed.",
   "timesheet": "Extract employee, project, customer, and time entries (activity name, date, hours). If the prompt also asks to invoice, set invoice.create=true and extract invoice products.",

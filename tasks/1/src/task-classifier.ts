@@ -67,6 +67,28 @@ export function classifyTask(prompt: string): TaskType {
     return "salary";
   }
 
+  // --- Bank reconciliation (BEFORE supplier-invoice — "Lieferantenrechnungen" contains "lieferant"+"rechnung")
+  if (
+    has(
+      t,
+      "bankavstemming",
+      "kontoutskrift",
+      "kontoauszug",
+      "bank reconciliation",
+      "bank statement",
+      "conciliación bancaria",
+      "extracto bancario",
+      "reconciliação bancária",
+      "extrato bancário",
+      "rapprochement bancaire",
+      "relevé bancaire",
+    ) ||
+    (has(t, "kontoauszug", "kontoutskrift", "bank statement", "relevé") &&
+      has(t, "abgleich", "abstimm", "reconcil", "avstemm"))
+  ) {
+    return "voucher";
+  }
+
   // --- Supplier invoice (before generic invoice)
   if (
     has(
