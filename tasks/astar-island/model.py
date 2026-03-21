@@ -111,6 +111,55 @@ def _extract_cell_features(
     land_count_r3 = ndimage.convolve(np.ones((h, w)), kernel7, mode='constant', cval=0.0)
     land_ratio_r3 = land_sum_r3 / np.maximum(land_count_r3, 1.0)
 
+    # Precompute adjacency counts via convolution (replaces per-cell 8-neighbor loops)
+    kernel3 = np.array([[1,1,1],[1,0,1],[1,1,1]], dtype=np.float64)
+    adj_ocean_arr = ndimage.convolve((grid_arr == 10).astype(np.float64), kernel3, mode='constant', cval=0.0)
+    adj_forest_arr = ndimage.convolve((grid_arr == 4).astype(np.float64), kernel3, mode='constant', cval=0.0)
+    adj_settl_arr = ndimage.convolve(np.isin(grid_arr, [1, 2]).astype(np.float64), kernel3, mode='constant', cval=0.0)
+    adj_mountain_arr = ndimage.convolve((grid_arr == 5).astype(np.float64), kernel3, mode='constant', cval=0.0)
+
+    # Precompute distance to nearest ocean and mountain via distance transform
+    # distance_transform_cdt computes Manhattan (chessboard) distance to nearest zero
+    ocean_mask = (grid_arr == 10)
+    mountain_mask = (grid_arr == 5)
+    # distance_transform gives distance to nearest 0 — we invert so terrain=0, non-terrain=1
+    dist_ocean_arr = ndimage.distance_transform_cdt(~ocean_mask, metric='taxicab').astype(np.int32)
+    dist_ocean_arr = np.minimum(dist_ocean_arr, 99)
+    if mountain_mask.any():
+        dist_mountain_arr = ndimage.distance_transform_cdt(~mountain_mask, metric='taxicab').astype(np.int32)
+        dist_mountain_arr = np.minimum(dist_mountain_arr, 99)
+    else:
+        dist_mountain_arr = np.full((h, w), 99, dtype=np.int32)
+
+    # Precompute forests in radius 2 via diamond kernel convolution
+    forest_float = (grid_arr == 4).astype(np.float64)
+    kernel_diamond = np.array([[0,0,1,0,0],[0,1,1,1,0],[1,1,0,1,1],[0,1,1,1,0],[0,0,1,0,0]], dtype=np.float64)
+    forests_r2_arr = ndimage.convolve(forest_float, kernel_diamond, mode='constant', cval=0.0)
+
+    # Precompute settlement distance arrays for vectorized lookups
+    if settl_pos:
+        settl_xy = np.array(settl_pos)  # (n_settl, 2) with (x, y)
+        settl_xs_arr = settl_xy[:, 0]
+        settl_ys_arr = settl_xy[:, 1]
+    if port_pos:
+        port_xy = np.array(port_pos)
+        port_xs_arr = port_xy[:, 0]
+        port_ys_arr = port_xy[:, 1]
+
+    # Precompute component size/settl arrays for fast lookup
+    comp_size_arr = np.zeros((h, w), dtype=np.int32)
+    comp_settl_arr = np.zeros((h, w), dtype=np.int32)
+    for comp_id, size in comp_sizes.items():
+        mask = labeled == comp_id
+        comp_size_arr[mask] = size
+        comp_settl_arr[mask] = comp_settl.get(comp_id, 0)
+
+    # Edge distance
+    ys = np.arange(h)[:, None]
+    xs = np.arange(w)[None, :]
+    dist_to_edge_arr = np.minimum(np.minimum(ys, h - 1 - ys), np.minimum(xs, w - 1 - xs))
+
+    n_settl = len(settl_pos)
     features = []
     coords = []
     for y in range(h):
@@ -119,113 +168,43 @@ def _extract_cell_features(
             if code in {10, 5}:
                 continue
 
-            dist = min(
-                (abs(y - sy) + abs(x - sx) for sx, sy in settl_pos), default=99
-            )
-            adj_ocean = sum(
-                1 for dy in [-1, 0, 1] for dx in [-1, 0, 1]
-                if not (dy == 0 and dx == 0)
-                and 0 <= y + dy < h and 0 <= x + dx < w
-                and initial_grid[y + dy][x + dx] == 10
-            )
-            adj_forest = sum(
-                1 for dy in [-1, 0, 1] for dx in [-1, 0, 1]
-                if not (dy == 0 and dx == 0)
-                and 0 <= y + dy < h and 0 <= x + dx < w
-                and initial_grid[y + dy][x + dx] == 4
-            )
-            adj_settl = sum(
-                1 for dy in [-1, 0, 1] for dx in [-1, 0, 1]
-                if not (dy == 0 and dx == 0)
-                and 0 <= y + dy < h and 0 <= x + dx < w
-                and initial_grid[y + dy][x + dx] in {1, 2}
-            )
-            adj_mountain = sum(
-                1 for dy in [-1, 0, 1] for dx in [-1, 0, 1]
-                if not (dy == 0 and dx == 0)
-                and 0 <= y + dy < h and 0 <= x + dx < w
-                and initial_grid[y + dy][x + dx] == 5
-            )
+            # Settlement distances (vectorized over settlements, loop over cells)
+            if settl_pos:
+                dists_all = np.abs(y - settl_ys_arr) + np.abs(x - settl_xs_arr)
+                dist = int(dists_all.min())
+                sorted_d = np.sort(dists_all)
+                dist2 = int(sorted_d[1]) if len(sorted_d) >= 2 else 99
+                nearby_settl = int((dists_all <= 4).sum())
+                settlements_r3 = int((dists_all <= 3).sum())
+                settl_r12 = int(((dists_all >= 1) & (dists_all <= 2)).sum())
+                settl_r57 = int(((dists_all >= 5) & (dists_all <= 7)).sum())
+            else:
+                dist = dist2 = 99
+                nearby_settl = settlements_r3 = settl_r12 = settl_r57 = 0
 
-            # Distance to 2nd nearest settlement
-            dists_sorted = sorted(
-                abs(y - sy) + abs(x - sx) for sx, sy in settl_pos
-            )
-            dist2 = dists_sorted[1] if len(dists_sorted) >= 2 else 99
+            if port_pos:
+                dist_port = int((np.abs(y - port_ys_arr) + np.abs(x - port_xs_arr)).min())
+            else:
+                dist_port = 99
 
-            # Settlements within radius 4
-            nearby_settl = sum(
-                1 for sx, sy in settl_pos
-                if abs(y - sy) + abs(x - sx) <= 4
-            )
-
-            # Distance to nearest ocean and mountain (scan radius 8)
-            dist_ocean = 99
-            dist_mountain = 99
-            for dy in range(-8, 9):
-                for dx in range(-8, 9):
-                    ny, nx = y + dy, x + dx
-                    if 0 <= ny < h and 0 <= nx < w:
-                        d = abs(dy) + abs(dx)
-                        if d > 8:
-                            continue
-                        if initial_grid[ny][nx] == 10 and d < dist_ocean:
-                            dist_ocean = d
-                        if initial_grid[ny][nx] == 5 and d < dist_mountain:
-                            dist_mountain = d
-
-            # Count forests in radius 2
-            forests_r2 = sum(
-                1 for dy in range(-2, 3) for dx in range(-2, 3)
-                if not (dy == 0 and dx == 0)
-                and abs(dy) + abs(dx) <= 2
-                and 0 <= y + dy < h and 0 <= x + dx < w
-                and initial_grid[y + dy][x + dx] == 4
-            )
-
-            # Settlements within radius 3
-            settlements_r3 = sum(
-                1 for sx, sy in settl_pos
-                if abs(y - sy) + abs(x - sx) <= 3
-            )
-
-            # Settlements in radius bands (captures expansion pressure at different scales)
-            settl_r12 = sum(
-                1 for sx, sy in settl_pos
-                if 1 <= abs(y - sy) + abs(x - sx) <= 2
-            )
-            settl_r57 = sum(
-                1 for sx, sy in settl_pos
-                if 5 <= abs(y - sy) + abs(x - sx) <= 7
-            )
-
-            # Distance to nearest initial port
-            dist_port = min(
-                (abs(y - py) + abs(x - px) for px, py in port_pos), default=99
-            )
-
-            # Connected component features
-            comp = labeled[y, x]
-            comp_size = comp_sizes.get(comp, 0)
-            comp_n_settl = comp_settl.get(comp, 0)
-
-            # New features from research agent analysis
-            dist_to_edge = min(y, x, h - 1 - y, w - 1 - x)
+            adj_ocean = int(adj_ocean_arr[y, x])
+            adj_forest = int(adj_forest_arr[y, x])
+            adj_settl = int(adj_settl_arr[y, x])
+            adj_mountain = int(adj_mountain_arr[y, x])
             bfs_d = int(bfs_dist[y, x])
-            passable_5x5 = int(passable_r2[y, x])
             land_r3 = float(land_ratio_r3[y, x])
 
             features.append([
                 code, dist, adj_ocean, adj_forest, adj_settl, adj_mountain,
                 int(code == 11), int(code == 4), int(code == 1), int(code == 2),
                 int(adj_ocean >= 2),
-                dist2, nearby_settl, len(settl_pos),
-                dist_ocean, dist_mountain, forests_r2,
-                y, x,  # map position (captures fjord/border effects)
+                dist2, nearby_settl, n_settl,
+                int(dist_ocean_arr[y, x]), int(dist_mountain_arr[y, x]), int(forests_r2_arr[y, x]),
+                y, x,
                 settlements_r3, settl_r12, settl_r57,
-                dist_port, comp_size, comp_n_settl,
-                dist_to_edge, bfs_d, passable_5x5, land_r3,
-                land_r3 / (1 + bfs_d),  # interaction: dense land + close to settlement
+                dist_port, int(comp_size_arr[y, x]), int(comp_settl_arr[y, x]),
+                int(dist_to_edge_arr[y, x]), bfs_d, int(passable_r2[y, x]), land_r3,
+                land_r3 / (1 + bfs_d),
             ])
             coords.append((y, x))
 
