@@ -122,6 +122,11 @@ function getErrorHint(
     return 'Salary specification requires an active employment. POST /employee/employment first with employee.id, startDate, and division.id. Also check that year and month match the current payroll period.';
   }
 
+  // Employee standard time — format hint
+  if (method === "POST" && path.includes("employee/standardTime")) {
+    return 'Standard time requires: GET /employee/standardTime?employeeId=<id>&fields=* first to see existing entries. Then PUT /employee/standardTime/{id} to update (not POST). Set workHoursPerDay to the desired hours. Do NOT keep retrying POST — use PUT on the existing entry.';
+  }
+
   // Voucher postings don't balance
   if (method === "POST" && path.includes("ledger/voucher") && vm?.some((v) => v.message.includes("balanse") || v.message.includes("balance"))) {
     return 'Voucher postings MUST balance (sum of all amountGross = 0). Check that debit (positive) and credit (negative) amounts are equal.';

@@ -52,7 +52,11 @@ export function classifyTask(prompt: string): TaskType {
       t,
       "lønnskjøring",
       "lønn",
+      "lonn",
       "fastlønn",
+      "fastlonn",
+      "arslonn",
+      "årslønn",
       "salary",
       "payroll",
       "gehaltsabrechnung",
@@ -62,6 +66,15 @@ export function classifyTask(prompt: string): TaskType {
       "salário",
       "nómina",
       "folha de pagamento",
+      "onboarding",
+      "arbeidskontrakt",
+      "employment contract",
+      "contrato de trabalho",
+      "contrat de travail",
+      "arbeitsvertrag",
+      "contrato de trabajo",
+      "tilbud om stilling",
+      "tilbudsbrev",
     )
   ) {
     return "salary";
