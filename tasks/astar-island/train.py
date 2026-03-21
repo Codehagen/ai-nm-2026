@@ -386,13 +386,15 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=No
     features, coords = _extract_cell_features(initial_grid, settlements)
     if len(features) == 0:
         return None
-    # Append obs stats to match training (46 features)
-    if obs_stats is not None:
-        features = np.hstack([features, np.tile(obs_stats, (len(features), 1))])
-    # Append per-cell obs features (50 features total)
-    if cell_obs is not None:
-        cell_feats = np.array([cell_obs[y, x] for y, x in coords])
-        features = np.hstack([features, cell_feats])
+    # Append obs stats (always 26 features — zeros if no observations)
+    if obs_stats is None:
+        obs_stats = np.zeros(26)
+    features = np.hstack([features, np.tile(obs_stats, (len(features), 1))])
+    # Append per-cell obs features (always 21 features — zeros if no observations)
+    if cell_obs is None:
+        cell_obs = np.zeros((h, w, 21))
+    cell_feats = np.array([cell_obs[y, x] for y, x in coords])
+    features = np.hstack([features, cell_feats])
     tensor = np.zeros((h, w, NUM_CLASSES))
     for y in range(h):
         for x in range(w):
