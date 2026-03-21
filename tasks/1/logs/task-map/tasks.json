@@ -16,7 +16,7 @@
     "13": { "tier": 1, "score": 1.13, "tries": 9, "taskType": null, "description": null, "hasFiles": false },
     "14": { "tier": 2, "score": 3.00, "tries": 11, "taskType": null, "description": null, "hasFiles": false },
     "15": { "tier": 2, "score": 2.23, "tries": 11, "taskType": null, "description": null, "hasFiles": false },
-    "16": { "tier": 1, "score": 1.00, "tries": 13, "taskType": null, "description": null, "hasFiles": false },
+    "16": { "tier": 1, "score": 1.00, "tries": 14, "taskType": "timesheet", "description": "Register hours + generate project invoice. 2/4 checks pass, 2 fail (unknown fields).", "hasFiles": false },
     "17": { "tier": 2, "score": 3.50, "tries": 10, "taskType": null, "description": null, "hasFiles": false },
     "18": { "tier": 2, "score": 2.67, "tries": 12, "taskType": null, "description": null, "hasFiles": false },
     "19": { "tier": 3, "score": 1.77, "tries": 1, "taskType": "salary", "description": "PDF employment contract — create employee with all details from PDF", "hasFiles": true },

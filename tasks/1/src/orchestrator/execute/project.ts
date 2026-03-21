@@ -69,6 +69,6 @@ export async function executeProject(ctx: OrchestratorContext, data: ProjectData
       const prod = await ensureProduct(ctx, p);
       products.push({ id: prod.id, price: p.price, quantity: p.quantity, vatPercent: p.vatPercent });
     }
-    await createInvoiceFromProducts(ctx, custId, products);
+    await createInvoiceFromProducts(ctx, custId, products, undefined, projId);
   }
 }

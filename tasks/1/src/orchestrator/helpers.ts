@@ -399,6 +399,7 @@ export async function createInvoiceFromProducts(
   custId: number,
   products: Array<{ id: number; price: number; quantity: number; vatPercent: string }>,
   dueDate?: string,
+  projectId?: number,
 ): Promise<number> {
   const today = getOsloDate();
   await ensureBankAccount(ctx);
@@ -410,12 +411,15 @@ export async function createInvoiceFromProducts(
     vatType: { id: vatPercentToId(p.vatPercent) },
   }));
 
-  const orderRes = await ctx.post("/order", {
+  const orderBody: Record<string, unknown> = {
     customer: { id: custId },
     orderDate: today,
     deliveryDate: today,
     orderLines,
-  });
+  };
+  if (projectId) orderBody.project = { id: projectId };
+
+  const orderRes = await ctx.post("/order", orderBody);
   if (!orderRes.ok) throw new Error(`Failed to create order: ${orderRes.message}`);
 
   const invoiceRes = await ctx.post("/invoice", {

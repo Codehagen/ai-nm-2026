@@ -93,6 +93,6 @@ export async function executeTimesheet(ctx: OrchestratorContext, data: Timesheet
       const prod = await ensureProduct(ctx, p);
       products.push({ id: prod.id, price: p.price, quantity: p.quantity, vatPercent: p.vatPercent });
     }
-    await createInvoiceFromProducts(ctx, custId, products, data.invoice.dueDate);
+    await createInvoiceFromProducts(ctx, custId, products, data.invoice.dueDate, projId);
   }
 }
