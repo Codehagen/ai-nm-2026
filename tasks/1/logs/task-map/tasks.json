@@ -24,7 +24,7 @@
     "21": { "tier": 3, "score": 2.36, "tries": 2, "taskType": "salary", "description": "PDF offer letter — onboarding: employee, dept, employment, salary, standardTime from PDF", "hasFiles": true },
     "22": { "tier": 3, "score": 0, "tries": 2, "taskType": "supplier-invoice", "description": "Receipt expense — register receipt as supplier invoice in named department. Scoring checks PDF fields.", "hasFiles": true },
     "23": { "tier": 3, "score": 0, "tries": 1, "taskType": "voucher", "description": "Bank reconciliation — CSV bank statement, match payments to invoices", "hasFiles": true },
-    "24": { "tier": 3, "score": 0, "tries": 1, "taskType": "voucher", "description": "Error correction in ledger — find 4 errors in vouchers (wrong acct, duplicate, missing VAT, ...)", "hasFiles": false },
+    "24": { "tier": 3, "score": 1.50, "tries": 2, "taskType": "voucher", "description": "Error correction in ledger — find 4 errors in vouchers. Model often times out. 2/4 checks pass.", "hasFiles": false },
     "25": { "tier": null, "score": null, "tries": 0, "taskType": null, "description": null, "hasFiles": null },
     "26": { "tier": null, "score": null, "tries": 0, "taskType": null, "description": null, "hasFiles": null },
     "27": { "tier": null, "score": null, "tries": 0, "taskType": null, "description": null, "hasFiles": null },
