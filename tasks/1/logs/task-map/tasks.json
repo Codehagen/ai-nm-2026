@@ -1,7 +1,7 @@
 {
   "_instructions": "Run one submission at a time. After each, check which task number's score changed on the dashboard. Update the entry with the prompt and taskType from the log.",
   "tasks": {
-    "01": { "tier": 1, "score": 1.50, "tries": 14, "taskType": null, "description": null, "hasFiles": false },
+    "01": { "tier": 1, "score": 1.50, "tries": 15, "taskType": "employee", "description": "Create employee with name, DOB, email, start date", "hasFiles": false },
     "02": { "tier": 1, "score": 2.00, "tries": 14, "taskType": null, "description": null, "hasFiles": false },
     "03": { "tier": 2, "score": 2.00, "tries": 16, "taskType": null, "description": null, "hasFiles": false },
     "04": { "tier": 2, "score": 2.00, "tries": 16, "taskType": null, "description": null, "hasFiles": false },
