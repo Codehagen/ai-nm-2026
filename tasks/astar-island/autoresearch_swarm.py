@@ -1,33 +1,32 @@
-"""Gemini-guided swarm autoresearch for Astar Island.
+"""Karpathy-style autoresearch agent using Gemini 3.1 Pro.
 
-Follows the Karpathy autoresearch protocol:
-  edit train.py → run LORO → keep if improved → revert if worse → repeat
+Exact same protocol as autoresearch-mlx/program.md:
+  1. Read the code. Understand the architecture.
+  2. Form a hypothesis. Edit train.py.
+  3. git commit. Run. Read val_metric.
+  4. Keep if improved (amend commit with results.tsv).
+  5. Discard if worse (git reset --hard).
+  6. NEVER STOP.
 
-Each VM runs autonomously with Gemini generating actual code patches.
-VMs share results via SCP so Gemini sees ALL experiments ("swarm intelligence").
+The LLM (Gemini) does its own research — reads full files,
+analyzes results, reasons about what to try next.
 
 Usage:
-    VM_ID=beast176 IS_HUB=1 FLEET_IPS=10.164.0.4,10.164.0.5 \
-      GOOGLE_API_KEY=... PARALLEL_XGB=18 \
-      nohup python3 -u autoresearch_swarm.py > swarm.log 2>&1 &
+    VM_ID=s1 VM_FOCUS=r7_adaptive GOOGLE_API_KEY=... \
+      python3 -u autoresearch_swarm.py
 
 Environment:
-    VM_ID          — unique per VM (default: "vm0")
-    GOOGLE_API_KEY — Gemini API key (required for AI mode)
-    MODEL_ID       — Gemini model (default: "gemini-2.5-flash")
-    PARALLEL_XGB   — parallel XGB workers (default: 18)
-    MAX_RUNS       — max experiments (default: 200)
-    IS_HUB         — "1" if this VM collects from workers
-    FLEET_IPS      — comma-separated internal IPs of worker VMs
-    HUB_IP         — internal IP of hub VM (for workers)
+    VM_ID          — unique per VM
+    VM_FOCUS       — research specialization (see FOCUS_PROMPTS)
+    GOOGLE_API_KEY — Gemini API key
+    MODEL_ID       — Gemini model (default: gemini-3.1-pro-preview)
+    PARALLEL_XGB   — parallel workers (default: 18)
 """
 
 import hashlib
 import json
 import os
 import random
-import re
-import shutil
 import subprocess
 import sys
 import time
@@ -40,86 +39,29 @@ TASK_DIR = Path(__file__).parent.resolve()
 VM_ID = os.environ.get("VM_ID", "vm0")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 GEMINI_MODEL = os.environ.get("MODEL_ID", "gemini-3.1-pro-preview")
-MAX_RUNS = int(os.environ.get("MAX_RUNS", "200"))
-
-IS_HUB = os.environ.get("IS_HUB", "0") == "1"
-FLEET_IPS = [ip.strip() for ip in os.environ.get("FLEET_IPS", "").split(",") if ip.strip()]
-HUB_IP = os.environ.get("HUB_IP", "")
 VM_FOCUS = os.environ.get("VM_FOCUS", "general")
 
-# VM specialization prompts — each VM gets a focused research direction
-FOCUS_PROMPTS = {
-    "r7_adaptive": """FOCUS: Fix R7 (72.5 — weakest round, extreme expansion).
-Try: round-type detection from obs_stats (obs_settl_rate > 0.15 = expansion),
-per-type blend weights, per-type L7 strengths, adaptive EMP_BLEND based on expansion rate.
-The key insight: expansion rounds need LESS heuristic (lower blend weight = more XGB)
-and STRONGER L7 settlement correction.""",
-
-    "distance_decay": """FOCUS: Non-linear distance decay for expansion rounds.
-Current distance tables use linear buckets (1-8, 99). Expansion rounds may need
-exponential or quadratic decay. Try: distance**0.5, log(1+distance), or per-round
-distance scaling based on obs_settl_rate. Also try different distance bucket boundaries.""",
-
-    "expansion_features": """FOCUS: New features that capture settlement expansion pressure.
-Try: settlement cluster density (how many settlements within r5),
-expansion front detection (cells where obs_settl_rate transitions from high to low),
-settlement momentum (rate of change of settlement count across observations),
-food pressure (forests_r3 / settlements_r3).""",
-
-    "faction_analysis": """FOCUS: Use faction/owner_id data from observations.
-Each observation includes owner_id per settlement. Try features like:
-faction count in r3, faction diversity index, dominant faction strength,
-cells between different factions (conflict zone indicator),
-faction territory boundary distance.""",
-
-    "port_trade": """FOCUS: Port and trade corridor features.
-Ports enable long-range trade and raiding. Try: BFS distance to nearest port,
-port cluster density, cells between two ports (trade corridor),
-coastal path length, port-to-port connectivity features.""",
-
-    "winter_raiding": """FOCUS: Winter severity and raiding signal features.
-Try: defense variance across observations (high = active raiding),
-wealth depletion rate (fraction with wealth < 10), food deficit severity,
-population crash proxy (max_pop - min_pop), dead_rate correlation features.""",
-
-    "terrain_interaction": """FOCUS: Terrain transition and interaction features.
-Try: number of terrain boundaries in r2 (edge-of-biome cells behave differently),
-forest-to-plains transition count, ocean adjacency patterns,
-mountain blocking features (cells behind mountains from settlements).""",
-
-    "directional": """FOCUS: Directional expansion features.
-Settlements don't expand uniformly — they follow terrain. Try:
-direction to nearest settlement (N/S/E/W quadrant encoding),
-coastal direction (which side has ocean), expansion vector from settlement centroid,
-asymmetric distance features (distance along passable terrain vs Manhattan).""",
-
-    "l7_tuning": """FOCUS: L7 observation ratio correction optimization.
-Try: per-class L7 strengths (sweep each independently),
-round-type-adaptive L7 (different strengths for expansion vs extinction),
-wider/narrower clamp bounds per class, dynamic MIN_OBS thresholds,
-L7 applied before vs after empirical blend.""",
-
-    "xgb_tuning": """FOCUS: XGBoost hyperparameter optimization.
-Try: per-terrain n_estimators (plains might need more than settlement),
-per-terrain max_depth, per-terrain learning_rate, colsample sweep,
-subsample sweep, reg_alpha/reg_lambda combinations,
-min_child_weight per terrain.""",
-
-    "general": """FOCUS: Creative exploration — try anything that might improve the score.
-Look at what worked and failed in past experiments, and try new angles.""",
-}
-
-
 TRAIN_PY = TASK_DIR / "train.py"
-TRAIN_PY_BACKUP = TASK_DIR / "train.py.backup"
-TRAIN_PY_BEST = TASK_DIR / "train.py.best"
-
-RESULTS_TSV = TASK_DIR / f"swarm_results_{VM_ID}.tsv"
-SHARED_RESULTS = TASK_DIR / "swarm_results_fleet.tsv"
-
-TSV_HEADER = "timestamp\tvm_id\tval_metric\tduration_min\tstatus\tdescription\n"
+MODEL_PY = TASK_DIR / "model.py"
+RESULTS_TSV = TASK_DIR / "results.tsv"
 
 SEED = int(hashlib.md5(VM_ID.encode()).hexdigest()[:8], 16) % (2**31)
+
+# ─── VM Specialization ──────────────────────────────────────────
+
+FOCUS_PROMPTS = {
+    "r7_adaptive": "FOCUS: Fix R7=72.5 (extreme expansion round). Try round-type detection from obs_stats, per-type blend/L7, adaptive distance tables.",
+    "distance_decay": "FOCUS: Non-linear distance decay. Current tables use linear buckets 1-8. Try quadratic, exponential, or obs-rate-scaled decay.",
+    "expansion_features": "FOCUS: New features for expansion pressure. Try settlement cluster density, expansion front detection, food pressure ratio.",
+    "faction_analysis": "FOCUS: Faction/owner_id features from observations. Try faction diversity r3, conflict zone detection, conquest events.",
+    "port_trade": "FOCUS: Port and trade corridor features. Try port-to-port BFS, coastal path length, trade route indicators.",
+    "winter_raiding": "FOCUS: Winter/raiding signals. Try defense variance, wealth depletion rate, population crash proxy.",
+    "terrain_interaction": "FOCUS: Terrain boundary features. Try terrain transition counts, biome edge detection, mountain blocking.",
+    "directional": "FOCUS: Directional expansion features. Try expansion vectors, coastal direction encoding, asymmetric distances.",
+    "l7_tuning": "FOCUS: L7 observation correction. Try per-class strengths, round-type-adaptive L7, dynamic clamp bounds.",
+    "xgb_tuning": "FOCUS: XGB hyperparameters. Try per-terrain depth/lr/trees, colsample sweep, regularization tuning.",
+    "general": "FOCUS: Creative exploration. Try anything — new features, new blend strategies, architectural changes.",
+}
 
 
 def log(msg):
@@ -127,20 +69,86 @@ def log(msg):
     print(f"[{ts}] [{VM_ID}] {msg}", flush=True)
 
 
-# ─── Results tracking ───────────────────────────────────────────
+# ─── Git operations ─────────────────────────────────────────────
+
+def git(cmd):
+    """Run a git command in TASK_DIR."""
+    r = subprocess.run(
+        f"git {cmd}", shell=True, capture_output=True, text=True,
+        cwd=str(TASK_DIR), timeout=30
+    )
+    return r.returncode, r.stdout.strip(), r.stderr.strip()
+
+
+def git_setup():
+    """Initialize git repo and branch for this VM."""
+    if not (TASK_DIR / ".git").exists():
+        git("init")
+        git("config user.email 'autoresearch@vm'")
+        git("config user.name 'autoresearch'")
+        git(f"checkout -b autoresearch/{VM_ID}")
+        git("add -A")
+        git("commit -m 'initial: baseline'")
+    log(f"Git branch: autoresearch/{VM_ID}")
+
+
+def git_commit(message):
+    git("add train.py results.tsv")
+    git(f'commit -m "{message}"')
+
+
+def git_amend():
+    git("add results.tsv")
+    git("commit --amend --no-edit")
+
+
+def git_reset_hard():
+    """Revert to last kept commit."""
+    git("checkout -- train.py")
+
+
+def git_log_oneline(n=10):
+    _, out, _ = git(f"log --oneline -{n}")
+    return out
+
+
+def git_diff_stat():
+    _, out, _ = git("diff --stat HEAD~1 -- train.py 2>/dev/null")
+    return out
+
+
+# ─── Results TSV (exact Karpathy format) ─────────────────────────
+
+TSV_HEADER = "commit\tval_metric\tmemory_gb\tdiff_lines\tstatus\tdescription\treject_reason\n"
+
 
 def init_results():
-    for tsv in [RESULTS_TSV, SHARED_RESULTS]:
-        if not tsv.exists():
-            tsv.write_text(TSV_HEADER)
+    if not RESULTS_TSV.exists():
+        RESULTS_TSV.write_text(TSV_HEADER)
 
 
-def append_result(val_metric, duration_min, status, description):
-    ts = datetime.now().strftime("%Y-%m-%d %H:%M")
-    row = f"{ts}\t{VM_ID}\t{val_metric:.4f}\t{duration_min:.1f}\t{status}\t{description}\n"
-    for tsv in [RESULTS_TSV, SHARED_RESULTS]:
-        with open(tsv, "a") as f:
-            f.write(row)
+def get_commit_hash():
+    _, out, _ = git("rev-parse --short HEAD")
+    return out[:7] if out else "0000000"
+
+
+def count_diff_lines():
+    _, out, _ = git("diff HEAD -- train.py")
+    return len([l for l in out.split("\n") if l.startswith("+") or l.startswith("-")]) if out else 0
+
+
+def append_result(val_metric, status, description, reject_reason="-"):
+    commit = get_commit_hash()
+    diff_lines = count_diff_lines()
+    row = f"{commit}\t{val_metric:.6f}\t0.0\t{diff_lines}\t{status}\t{description}\t{reject_reason}\n"
+    with open(RESULTS_TSV, "a") as f:
+        f.write(row)
+
+
+def get_results_history():
+    if not RESULTS_TSV.exists():
+        return "No experiments yet."
+    return RESULTS_TSV.read_text()
 
 
 def get_best_metric():
@@ -149,204 +157,145 @@ def get_best_metric():
     best = 0.0
     for line in RESULTS_TSV.read_text().strip().split("\n")[1:]:
         parts = line.split("\t")
-        if len(parts) >= 5 and parts[4] == "kept":
+        if len(parts) >= 5 and parts[4] == "keep":
             try:
-                best = max(best, float(parts[2]))
+                best = max(best, float(parts[1]))
             except ValueError:
                 pass
     return best
 
 
-def get_fleet_summary():
-    """Summarize ALL fleet results for Gemini — swarm intelligence."""
-    source = SHARED_RESULTS if SHARED_RESULTS.exists() else RESULTS_TSV
-    if not source.exists():
-        return "No results yet. First run."
+# ─── Run experiment ──────────────────────────────────────────────
 
-    lines = source.read_text().strip().split("\n")
-    if len(lines) <= 1:
-        return "No results yet. First run."
-
-    data = lines[1:]
-    parsed = []
-    for line in data:
-        parts = line.split("\t")
-        if len(parts) >= 6:
-            try:
-                metric = float(parts[2])
-                status = parts[4]
-                desc = parts[5]
-                if metric > 0:
-                    parsed.append((metric, status, desc, line))
-            except (ValueError, IndexError):
-                pass
-
-    if not parsed:
-        return "No successful results yet."
-
-    parsed.sort(key=lambda x: -x[0])
-    n_kept = sum(1 for _, s, _, _ in parsed if s == "kept")
-
-    summary = f"Fleet: {len(data)} total runs, {len(parsed)} successful, {n_kept} improvements\n"
-    summary += f"Best: {parsed[0][0]:.4f} | Median: {parsed[len(parsed)//2][0]:.4f}\n\n"
-
-    summary += "TOP 10 (what works):\n"
-    for m, s, desc, _ in parsed[:10]:
-        summary += f"  {m:.4f} [{s}] {desc}\n"
-
-    if len(parsed) > 10:
-        summary += "\nBOTTOM 5 (what doesn't work):\n"
-        for m, s, desc, _ in parsed[-5:]:
-            summary += f"  {m:.4f} [{s}] {desc}\n"
-
-    kept_descs = [desc for _, s, desc, _ in parsed if s == "kept"]
-    if kept_descs:
-        summary += f"\nKEPT IMPROVEMENTS ({len(kept_descs)}):\n"
-        for d in kept_descs:
-            summary += f"  - {d}\n"
-
-    return summary
-
-
-# ─── Swarm sync (hub/worker SCP) ────────────────────────────────
-
-def sync_fleet_results():
-    """Sync results across fleet. Hub collects, workers push/pull."""
-    if IS_HUB:
-        _hub_collect()
-    else:
-        _worker_sync()
-
-
-def _hub_collect():
-    """Hub: pull per-VM results from all workers, merge."""
-    for ip in FLEET_IPS:
-        try:
-            subprocess.run(
-                ["scp", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5",
-                 f"root@{ip}:/tmp/astar/swarm_results_*.tsv", str(TASK_DIR) + "/"],
-                capture_output=True, timeout=15
-            )
-        except Exception:
-            pass
-    _merge_results()
-
-
-def _worker_sync():
-    """Worker: push results to hub, pull fleet file."""
-    if not HUB_IP:
-        return
-    # Push our results to hub
+def run_train():
+    """Run train.py and return (val_metric, peak_vram_mb, output)."""
     try:
-        subprocess.run(
-            ["scp", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5",
-             str(RESULTS_TSV), f"root@{HUB_IP}:/tmp/astar/"],
-            capture_output=True, timeout=15
+        r = subprocess.run(
+            [sys.executable, str(TRAIN_PY)],
+            capture_output=True, text=True, timeout=900,
+            cwd=str(TASK_DIR),
         )
-    except Exception:
-        pass
-    # Pull merged fleet file from hub
-    try:
-        subprocess.run(
-            ["scp", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5",
-             f"root@{HUB_IP}:/tmp/astar/swarm_results_fleet.tsv", str(SHARED_RESULTS)],
-            capture_output=True, timeout=15
-        )
-    except Exception:
-        pass
+        output = r.stdout
+        val_metric = 0.0
+        peak_vram = 0.0
+        for line in output.split("\n"):
+            if line.startswith("val_metric:"):
+                val_metric = float(line.split(":")[1].strip())
+            if line.startswith("peak_vram_mb:"):
+                peak_vram = float(line.split(":")[1].strip())
+
+        if val_metric == 0.0 and r.returncode != 0:
+            log(f"CRASH. Exit code: {r.returncode}")
+            log(f"stderr (last 300): {r.stderr[-300:]}")
+
+        return val_metric, peak_vram, output
+    except subprocess.TimeoutExpired:
+        log("TIMEOUT (>15 min)")
+        return 0.0, 0.0, "TIMEOUT"
+    except Exception as e:
+        log(f"ERROR: {e}")
+        return 0.0, 0.0, str(e)
 
 
-def _merge_results():
-    """Merge all local swarm_results_*.tsv into fleet file."""
-    all_rows = set()
-    for f in TASK_DIR.glob("swarm_results_*.tsv"):
-        if f.name == "swarm_results_fleet.tsv":
-            continue
-        for line in f.read_text().strip().split("\n")[1:]:
-            if line.strip():
-                all_rows.add(line.strip())
+# ─── Gemini: The Researcher ─────────────────────────────────────
 
-    with open(SHARED_RESULTS, "w") as f:
-        f.write(TSV_HEADER)
-        for row in sorted(all_rows):
-            f.write(row + "\n")
+def ask_gemini(train_py_content, model_py_summary, results_history, run_idx):
+    """Ask Gemini to analyze and suggest ONE code change.
 
-
-# ─── Gemini code generation ─────────────────────────────────────
-
-def ask_gemini_for_code(current_train_py, rng):
-    """Ask Gemini to generate a code change for train.py."""
+    Follows the Karpathy protocol: the LLM reads the full code,
+    understands the architecture, reasons about what to try,
+    and generates a precise edit.
+    """
     if not GOOGLE_API_KEY:
         return None
 
-    fleet_summary = get_fleet_summary()
-
-    # Read per-round scores from the best run's output if available
-    per_round_info = """Per-round LORO scores (weakest first, from baseline):
-R7=72.5 (extreme expansion), R1=85.5, R14=85.7, R5=86.5, R6=87.6, R11=87.7,
-R2=92.1, R15=92.4, R10=93.0, R9=93.1, R13=93.7, R4=94.3, R8=95.2, R16=88.8
-Pattern: STRONG on extinction rounds, WEAK on expansion rounds."""
-
     focus = FOCUS_PROMPTS.get(VM_FOCUS, FOCUS_PROMPTS["general"])
 
-    prompt = f"""You are an ML researcher doing autonomous autoresearch on a probabilistic terrain prediction model.
-The model predicts P(terrain class) on a 40x40 grid after 50 years of Norse civilization simulation.
-Metric: entropy-weighted KL divergence, score=100*exp(-3*weighted_kl). Higher=better. Max=100.
+    prompt = f"""You are an autonomous ML researcher running Karpathy-style autoresearch.
+You are optimizing a probabilistic terrain prediction model for a Norse civilization simulator.
 
-{per_round_info}
+## Your Task
+Read the code below. Understand the architecture. Form a hypothesis.
+Generate ONE edit to train.py that you believe will improve val_metric.
 
-YOUR SPECIALIZATION (this VM's research direction):
+## The Metric
+val_metric = weighted average LORO score (higher is better, max 100).
+Score formula: 100 * exp(-3 * entropy_weighted_KL_divergence).
+KL divergence between your prediction and Monte Carlo ground truth.
+CRITICAL: Never let any probability be 0.0 (KL → infinity).
+
+## Per-Round Scores (your weaknesses)
+R7=72.5 (extreme expansion — BIGGEST opportunity, 17 pts below mean)
+R1=85.5, R14=85.7, R5=86.5, R6=87.6, R11=87.7 (expansion rounds)
+R2=92.1, R15=92.4, R10=93.0, R9=93.1, R13=93.7, R4=94.3, R8=95.2 (strong)
+R16=88.8, R17=93.0 (recent)
+Pattern: STRONG on extinction, WEAK on expansion.
+
+## Your Specialization
 {focus}
 
-FLEET EXPERIMENT HISTORY (from ALL VMs):
-{fleet_summary}
-
-CURRENT train.py (the ONLY file you can edit):
-```python
-{current_train_py[:12000]}
+## Experiment History (results.tsv)
+```
+{results_history[-3000:]}
 ```
 
-YOUR TASK: Generate ONE code change to train.py that might improve val_metric.
-Stay focused on your specialization above. Don't repeat experiments that failed in the fleet history.
+## Git Log (recent commits)
+```
+{git_log_oneline(15)}
+```
 
-IDEAS TO EXPLORE (pick one, or invent your own):
-- New features in _extract_cell_features (add to the features list, update empty array size)
-- New per-cell observation features (add inline computation in evaluate_loro)
-- Round-type-adaptive parameters (detect expansion vs extinction from obs_stats)
-- Non-linear distance decay for expansion rounds
-- New blend strategies
-- Observation-derived signals (settlement cluster features, faction analysis)
-- Feature interactions (multiply existing features together)
+## train.py (THE FILE YOU EDIT — full content)
+```python
+{train_py_content}
+```
 
-RULES:
-- Output ONLY valid JSON with search_replace pairs
-- Each pair: find exact string in train.py, replace with new string
-- Keep changes SMALL and ISOLATED (one idea at a time)
-- Don't break imports, output format, or the evaluate_loro structure
-- The change must be self-contained in train.py (no model.py edits)
+## model.py (READ ONLY — key functions for context)
+{model_py_summary}
 
-RESPOND WITH ONLY THIS JSON:
+## Rules
+1. Generate exactly ONE change. Small and isolated.
+2. Reason about WHY this change should help before writing code.
+3. Don't repeat experiments that already failed in results.tsv.
+4. Simplicity criterion: don't add ugly complexity for tiny gains.
+5. If 3+ consecutive experiments failed, try a completely different direction.
+6. NEVER modify imports, output format, or evaluation logic.
+
+## What has NOT worked (proven failures — do NOT try these)
+- KNN round matching, probability sharpening, LightGBM
+- Cross-seed transfer (Layer 4), Layer 2 Bayesian obs
+- Higher PROB_FLOOR, simulator blend, voronoi features
+- Grid-level features (constant across cells = useless for XGB)
+- Plains in r3 (too correlated with existing features)
+
+## Output Format
+Respond with ONLY this JSON:
 {{
-  "description": "one-line description of what this change does",
+  "reasoning": "2-3 sentences explaining your hypothesis and why this should work",
+  "description": "short description for results.tsv (max 60 chars)",
   "search_replace": [
     {{"old": "exact string to find in train.py", "new": "replacement string"}}
   ]
-}}"""
+}}
+
+Think step by step. What is the model getting wrong? Why? What change addresses the root cause?"""
 
     try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GOOGLE_API_KEY}"
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.9, "maxOutputTokens": 4000},
+            "generationConfig": {
+                "temperature": 0.8,
+                "maxOutputTokens": 4000,
+            }
         }
         data = json.dumps(payload).encode()
         req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
 
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        with urllib.request.urlopen(req, timeout=120) as resp:
             body = json.loads(resp.read().decode())
 
         text = body["candidates"][0]["content"]["parts"][0]["text"].strip()
-        # Strip markdown code fences
+        # Strip markdown fences
         if text.startswith("```"):
             text = "\n".join(text.split("\n")[1:])
         if text.endswith("```"):
@@ -361,19 +310,40 @@ RESPOND WITH ONLY THIS JSON:
         return None
 
 
-def apply_code_patch(patch):
-    """Apply a search_replace patch to train.py. Returns True if all replacements succeeded."""
+def get_model_py_summary():
+    """Read model.py and extract key function signatures + architecture summary."""
+    if not MODEL_PY.exists():
+        return "model.py not available"
+
+    content = MODEL_PY.read_text()
+    # Extract function defs and docstrings
+    lines = content.split("\n")
+    summary_lines = []
+    for i, line in enumerate(lines):
+        if line.strip().startswith("def ") or line.strip().startswith("class "):
+            summary_lines.append(line)
+            # Get docstring if present
+            if i + 1 < len(lines) and '"""' in lines[i + 1]:
+                summary_lines.append(lines[i + 1])
+        elif "EMPIRICAL" in line or "BLEND" in line or "NUM_CLASSES" in line:
+            summary_lines.append(line)
+
+    summary = "\n".join(summary_lines[:80])
+    return f"```python\n# model.py key functions (READ ONLY — do not edit):\n{summary}\n```"
+
+
+def apply_edit(patch):
+    """Apply search_replace edit to train.py. Returns True if successful."""
     source = TRAIN_PY.read_text()
-    description = patch.get("description", "unknown change")
 
     for sr in patch.get("search_replace", []):
         old = sr.get("old", "")
         new = sr.get("new", "")
         if not old:
-            log(f"  Empty search string, skipping")
+            log("  Empty search string")
             return False
         if old not in source:
-            log(f"  Search string not found: {old[:80]}...")
+            log(f"  Search string not found: {old[:60]}...")
             return False
         source = source.replace(old, new, 1)
 
@@ -381,243 +351,126 @@ def apply_code_patch(patch):
     return True
 
 
-# ─── Parameter-only fallback ────────────────────────────────────
-
-PARAM_SPACE = {
-    "BLEND_TERRAIN": [
-        '{"plains": 0.90, "forest": 0.85, "settl": 0.90}',
-        '{"plains": 0.95, "forest": 0.90, "settl": 0.95}',
-        '{"plains": 1.00, "forest": 0.95, "settl": 1.00}',
-        '{"plains": 1.00, "forest": 1.00, "settl": 0.90}',
-    ],
-    "EMP_BLEND": ["0.40", "0.45", "0.48", "0.52", "0.55"],
-    "L7_STRENGTHS": [
-        "np.array([1.20, 0.80, 0.0, 0.0, 1.30, 0.0])",
-        "np.array([1.40, 1.00, 0.0, 0.0, 1.50, 0.0])",
-        "np.array([1.50, 1.10, 0.0, 0.0, 1.60, 0.0])",
-        "np.array([1.60, 1.20, 0.0, 0.0, 1.70, 0.0])",
-    ],
-}
-
-
-def apply_random_params(rng):
-    """Fallback: random parameter substitution (no Gemini needed)."""
-    source = TRAIN_PY_BACKUP.read_text()
-    desc_parts = []
-
-    for param, values in PARAM_SPACE.items():
-        if rng.random() < 0.5:
-            continue
-        val = rng.choice(values)
-        pattern = rf'^(\s*{re.escape(param)}\s*=\s*)(.+)$'
-        new_source, n = re.subn(pattern, rf'\g<1>{val}', source, count=1, flags=re.MULTILINE)
-        if n > 0:
-            source = new_source
-            desc_parts.append(f"{param}={val[:30]}")
-
-    if not desc_parts:
-        # Change at least one thing
-        val = rng.choice(PARAM_SPACE["EMP_BLEND"])
-        source = re.sub(r'EMP_BLEND\s*=\s*[\d.]+', f'EMP_BLEND = {val}', source)
-        desc_parts.append(f"EMP_BLEND={val}")
-
-    TRAIN_PY.write_text(source)
-    return "param: " + ", ".join(desc_parts)
-
-
-# ─── Main experiment loop ───────────────────────────────────────
-
-def _run_train(env_override=None):
-    """Run train.py and parse val_metric + per-round scores."""
-    try:
-        env = os.environ.copy()
-        if env_override:
-            env.update(env_override)
-        r = subprocess.run(
-            [sys.executable, str(TRAIN_PY)],
-            capture_output=True, text=True, timeout=900,
-            cwd=str(TASK_DIR), env=env,
-        )
-        output = r.stdout
-        val_metric = 0.0
-        per_round = {}
-        for line in output.split("\n"):
-            if line.startswith("val_metric:"):
-                val_metric = float(line.split(":")[1].strip())
-            if line.startswith("round_") and "_score:" in line:
-                parts = line.split(":")
-                rnum = int(parts[0].replace("round_", "").replace("_score", ""))
-                per_round[rnum] = float(parts[1].strip())
-        if val_metric == 0.0:
-            log(f"No val_metric. Exit code: {r.returncode}")
-            if r.stderr:
-                log(f"stderr: {r.stderr[-300:]}")
-        return val_metric, per_round, output
-    except subprocess.TimeoutExpired:
-        log("LORO timed out (>900s)")
-        return 0.0, {}, "TIMEOUT"
-    except Exception as e:
-        log(f"LORO error: {e}")
-        return 0.0, {}, str(e)
-
-
-# Quick screen folds: R7 (expansion), R13 (medium), R16 (recent)
-QUICK_FOLDS = [7, 13, 16]
-
-
-def run_quick_screen():
-    """Stage 1: 3-fold LORO for fast screening (~40-80s).
-
-    Returns (avg_score, per_round, output). If avg_score beats the quick baseline,
-    the experiment is worth verifying with full LORO.
-    """
-    log("STAGE 1: Quick screen (3-fold)...")
-    env = {"LORO_FOLDS": ",".join(str(f) for f in QUICK_FOLDS)}
-    return _run_train(env_override=env)
-
-
-def run_full_loro():
-    """Stage 2: Full 15-fold LORO for verification (~180-360s)."""
-    log("STAGE 2: Full LORO (15-fold)...")
-    return _run_train()
-
+# ─── Main: The Karpathy Loop ────────────────────────────────────
 
 def main():
     rng = random.Random(SEED)
 
-    log(f"{'='*60}")
-    log(f"AUTORESEARCH SWARM — Karpathy protocol")
-    log(f"VM={VM_ID} | Hub={'YES' if IS_HUB else 'NO'}")
-    log(f"Gemini: {'ENABLED' if GOOGLE_API_KEY else 'DISABLED (random only)'}")
-    log(f"Model: {GEMINI_MODEL}")
+    log("=" * 60)
+    log("AUTORESEARCH — Karpathy Protocol")
+    log(f"VM={VM_ID} | Focus={VM_FOCUS}")
+    log(f"Model={GEMINI_MODEL}")
     log(f"Parallel XGB: {os.environ.get('PARALLEL_XGB', 'default')}")
-    log(f"{'='*60}")
+    log("=" * 60)
 
-    # Save original train.py as backup
-    if not TRAIN_PY_BACKUP.exists():
-        shutil.copy2(TRAIN_PY, TRAIN_PY_BACKUP)
-    if not TRAIN_PY_BEST.exists():
-        shutil.copy2(TRAIN_PY, TRAIN_PY_BEST)
-
+    # Setup
+    git_setup()
     init_results()
+
+    # Step 1: Establish baseline
     best_metric = get_best_metric()
-    best_quick_metric = 0.0  # quick screen baseline (updated when full LORO keeps)
-    consecutive_crashes = 0
-
-    for run_idx in range(MAX_RUNS):
-        log(f"\n{'='*60}")
-        log(f"Run {run_idx + 1}/{MAX_RUNS} | Best: {best_metric:.4f}")
-        log(f"{'='*60}")
-
-        # Swarm sync: share results before asking Gemini
-        if run_idx > 0:
-            try:
-                sync_fleet_results()
-                fleet_count = 0
-                if SHARED_RESULTS.exists():
-                    fleet_count = max(0, len(SHARED_RESULTS.read_text().strip().split("\n")) - 1)
-                log(f"Fleet: {fleet_count} total results synced")
-            except Exception as e:
-                log(f"Sync warning: {e}")
-
-        # Restore to best known version before each experiment
-        shutil.copy2(TRAIN_PY_BEST, TRAIN_PY)
-
-        # Get experiment: Gemini code gen (or random params fallback)
-        description = "unknown"
-        if run_idx < 2 or consecutive_crashes >= 3:
-            # Warm-up or crash recovery: use safe parameter-only changes
-            if consecutive_crashes >= 3:
-                log("3+ consecutive crashes — falling back to parameter-only mode")
-                consecutive_crashes = 0
-            shutil.copy2(TRAIN_PY_BACKUP, TRAIN_PY)
-            description = apply_random_params(rng)
-            log(f"Mode: PARAMETER SWEEP")
-        elif GOOGLE_API_KEY:
-            # Gemini code generation
-            current_code = TRAIN_PY_BEST.read_text()
-            patch = ask_gemini_for_code(current_code, rng)
-            if patch:
-                description = patch.get("description", "gemini change")
-                log(f"Mode: GEMINI CODE GEN")
-                log(f"Idea: {description}")
-                if not apply_code_patch(patch):
-                    log("Patch failed to apply — falling back to params")
-                    shutil.copy2(TRAIN_PY_BACKUP, TRAIN_PY)
-                    description = apply_random_params(rng)
-            else:
-                log("Gemini returned nothing — using random params")
-                shutil.copy2(TRAIN_PY_BACKUP, TRAIN_PY)
-                description = apply_random_params(rng)
+    if best_metric == 0.0:
+        log("Running baseline...")
+        val_metric, _, output = run_train()
+        if val_metric > 0:
+            best_metric = val_metric
+            append_result(val_metric, "keep", "baseline")
+            git_amend()
+            log(f"Baseline: val_metric={val_metric:.6f}")
         else:
-            shutil.copy2(TRAIN_PY_BACKUP, TRAIN_PY)
-            description = apply_random_params(rng)
+            log("Baseline CRASHED. Check train.py.")
+            return
 
-        # ── TWO-STAGE SCREENING ──────────────────────────────────
-        # Stage 1: Quick 3-fold screen (~40-80s)
-        # Stage 2: Full 15-fold verify (only if screen passes)
+    log(f"Starting from best={best_metric:.6f}")
+    log("NEVER STOP — running until interrupted")
+    log("")
+
+    # Step 2: Loop forever
+    run_idx = 0
+    consecutive_failures = 0
+
+    while True:
+        run_idx += 1
+        log(f"{'=' * 60}")
+        log(f"Experiment {run_idx} | Best: {best_metric:.6f}")
+        log(f"{'=' * 60}")
+
+        # Read current state
+        train_py_content = TRAIN_PY.read_text()
+        model_py_summary = get_model_py_summary()
+        results_history = get_results_history()
+
+        # Ask Gemini for a hypothesis + edit
+        patch = ask_gemini(train_py_content, model_py_summary, results_history, run_idx)
+
+        if patch is None:
+            log("Gemini returned nothing. Sleeping 30s and retrying.")
+            time.sleep(30)
+            continue
+
+        reasoning = patch.get("reasoning", "no reasoning")
+        description = patch.get("description", "unknown change")[:60]
+
+        log(f"Hypothesis: {reasoning}")
+        log(f"Edit: {description}")
+
+        # Apply the edit
+        if not apply_edit(patch):
+            log("Edit failed to apply. Discarding.")
+            git("checkout -- train.py")
+            append_result(0.0, "crash", description, "edit failed to apply")
+            consecutive_failures += 1
+            if consecutive_failures >= 5:
+                log("5 consecutive failures. Sleeping 60s for Gemini to cool down.")
+                time.sleep(60)
+                consecutive_failures = 0
+            continue
+
+        # Git commit
+        git_commit(f"experiment: {description}")
+
+        # Run
+        log("Running train.py...")
         t0 = time.time()
-        quick_metric, quick_rounds, quick_output = run_quick_screen()
-        screen_time = (time.time() - t0) / 60
-
-        if quick_metric <= 0:
-            log(f"CRASHED in screen ({screen_time:.1f} min)")
-            append_result(0.0, screen_time, "crash", description)
-            consecutive_crashes += 1
-            continue
-
-        consecutive_crashes = 0
-
-        # Quick baseline: compare against quick scores of best config
-        # (approximate — if quick score is clearly worse, skip full LORO)
-        if best_quick_metric > 0 and quick_metric < best_quick_metric - 0.5:
-            delta = quick_metric - best_quick_metric
-            log(f"SCREEN REJECT: quick={quick_metric:.4f} ({delta:.4f} vs quick baseline)")
-            append_result(quick_metric, screen_time, "screen_reject", description)
-            continue
-
-        # Stage 2: Full LORO verification
-        log(f"Screen passed (quick={quick_metric:.4f}). Running full LORO...")
-        t1 = time.time()
-        val_metric, per_round, full_output = run_full_loro()
-        full_time = (time.time() - t0) / 60  # total time
+        val_metric, peak_vram, output = run_train()
+        duration = time.time() - t0
 
         if val_metric <= 0:
-            log(f"CRASHED in full LORO ({full_time:.1f} min)")
-            append_result(0.0, full_time, "crash", description)
-            consecutive_crashes += 1
+            # Crash
+            log(f"CRASH ({duration:.0f}s)")
+            # Try to read error
+            for line in output.split("\n")[-10:]:
+                if line.strip():
+                    log(f"  {line.strip()}")
+            append_result(0.0, "crash", description, "crash/no metric")
+            git_reset_hard()
+            git("checkout -- train.py")
+            consecutive_failures += 1
             continue
 
+        consecutive_failures = 0
+
+        # Decide: keep or discard
         if val_metric > best_metric:
             delta = val_metric - best_metric
             best_metric = val_metric
-            best_quick_metric = quick_metric  # update quick baseline too
-            shutil.copy2(TRAIN_PY, TRAIN_PY_BEST)
-            log(f"KEPT! val_metric={val_metric:.4f} (+{delta:.4f})")
-            append_result(val_metric, full_time, "kept", description)
+            append_result(val_metric, "keep", description)
+            git_amend()  # include results.tsv in the commit
+            log(f"KEEP! val_metric={val_metric:.6f} (+{delta:.6f})")
 
-            for rnum, score in sorted(per_round.items()):
-                log(f"  R{rnum}: {score:.2f}")
+            # Log per-round scores
+            for line in output.split("\n"):
+                if line.startswith("round_") and "_score:" in line:
+                    log(f"  {line.strip()}")
         else:
             delta = val_metric - best_metric
-            log(f"DISCARDED. val_metric={val_metric:.4f} ({delta:.4f})")
-            append_result(val_metric, full_time, "rejected", description)
+            append_result(val_metric, "discard", description, f"val_metric {delta:+.6f}")
+            git_reset_hard()
+            git("checkout -- train.py")
+            log(f"DISCARD. val_metric={val_metric:.6f} ({delta:+.6f})")
 
-        # Push results after each experiment
-        if not IS_HUB and HUB_IP:
-            try:
-                subprocess.run(
-                    ["scp", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5",
-                     str(RESULTS_TSV), f"root@{HUB_IP}:/tmp/astar/"],
-                    capture_output=True, timeout=15
-                )
-            except Exception:
-                pass
-
+        log(f"Duration: {duration:.0f}s")
         time.sleep(5)
-
-    log(f"\nDone. Best: {best_metric:.4f} over {MAX_RUNS} runs")
-    log(f"Best train.py saved at: {TRAIN_PY_BEST}")
 
 
 if __name__ == "__main__":
