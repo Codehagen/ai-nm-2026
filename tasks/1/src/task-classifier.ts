@@ -239,6 +239,15 @@ export function classifyTask(prompt: string): TaskType {
     return "timesheet";
   }
 
+  // --- Voucher / accounting dimensions (BEFORE project — dimension names like "Prosjekttype" contain "prosjekt")
+  if (
+    has(t, "dimension", "dimensión", "kostsenter", "kostnadsbærer", "pièce comptable",
+      "bilag", "voucher", "comprobante", "comprovante", "beleg",
+      "comptabilisez", "buchungsbeleg")
+  ) {
+    return "voucher";
+  }
+
   // --- Project
   if (has(t, "prosjekt", "project", "proyecto", "projeto", "projekt", "projet")) {
     return "project";
@@ -273,15 +282,6 @@ export function classifyTask(prompt: string): TaskType {
     (hasWord(t, "kunde") || has(t, "kunden", "kunder", "customer", "cliente", "client"))
   ) {
     return "update-customer";
-  }
-
-  // --- Voucher / accounting dimensions (before customer — dimension values may contain "kunde")
-  if (
-    has(t, "dimension", "kostsenter", "kostnadsbærer", "pièce comptable",
-      "bilag", "voucher", "comprobante", "comprovante", "beleg",
-      "comptabilisez", "buchungsbeleg")
-  ) {
-    return "voucher";
   }
 
   // --- Contact

@@ -190,7 +190,13 @@
       "Bash(chown:*)",
       "Bash(lsof -ti:9053)",
       "Bash(for vm_zone in \"ainm-norgesgruppen-a100:us-central1-f:cls10\" \"ainm-norgesgruppen-a100-2:us-central1-f:cls15\" \"ainm-norgesgruppen-a100-3:us-central1-f:cls20\" \"ainm-norgesgruppen-a100-6:us-central1-f:cls25\" \"ainm-norgesgruppen-a100-9:us-central1-b:cls30\")",
-      "Bash(grep -n \"invoiceDate\\\\|orderDate\\\\|deliveryDate\\\\|startDate\\\\|\\\\.date\\\\b\" /Users/walgermo/Utvikling/ai-nm-2026/tasks/1/src/orchestrator/execute/*.ts)"
+      "Bash(grep -n \"invoiceDate\\\\|orderDate\\\\|deliveryDate\\\\|startDate\\\\|\\\\.date\\\\b\" /Users/walgermo/Utvikling/ai-nm-2026/tasks/1/src/orchestrator/execute/*.ts)",
+      "Bash(npx --version)",
+      "Bash(npm install:*)",
+      "Bash(echo \"EXIT: $?\")",
+      "mcp__excalidraw__create_element",
+      "mcp__excalidraw__query_elements",
+      "mcp__excalidraw__get_resource"
     ]
   }
 }

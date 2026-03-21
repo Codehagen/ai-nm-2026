@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-21T08:16:38.135Z",
+  "prompt": "Cree una dimensión contable personalizada \"Prosjekttype\" con los valores \"Forskning\" y \"Utvikling\". Luego registre un asiento en la cuenta 7000 por 14550 NOK, vinculado al valor de dimensión \"Forskning\".",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

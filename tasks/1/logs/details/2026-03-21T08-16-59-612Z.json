@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-03-21T08:16:59.612Z",
+  "model": "orchestrator-failed",
+  "taskType": "orchestrator:project:failed",
+  "prompt": "Cree una dimensión contable personalizada \"Prosjekttype\" con los valores \"Forskning\" y \"Utvikling\". Luego registre un asiento en la cuenta 7000 por 14550 NOK, vinculado al valor de dimensión \"Forskning\".",
+  "filesCount": 0,
+  "steps": 1,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 1,
+  "elapsedMs": 21476,
+  "status": "error",
+  "error": "Failed to create employee  : Validering feilet.",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "count": "1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "name": "Avdeling",
+        "departmentNumber": "1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "body": {
+        "firstName": "",
+        "lastName": "",
+        "email": ".@example.org",
+        "dateOfBirth": "1990-01-15",
+        "userType": "STANDARD",
+        "department": {
+          "id": 926505
+        }
+      },
+      "status": 422,
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "lastName",
+          "message": "Feltet har ikke korrekt lengde. Det må være mellom 1 og 100.",
+          "path": "null.lastName",
+          "rootId": null
+        },
+        {
+          "field": "firstName",
+          "message": "Feltet har ikke korrekt lengde. Det må være mellom 1 og 100.",
+          "path": "null.firstName",
+          "rootId": null
+        },
+        {
+          "field": "email",
+          "message": "E-postadressen må være gyldig.",
+          "path": "null.email",
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "email": ".@example.org",
+        "fields": "id,firstName,lastName,version,dateOfBirth"
+      }
+    }
+  ]
+}

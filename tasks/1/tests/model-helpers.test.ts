@@ -824,6 +824,26 @@ describe("classifyTask — department vs customer disambiguation", () => {
   });
 });
 
+// ─── Phase 4: Voucher vs project disambiguation ────────────────────────
+
+describe("classifyTask — voucher vs project disambiguation", () => {
+  it("classifies Spanish accounting dimension as voucher, not project", () => {
+    expect(classifyTask('Cree una dimensión contable personalizada "Prosjekttype" con los valores "Forskning" y "Utvikling".')).toBe("voucher");
+  });
+
+  it("classifies Norwegian bilag as voucher", () => {
+    expect(classifyTask("Opprett et bilag med to posteringer")).toBe("voucher");
+  });
+
+  it("classifies dimension with prosjekt in value name as voucher", () => {
+    expect(classifyTask('Create a custom accounting dimension "Prosjekttype" with values')).toBe("voucher");
+  });
+
+  it("still classifies pure project creation as project", () => {
+    expect(classifyTask("Opprett et prosjekt kalt Nettside Redesign")).toBe("project");
+  });
+});
+
 // ─── Classifier validates against all benchmark prompts ──────────────────
 
 describe("classifyTask against benchmark prompts", () => {

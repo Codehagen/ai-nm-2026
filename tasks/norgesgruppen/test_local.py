@@ -23,6 +23,7 @@ import argparse
 import json
 import shutil
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -59,7 +60,7 @@ def run_inference(run_py, model_pt, input_dir, output_json):
 
     start = time.time()
     result = subprocess.run(
-        ["python", str(tmp / "run.py"),
+        [sys.executable, str(tmp / "run.py"),
          "--input", str(input_dir),
          "--output", str(output_json)],
         capture_output=True, text=True, timeout=300, env=env,
@@ -170,7 +171,7 @@ def test_from_zip(zip_path, input_dir, output_json):
 
     start = time.time()
     result = subprocess.run(
-        ["python", str(tmp / "run.py"),
+        [sys.executable, str(tmp / "run.py"),
          "--input", str(input_dir),
          "--output", str(output_json)],
         capture_output=True, text=True, timeout=300, env=env,

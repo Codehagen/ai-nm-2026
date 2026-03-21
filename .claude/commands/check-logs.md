@@ -58,3 +58,22 @@ If there are actionable fixes:
 - If yes, make the changes and run `cd tasks/1 && npx vitest run tests/model-helpers.test.ts` to verify
 
 If $ARGUMENTS is provided (e.g. a number like "3" or "5"), use that as the number of entries to analyze instead of the default flagged-only approach. If $ARGUMENTS is "all", analyze all entries from the last 24 hours.
+
+### 7. Visualize API call flow
+
+For each flagged entry, render an ASCII flow diagram showing the API call sequence. Use this format:
+
+```
+─── task: supplier-invoice (08:06, 18s, FAILED) ────────────────────────
+  POST /supplier ✅ → GET /ledger/acct ✅ → GET /ledger/acct ✅ → POST /supplierInvoice ❌ 422
+                                                                    └─ date: "" (empty!)
+```
+
+Rules:
+- ✅ for ok: true, ❌ for ok: false (with status code)
+- Show error details on a continuation line with └─
+- For timeouts: show `⏱ TIMEOUT (Xs, 0 steps)`
+- For long chains (>6 calls), wrap to next line with continuation indent
+- Keep it compact — one task = 2-4 lines max
+
+This renders directly in the terminal without external tools.
