@@ -80,7 +80,7 @@ export async function executeTimesheet(ctx: OrchestratorContext, data: Timesheet
       employee: { id: empId },
       project: { id: projId },
       activity: { id: actId },
-      date: entry.date || today,
+      date: (entry.date && entry.date.trim() !== "") ? entry.date : today,
       hours: entry.hours,
       comment: entry.comment ?? "",
     });

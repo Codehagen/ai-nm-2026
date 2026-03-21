@@ -251,7 +251,8 @@
       "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B click @e23 2)",
       "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B click @e21 2)",
       "Bash(/dev/null $B text)",
-      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B cookie-import-browser chrome 2)"
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B cookie-import-browser chrome 2)",
+      "Bash(ssh -i ~/.ssh/gcp_ainm -o StrictHostKeyChecking=no walgermo@34.158.87.44 'cd ~/task1 && tar xzf ~/task1.tar.gz 2>/dev/null; pkill -f \"\"\"\"node dist/api.js\"\"\"\" 2>/dev/null; sleep 1; nohup node dist/api.js > /tmp/api.log 2>&1 &')"
     ]
   }
 }

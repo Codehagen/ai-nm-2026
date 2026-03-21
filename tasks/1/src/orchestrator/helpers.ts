@@ -232,7 +232,7 @@ export async function ensureEmployee(
         (data.firstName && existing.firstName !== data.firstName) ||
         (data.lastName && existing.lastName !== data.lastName);
       const needsDobUpdate = !existing.dateOfBirth;
-      if (needsNameUpdate || needsDobUpdate) {
+      if (needsNameUpdate || needsDobUpdate || !existing.dateOfBirth) {
         await ctx.put(`/employee/${existing.id}`, {
           id: existing.id,
           version: existing.version,
