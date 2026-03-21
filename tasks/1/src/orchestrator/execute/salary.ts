@@ -27,8 +27,8 @@ const SALARY_TYPE_NUMBERS: Record<string, number> = {
 export async function executeSalary(ctx: OrchestratorContext, data: SalaryData): Promise<void> {
   const today = getOsloDate();
   const [yearStr, monthStr] = today.split("-");
-  const year = data.year ?? parseInt(yearStr);
-  const month = data.month ?? parseInt(monthStr);
+  let year = data.year ?? parseInt(yearStr);
+  let month = data.month ?? parseInt(monthStr);
 
   // 1. Department (use name from PDF/prompt if available)
   const deptId = await ensureDepartment(ctx, data.departmentName ?? "Avdeling", "1");
@@ -79,6 +79,14 @@ export async function executeSalary(ctx: OrchestratorContext, data: SalaryData):
 
   // 5. Employment (with startDate and percentage from PDF if available)
   const startDate = data.startDate || `${year}-${String(month).padStart(2, "0")}-01`;
+  // If employment starts in the future, use start date's year/month for salary spec
+  if (!data.year && !data.month) {
+    const [sY, sM] = startDate.split("-").map(Number);
+    if (sY > year || (sY === year && sM > month)) {
+      year = sY;
+      month = sM;
+    }
+  }
   const employmentBody: Record<string, unknown> = {
     employee: { id: empId },
     startDate,

@@ -158,7 +158,13 @@ function getErrorHint(
   // Invoice GET — invalid field names
   if (method === "GET" && path.includes("/invoice") && !path.includes("supplierInvoice") &&
       result.status === 400 && result.message?.includes("does not match a field")) {
-    return 'InvoiceDTO valid fields: id, invoiceNumber, invoiceDate, customer, amount, ehfSendStatus, orders, isCreditNote. Do NOT use: totalAmount, remainingAmount, dueDate, status, balance. Use fields=* for full list.';
+    return 'InvoiceDTO valid fields: id, invoiceNumber, invoiceDate, invoiceDueDate, customer, amount, ehfSendStatus, orders, isCreditNote. Do NOT use: totalAmount, remainingAmount, dueDate, status, balance, isClosed. Use fields=* for full list.';
+  }
+
+  // Order line — invalid fields (orderDate/deliveryDate belong on order, not orderline)
+  if (method === "POST" && path.includes("/order/orderline") &&
+      vm?.some((v) => v.field === "orderDate" || v.field === "deliveryDate")) {
+    return 'STOP: orderDate and deliveryDate do NOT go on order lines — they belong on the ORDER. OrderLine fields: order.id, product.id or description, count, unitPriceExcludingVatCurrency, vatType.id. Remove orderDate and deliveryDate.';
   }
 
   return null;

@@ -309,6 +309,62 @@ describe("Orchestrator Executors", () => {
       const errors = ctx.apiCalls.filter((c) => !c.ok);
       expect(errors.length).toBe(0);
     });
+
+    it("includes department on voucher posting when departmentName is set", async () => {
+      const ctx = makeCtx();
+      const data: SupplierInvoiceData = {
+        supplier: { name: "Elkjøp" },
+        invoiceNumber: "KVT-001",
+        invoiceDate: "2026-01-07",
+        dueDate: "2026-01-07",
+        description: "Tastatur",
+        amountExclVat: 4360,
+        amountInclVat: 5450,
+        vatPercent: "25",
+        expenseAccount: "7300",
+        departmentName: "Kundeservice",
+      };
+
+      await executeSupplierInvoice(ctx, data);
+
+      // Verify: department was created
+      const deptCalls = ctx.apiCalls.filter((c) => c.method === "POST" && c.path === "/department");
+      expect(deptCalls.length).toBeGreaterThanOrEqual(1);
+
+      // Verify: supplier invoice posting includes department
+      const siCalls = ctx.apiCalls.filter((c) => c.method === "POST" && c.path.includes("/supplierInvoice"));
+      expect(siCalls.length).toBe(1);
+      const body = siCalls[0].body as Record<string, unknown>;
+      const voucher = body?.voucher as Record<string, unknown>;
+      const postings = voucher?.postings as Array<Record<string, unknown>>;
+      const expensePosting = postings?.[0];
+      expect(expensePosting?.department).toBeDefined();
+      expect((expensePosting?.department as Record<string, unknown>)?.id).toBeTruthy();
+    });
+
+    it("omits department from posting when departmentName is not set", async () => {
+      const ctx = makeCtx();
+      const data: SupplierInvoiceData = {
+        supplier: { name: "Office AS" },
+        invoiceNumber: "INV-100",
+        invoiceDate: "2026-03-15",
+        dueDate: "2026-04-15",
+        description: "Kontorutstyr",
+        amountExclVat: 2000,
+        amountInclVat: 2500,
+        vatPercent: "25",
+        expenseAccount: "7300",
+      };
+
+      await executeSupplierInvoice(ctx, data);
+
+      const siCalls = ctx.apiCalls.filter((c) => c.method === "POST" && c.path.includes("/supplierInvoice"));
+      const body = siCalls[0].body as Record<string, unknown>;
+      const voucher = body?.voucher as Record<string, unknown>;
+      const postings = voucher?.postings as Array<Record<string, unknown>>;
+      const expensePosting = postings?.[0];
+      expect(expensePosting?.department).toBeUndefined();
+    });
   });
 
   // ─── Timesheet ────────────────────────────────────────────────────

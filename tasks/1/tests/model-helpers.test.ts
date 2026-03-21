@@ -844,6 +844,152 @@ describe("classifyTask — voucher vs project disambiguation", () => {
   });
 });
 
+// ─── Regression: Receipt expense vs department (Task 11/22 fix) ──────────
+
+describe("classifyTask — receipt expense vs department", () => {
+  it("classifies Portuguese receipt+department as supplier-invoice, not department", () => {
+    expect(classifyTask(
+      "Precisamos da despesa de Oppbevaringsboks deste recibo registada no departamento Markedsføring. Use a conta de despesas correta."
+    )).toBe("supplier-invoice");
+  });
+
+  it("classifies Portuguese receipt+HR department as supplier-invoice", () => {
+    expect(classifyTask(
+      "Precisamos da despesa de Kaffemøte deste recibo registada no departamento HR. Use a conta de despesas correta e garanta o tratamento correto do IVA."
+    )).toBe("supplier-invoice");
+  });
+
+  it("classifies Norwegian receipt+department as supplier-invoice", () => {
+    expect(classifyTask(
+      "Vi trenger Flybillett fra denne kvitteringen bokfort pa avdeling Kundeservice. Bruk riktig utgiftskonto."
+    )).toBe("supplier-invoice");
+  });
+
+  it("classifies Nynorsk receipt+department as supplier-invoice", () => {
+    expect(classifyTask(
+      "Vi treng Tastatur fra denne kvitteringa bokfort pa avdeling Kundeservice. Bruk rett utgiftskonto."
+    )).toBe("supplier-invoice");
+  });
+
+  it("still classifies legitimate department creation as department", () => {
+    expect(classifyTask("Créez trois départements dans Tripletex : Økonomi, Lager et IT.")).toBe("department");
+  });
+
+  it("still classifies Norwegian department creation as department", () => {
+    expect(classifyTask("Opprett avdeling Salg i Tripletex")).toBe("department");
+  });
+});
+
+// ─── Regression: Cost analysis vs project (Task 28 fix) ─────────────────
+
+describe("classifyTask — cost analysis vs project", () => {
+  it("classifies Nynorsk cost analysis as voucher, not project", () => {
+    expect(classifyTask(
+      "Totalkostnadene auka monaleg frå januar til februar 2026. Analyser hovudboka og finn dei tre kostnadskontoane med størst auke i beløp. Opprett eit internt prosjekt."
+    )).toBe("voucher");
+  });
+
+  it("classifies Spanish cost analysis as voucher, not project", () => {
+    expect(classifyTask(
+      "Los costos totales aumentaron significativamente de enero a febrero de 2026. Analice el libro mayor e identifique las tres cuentas de gastos."
+    )).toBe("voucher");
+  });
+
+  it("classifies English cost analysis as voucher", () => {
+    expect(classifyTask(
+      "Total costs increased significantly from January to February 2026. Analyze the ledger and identify the three expense accounts."
+    )).toBe("voucher");
+  });
+
+  it("classifies Bokmål cost analysis as voucher", () => {
+    expect(classifyTask(
+      "Kostnadene økte betydelig fra januar til februar 2026. Analyser hovedboken og identifiser de tre utgiftskontoene."
+    )).toBe("voucher");
+  });
+
+  it("still classifies normal project creation as project", () => {
+    expect(classifyTask("Opprett prosjektet Skymigrering for kunden Stormberg AS")).toBe("project");
+  });
+});
+
+// ─── Regression: Monthly closing / year-end vs salary ────────────────────
+
+describe("classifyTask — monthly closing vs salary", () => {
+  it("classifies German monthly closing as voucher, not salary", () => {
+    expect(classifyTask(
+      "Führen Sie den Monatsabschluss für März 2026 durch. Buchen Sie die Rechnungsabgrenzung und die Gehaltsrückstellung."
+    )).toBe("voucher");
+  });
+
+  it("classifies Portuguese monthly closing as voucher, not salary", () => {
+    expect(classifyTask(
+      "Realize o encerramento mensal de março de 2026. Registe a reversão de acréscimos."
+    )).toBe("voucher");
+  });
+
+  it("classifies English year-end closing as voucher", () => {
+    expect(classifyTask(
+      "Perform simplified year-end closing for 2025: Calculate and post annual depreciation for three assets."
+    )).toBe("voucher");
+  });
+
+  it("classifies Norwegian year-end closing as voucher", () => {
+    expect(classifyTask(
+      "Utfør forenklet årsoppgjør for 2025: Beregn og bokfør årlige avskrivninger."
+    )).toBe("voucher");
+  });
+
+  it("classifies French year-end closing as voucher", () => {
+    expect(classifyTask(
+      "Effectuez la clôture annuelle simplifiée pour 2025. Calculez et comptabilisez l'amortissement annuel."
+    )).toBe("voucher");
+  });
+
+  it("still classifies normal salary task as salary", () => {
+    expect(classifyTask("Opprett en lønnskjøring for Ola Nordmann med fastlønn 45000 kr")).toBe("salary");
+  });
+});
+
+// ─── Regression: Truncation limits for analytical paths ──────────────────
+
+describe("truncateForLLM — analytical path limits", () => {
+  const makeResult = (count: number): TxResult => ({
+    ok: true,
+    data: { values: Array.from({ length: count }, (_, i) => ({ id: i })), fullResultSize: count },
+  });
+
+  it("allows up to 200 items for /ledger/posting", () => {
+    const result = truncateForLLM(makeResult(150), "GET", "/ledger/posting");
+    const data = (result as { ok: true; data: Record<string, unknown> }).data;
+    expect((data.values as unknown[]).length).toBe(150);
+  });
+
+  it("truncates /ledger/posting at 200", () => {
+    const result = truncateForLLM(makeResult(250), "GET", "/ledger/posting");
+    const data = (result as { ok: true; data: Record<string, unknown> }).data;
+    expect((data.values as unknown[]).length).toBe(200);
+    expect(data._truncated).toBe(true);
+  });
+
+  it("allows up to 200 items for /ledger/voucher", () => {
+    const result = truncateForLLM(makeResult(100), "GET", "/ledger/voucher");
+    const data = (result as { ok: true; data: Record<string, unknown> }).data;
+    expect((data.values as unknown[]).length).toBe(100);
+  });
+
+  it("still truncates /employee at 5", () => {
+    const result = truncateForLLM(makeResult(20), "GET", "/employee");
+    const data = (result as { ok: true; data: Record<string, unknown> }).data;
+    expect((data.values as unknown[]).length).toBe(5);
+  });
+
+  it("still truncates unknown paths at 5", () => {
+    const result = truncateForLLM(makeResult(20), "GET");
+    const data = (result as { ok: true; data: Record<string, unknown> }).data;
+    expect((data.values as unknown[]).length).toBe(5);
+  });
+});
+
 // ─── Classifier validates against all benchmark prompts ──────────────────
 
 describe("classifyTask against benchmark prompts", () => {
