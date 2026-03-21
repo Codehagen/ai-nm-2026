@@ -139,20 +139,21 @@ def enhanced_obs_stats(observations):
 
 
 def compute_cell_obs_features(observations, h, w):
-    """Compute per-cell observation features (10 features per cell):
+    """Compute per-cell observation features (21 features per cell):
     [obs_settl_rate, obs_empty_rate, obs_ruin_rate, obs_freq,
      neighbor_settl_rate_r2, neighbor_settl_count_r2, max_neighbor_settl_rate_r1,
-     nearest_obs_settl_pop, nearest_obs_settl_food, nearest_obs_settl_dist]
-
-    The last 3 capture: avg population/food of nearest observed alive settlement
-    and distance to it.
+     nearest_obs_settl_pop, nearest_obs_settl_food, nearest_obs_settl_dist,
+     sum_settl_r2, sum_ruin_r2, dynamic_rate,
+     log_settl_count, log_total_count, log_ruin_count, log_dynamic_count,
+     sum_log_settl_r2, sum_log_ruin_r2,
+     nearest_obs_settl_wealth, nearest_obs_settl_defense]
     """
     cell_counts = np.zeros((h, w), dtype=np.int32)
     cell_settl = np.zeros((h, w), dtype=np.int32)
     cell_empty = np.zeros((h, w), dtype=np.int32)
     cell_ruin = np.zeros((h, w), dtype=np.int32)
-    # Collect per-settlement observations: (y, x, population, food) for alive settlements
-    obs_settl_list = []  # list of (y, x, pop, food)
+    # Collect per-settlement observations: (y, x, population, food, wealth, defense) for alive settlements
+    obs_settl_list = []  # list of (y, x, pop, food, wealth, defense)
     for obs in (observations or []):
         vp = obs.get("viewport", {})
         vy, vx = vp.get("y", 0), vp.get("x", 0)
@@ -174,11 +175,12 @@ def compute_cell_obs_features(observations, h, w):
         for s in obs.get("settlements", []):
             if s.get("alive", True):
                 sx, sy = s.get("x", 0), s.get("y", 0)
-                obs_settl_list.append((sy, sx, s.get("population", 0), s.get("food", 0)))
+                obs_settl_list.append((sy, sx, s.get("population", 0), s.get("food", 0),
+                                       s.get("wealth", 0), s.get("defense", 0)))
     total_obs = max(len(observations or []), 1)
     settl_rate = np.zeros((h, w), dtype=np.float32)
     ruin_rate = np.zeros((h, w), dtype=np.float32)
-    result = np.zeros((h, w, 19), dtype=np.float32)
+    result = np.zeros((h, w, 21), dtype=np.float32)
     for y in range(h):
         for x in range(w):
             n = cell_counts[y, x]
@@ -198,9 +200,13 @@ def compute_cell_obs_features(observations, h, w):
         settl_xs = np.array([s[1] for s in obs_settl_list], dtype=np.float32)
         settl_pops = np.array([s[2] for s in obs_settl_list], dtype=np.float32)
         settl_foods = np.array([s[3] for s in obs_settl_list], dtype=np.float32)
-        # Normalize population and food for feature stability
+        settl_wealths = np.array([s[4] for s in obs_settl_list], dtype=np.float32)
+        settl_defenses = np.array([s[5] for s in obs_settl_list], dtype=np.float32)
+        # Normalize for feature stability
         pop_max = max(float(np.max(settl_pops)), 1.0)
         food_max = max(float(np.max(settl_foods)), 1.0)
+        wealth_max = max(float(np.max(settl_wealths)), 1.0)
+        defense_max = max(float(np.max(settl_defenses)), 1.0)
         for y in range(h):
             for x in range(w):
                 dists = np.abs(settl_ys - y) + np.abs(settl_xs - x)
@@ -209,6 +215,8 @@ def compute_cell_obs_features(observations, h, w):
                 result[y, x, 7] = settl_pops[nearest_idx] / pop_max
                 result[y, x, 8] = settl_foods[nearest_idx] / food_max
                 result[y, x, 9] = nearest_dist / max(h + w, 1)  # normalized distance
+                result[y, x, 19] = settl_wealths[nearest_idx] / wealth_max
+                result[y, x, 20] = settl_defenses[nearest_idx] / defense_max
     # Compute neighbor settlement rates (radius 2) and max settl rate at radius 1
     for y in range(h):
         for x in range(w):
@@ -296,7 +304,7 @@ ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6
 
 
 def train_gbt_models(train_rounds):
-    """Train terrain-specific XGBoost on given rounds (71 features: 30 cell + 22 obs stats + 19 cell obs)."""
+    """Train terrain-specific XGBoost on given rounds (73 features: 30 cell + 22 obs stats + 21 cell obs)."""
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
     W_data = {"plains": [], "forest": [], "settl": []}
