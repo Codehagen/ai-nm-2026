@@ -92,10 +92,12 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 
 def enhanced_obs_stats(observations):
-    """Compute enhanced round-level obs stats (13 features: base 7 + min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm)."""
+    """Compute enhanced round-level obs stats (15 features: base 7 + min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate)."""
     base = compute_obs_stats(observations) if observations else np.zeros(7)
     pops, foods, defenses = [], [], []
     factions = set()
+    # Grid-level settlement/ruin rate
+    grid_settl_count, grid_ruin_count, grid_total = 0, 0, 0
     for obs in (observations or []):
         for s in obs.get("settlements", []):
             if s.get("alive", True):
@@ -103,13 +105,23 @@ def enhanced_obs_stats(observations):
                 foods.append(s.get("food", 0))
                 defenses.append(s.get("defense", 0))
                 factions.add(s.get("owner_id", -1))
+        for row in obs.get("grid", []):
+            for code in row:
+                if code not in {10, 5}:  # skip ocean/mountain
+                    grid_total += 1
+                    if code in {1, 2}:  # settlement or port
+                        grid_settl_count += 1
+                    elif code == 3:  # ruin
+                        grid_ruin_count += 1
     min_food = float(np.min(foods)) if foods else 0.0
     max_pop = float(np.max(pops)) if pops else 0.0
     food_std = float(np.std(foods)) if foods else 0.0
     min_defense = float(np.min(defenses)) if defenses else 0.0
     defense_std = float(np.std(defenses)) if defenses else 0.0
     n_factions_norm = len(factions) / 10.0  # normalize: typically 1-10 factions
-    return np.concatenate([base, [min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm]])
+    obs_settl_rate = grid_settl_count / max(grid_total, 1)
+    obs_ruin_rate = grid_ruin_count / max(grid_total, 1)
+    return np.concatenate([base, [min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate]])
 
 
 def load_round_data(round_num):
@@ -126,7 +138,7 @@ ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6
 
 
 def train_gbt_models(train_rounds):
-    """Train terrain-specific XGBoost on given rounds (43 features: 30 cell + 13 obs stats)."""
+    """Train terrain-specific XGBoost on given rounds (45 features: 30 cell + 15 obs stats)."""
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
     W_data = {"plains": [], "forest": [], "settl": []}
@@ -141,7 +153,7 @@ def train_gbt_models(train_rounds):
             settlements = initial_states[seed]["settlements"]
             gt = gts[seed]
             feats, coords = _extract_cell_features(grid, settlements)
-            # Append round-level obs stats (43 features total)
+            # Append round-level obs stats (45 features total)
             feats = np.hstack([feats, np.tile(obs_stats, (len(feats), 1))])
             targets = np.array([gt[y, x] for y, x in coords])
             for i, (y, x) in enumerate(coords):
@@ -190,7 +202,7 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=No
     features, coords = _extract_cell_features(initial_grid, settlements)
     if len(features) == 0:
         return None
-    # Append obs stats to match training (43 features)
+    # Append obs stats to match training (45 features)
     if obs_stats is not None:
         features = np.hstack([features, np.tile(obs_stats, (len(features), 1))])
     tensor = np.zeros((h, w, NUM_CLASSES))
@@ -260,7 +272,7 @@ def evaluate_loro():
             # Layer 6.7: Cross-seed empirical distance tables
             if all_observations and round_empirical:
                 h, w, _ = tensor.shape
-                EMP_BLEND = 0.55
+                EMP_BLEND = 0.50
                 settl_pos = [(s['x'] if isinstance(s, dict) else s.x,
                               s['y'] if isinstance(s, dict) else s.y) for s in settlements]
                 for y in range(h):
