@@ -344,6 +344,19 @@ const RECIPE_VOUCHER = `## Voucher Management
 POST /ledger/voucher to create vouchers. Postings MUST balance (debit + credit = 0).
 \`row\` numbering MUST start at 1. \`amountGrossCurrency\` MUST equal \`amountGross\`.
 
+### Reminder Fee / Late Fee / Purregebyr:
+If the prompt mentions a reminder fee with debit/credit accounts (e.g. "Debit 1500, credit 8020"):
+1. GET /ledger/account?number=<debit_acct>&fields=id (e.g. 1500 = accounts receivable)
+2. GET /ledger/account?number=<credit_acct>&fields=id (e.g. 8020 = financial products)
+3. POST /ledger/voucher?sendToLedger=true:
+\`\`\`json
+{"date": "<today>", "description": "Purregebyr / Reminder fee", "postings": [
+  {"row": 1, "date": "<today>", "account": {"id": <debit_id>}, "amountGross": <amount>, "amountGrossCurrency": <amount>, "description": "Reminder fee"},
+  {"row": 2, "date": "<today>", "account": {"id": <credit_id>}, "amountGross": -<amount>, "amountGrossCurrency": -<amount>, "description": "Reminder fee"}
+]}
+\`\`\`
+**Do NOT create an order or invoice for reminder fees — this is a journal voucher.**
+
 ### Custom Accounting Dimensions:
 1. POST /ledger/accountingDimensionName  {"dimensionName": "Region"}
 2. POST /ledger/accountingDimensionValue  {"displayName": "Sør-Norge", "dimensionIndex": 1}

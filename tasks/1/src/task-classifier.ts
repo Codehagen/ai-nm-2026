@@ -97,8 +97,11 @@ export function classifyTask(prompt: string): TaskType {
       "costos totales", "total costs increased",
       "kostnadene økte", "kosten gestiegen",
       // Reminder fees / late fees (voucher, not payment)
-      "frais de rappel", "purrerente", "reminder fee", "late fee",
-      "mahngebühr", "cargo por demora", "taxa de mora",
+      "frais de rappel", "purrerente", "purregebyr", "inkassogebyr",
+      "reminder fee", "late fee", "reminder",
+      "mahngebühr", "mahngebuhr",
+      "cargo por demora", "tasa de recordatorio",
+      "taxa de lembrete", "taxa de mora",
       // Year-end closing / depreciation
       "clôture annuelle", "year-end closing", "årsavslutning", "årsoppgjør",
       "amortissement", "depreciation", "avskrivning", "abschreibung",
