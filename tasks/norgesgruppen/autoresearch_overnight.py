@@ -40,7 +40,7 @@ MODELS_DIR.mkdir(exist_ok=True)
 VM_ID = os.environ.get("VM_ID", "vm0")
 GPU_TYPE = os.environ.get("GPU_TYPE", "l4").lower()
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
-GEMINI_MODEL = os.environ.get("MODEL_ID", "gemini-2.5-flash")
+GEMINI_MODEL = os.environ.get("MODEL_ID", "gemini-3.1-pro-preview")
 
 # Hub VM for swarm coordination — pulls results from all VMs, serves merged file
 HUB_IP = os.environ.get("HUB_IP", "10.128.0.13")  # ainm-norgesgruppen-a100

@@ -23,7 +23,12 @@ const FALLBACK_MODEL_ID = process.env.FALLBACK_MODEL_ID || "gemini-3.1-flash-lit
 
 /** Select the right provider based on model ID */
 function getModel(modelId: string) {
-  if (modelId.startsWith("claude-") || modelId.startsWith("anthropic/")) {
+  if (modelId.startsWith("anthropic/")) {
+    // Strip prefix for direct provider — "anthropic/claude-opus-4.6" → "claude-opus-4-6"
+    const bareId = modelId.replace("anthropic/", "").replace(/\./g, "-");
+    return anthropic(bareId);
+  }
+  if (modelId.startsWith("claude-")) {
     return anthropic(modelId);
   }
   return google(modelId);
