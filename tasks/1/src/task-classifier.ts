@@ -46,41 +46,8 @@ export function classifyTask(prompt: string): TaskType {
   const stripped = prompt.replace(/\S+@\S+\.\S+/g, "<EMAIL>");
   const t = stripped.toLowerCase();
 
-  // --- Salary / Payroll (check early — mentions "employee" but is salary task)
-  if (
-    has(
-      t,
-      "lønnskjøring",
-      "lønn",
-      "lonn",
-      "fastlønn",
-      "fastlonn",
-      "arslonn",
-      "årslønn",
-      "salary",
-      "payroll",
-      "gehaltsabrechnung",
-      "gehalt",
-      "salaire",
-      "salario",
-      "salário",
-      "nómina",
-      "folha de pagamento",
-      "onboarding",
-      "arbeidskontrakt",
-      "employment contract",
-      "contrato de trabalho",
-      "contrat de travail",
-      "arbeitsvertrag",
-      "contrato de trabajo",
-      "tilbud om stilling",
-      "tilbudsbrev",
-    )
-  ) {
-    return "salary";
-  }
-
-  // --- Analytical/ledger tasks + bank reconciliation (BEFORE supplier-invoice and invoice-payment)
+  // --- Analytical/ledger tasks + bank reconciliation (BEFORE salary — "Gehaltsrückstellung" contains "gehalt")
+  // Also BEFORE supplier-invoice and invoice-payment.
   // These are T3 tasks that need the LLM agent, not the orchestrator.
   if (
     has(
@@ -117,6 +84,40 @@ export function classifyTask(prompt: string): TaskType {
       has(t, "abgleich", "abstimm", "reconcil", "avstemm"))
   ) {
     return "voucher";
+  }
+
+  // --- Salary / Payroll (AFTER voucher — "Gehaltsrückstellung" contains "gehalt" but is a voucher task)
+  if (
+    has(
+      t,
+      "lønnskjøring",
+      "lønn",
+      "lonn",
+      "fastlønn",
+      "fastlonn",
+      "arslonn",
+      "årslønn",
+      "salary",
+      "payroll",
+      "gehaltsabrechnung",
+      "gehalt",
+      "salaire",
+      "salario",
+      "salário",
+      "nómina",
+      "folha de pagamento",
+      "onboarding",
+      "arbeidskontrakt",
+      "employment contract",
+      "contrato de trabalho",
+      "contrat de travail",
+      "arbeitsvertrag",
+      "contrato de trabajo",
+      "tilbud om stilling",
+      "tilbudsbrev",
+    )
+  ) {
+    return "salary";
   }
 
   // --- Project lifecycle (BEFORE supplier-invoice — lifecycle prompts mention "facture"/"fournisseur" as sub-steps)

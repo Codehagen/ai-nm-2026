@@ -1,39 +1,38 @@
 # VM Fleet Overview — NorgesGruppen Autoresearch
 
-**Last updated:** 2026-03-20 22:20 UTC
+**Last updated:** 2026-03-21 15:00 UTC
 **Compute:** Sponsored (AI Championship) — free runs
 **Best competition score:** 0.9221 (single-stage, multi-scale WBF + TTA)
-**Fleet:** 17 GPUs (5x A100 40GB + 12x L4 24GB)
+**Fleet:** 31 GPUs (10x A100 40GB + 21x L4 24GB)
 
 ## Current Status
 
-All 16 GPUs training YOLOv8l on full dataset (248 images, up from 199). Different seeds for ensemble diversity. A100s resumed from ep206 checkpoint after OOM incident.
+**Overnight autoresearch running** — `autoresearch_overnight.py` deployed to 31 VMs. Each VM samples random hyperparameter configs from a search space (70% exploitation / 30% exploration), trains YOLOv8l from scratch with 80/20 split for honest eval, and saves the best model per VM. Expected ~150+ experiments by morning.
 
-### A100 Fleet (5x, resumed from ep206)
+### A100 Fleet (10x, autoresearch)
 
-| VM | IP | Seed | Epoch | mAP50 |
-|----|-----|------|-------|-------|
-| a100 | 34.41.67.231 | 42 | ~10 (resumed) | 0.727 |
-| a100-2 | 34.45.96.187 | 0 | ~10 (resumed) | 0.717 |
-| a100-3 | 35.239.153.96 | 7 | ~10 (resumed) | 0.718 |
-| a100-6 | 34.123.55.182 | 123 | ~10 (resumed) | 0.712 |
-| a100-9 | 34.172.76.207 | 99 | ~10 (resumed) | 0.714 |
+| VM | Zone | Role | Status |
+|----|------|------|--------|
+| a0 | us-central1-f | overnight HPO | training |
+| a1 | us-central1-f | overnight HPO | training |
+| a2 | us-central1-f | overnight HPO | training |
+| a3 | us-central1-f | overnight HPO | training |
+| a4 | us-central1-f | overnight HPO | training |
+| a100 | us-central1-f | overnight HPO | training |
+| a100-2 | us-central1-f | overnight HPO | training |
+| a100-3 | us-central1-f | overnight HPO | training |
+| a100-6 | us-central1-f | overnight HPO | training |
+| a100-9 | us-central1-b | overnight HPO | training |
 
-### L4 Fleet (11x, from scratch)
+### L4 Fleet (21x, mixed)
 
-| VM | IP | Seed | Epoch | mAP50 |
-|----|-----|------|-------|-------|
-| ar2 | 34.38.119.86 | 77 | ~107 | training |
-| exp4 | 34.77.212.123 | 44 | ~47 | 0.510 |
-| exp5 | 34.135.158.38 | 55 | ~107 | training |
-| exp6 | 34.123.93.2 | 66 | ~107 | training |
-| exp7 | 136.115.124.244 | 7 | 0 | starting |
-| exp8 | 35.232.74.204 | 8 | ~107 | training |
-| exp9 | 34.71.125.9 | 9 | ~107 | training |
-| exp10 | 35.192.44.183 | 10 | ~107 | training |
-| exp11 | 34.123.169.171 | 11 | ~107 | training |
-| exp12 | 34.56.196.65 | 12 | ~107 | training |
-| exp13 | 34.135.45.164 | 13 | ~47 | 0.503 |
+| VM | Zone | Role | Status |
+|----|------|------|--------|
+| l0-l8 | mixed | overnight HPO | training |
+| ar2 | europe-west1-b | overnight HPO | training |
+| exp4 | europe-west1-b | overnight HPO | training |
+| exp5-exp13 | us-central1-a | cls=1.0 seed sweep | training |
+| cls | us-central1-a | overnight HPO | training |
 
 ## Competition Submissions
 
@@ -76,12 +75,51 @@ All 16 GPUs training YOLOv8l on full dataset (248 images, up from 199). Differen
 | submission_ensemble.zip | 233MB | 3-model WBF ensemble | Local eval slightly worse |
 | models/best_fulldataset_slim.pt | 84MB | Full-dataset ep206 (stripped) | Not yet packaged |
 
-## Pending Work
+## Pending Work (Morning March 22)
 
-1. **Await full-dataset training completion** — A100s finishing ~20 min, L4s ~1.5 hrs
-2. **Package best full-dataset model** — expected to beat 0.9007
-3. **Two-stage classifier** — code ready (train_classifier.py, run_twostage.py), needs product reference images from competition site
-4. **SWA of full-dataset models** — average weights from top seeds after training completes
+1. **Collect overnight results** — `bash scripts/gcp/collect-overnight.sh`
+2. **Identify top 5 configs** by val_metric, select diverse top 3 for ensemble
+3. **Retrain top 3 on full dataset** (`data/yolo_full/data.yaml`) on A100s for 300ep
+4. **SWA top 3-5 models** as additional candidate
+5. **Strip + package** with `strip_model.py` + `package_ensemble.sh`
+6. **Submit best combos** (6 submissions available)
+
+## Overnight Autoresearch
+
+### How it works
+`autoresearch_overnight.py` runs autonomously on each VM:
+1. Sample random config from search space (VM_ID-seeded RNG → different per VM)
+2. Generate inline training script, run as subprocess
+3. Parse `val_metric` from stdout
+4. If improved → save model as `best_overnight_{VM_ID}.pt`
+5. Log all params + result to `overnight_results_{VM_ID}.tsv`
+6. Cleanup runs dir (saves disk), repeat forever
+
+### Search space (anchored at proven-best)
+- **Fixed:** model=yolov8l.pt, imgsz=1280, SGD, cos_lr, lr0=0.005, lrf=0.01, batch=-1, patience=50
+- **Varied:** cls [0.8-1.2], box [5-10], dfl [1-2], mosaic [0.8-1.0], mixup [0.05-0.2], copy_paste [0.05-0.15], degrees [5-15], scale [0.3-0.7], epochs [280-350], close_mosaic [10-30], warmup [3-5], freeze [None/5/10], label_smoothing [0-0.1]
+- **Data:** `data/yolo/data.yaml` (80/20 split) for honest relative ranking
+
+### Commands
+```bash
+# Deploy overnight to all VMs
+bash scripts/gcp/deploy-overnight.sh
+
+# Collect results + best models
+bash scripts/gcp/collect-overnight.sh
+
+# Monitor a VM
+gcloud compute ssh <VM> --zone=<Z> --command='tail -50 ~/task/overnight.log'
+
+# Top results across all VMs
+cat tasks/norgesgruppen/overnight_results_*.tsv | sort -t$'\t' -k3 -rn | head -20
+```
+
+### Start on a single VM
+```bash
+systemd-run --unit=ainm-overnight --remain-after-exit bash -c \
+  'cd /root/task && VM_ID=<id> GPU_TYPE=<a100|l4> PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True python3 -u autoresearch_overnight.py > overnight.log 2>&1'
+```
 
 ## VM Setup Runbook
 
@@ -91,45 +129,35 @@ All 16 GPUs training YOLOv8l on full dataset (248 images, up from 199). Differen
 bash scripts/gcp/create-vm.sh norgesgruppen medium --name=<name>   # L4
 bash scripts/gcp/create-vm.sh norgesgruppen heavy --name=<name>    # A100
 
-# Deploy (VM→VM, NOT from Starlink)
-# Source A100 has tarball at /tmp/task.tar.gz
+# Deploy data (VM→VM via SSH)
+# Source A100 has tarball at /tmp/task_overnight.tar.gz
 gcloud compute ssh <source> --zone=<z> --command="
-cat /tmp/task.tar.gz | ssh -o StrictHostKeyChecking=no root@<NEW_IP> 'mkdir -p /root/task && cd /root/task && tar xzf -'
+cat /tmp/task_overnight.tar.gz | ssh -o StrictHostKeyChecking=no root@<NEW_IP> 'mkdir -p /root/task && cd /root/task && tar xzf -'
 "
 
-# Install deps (order matters!)
-pip install --break-system-packages ultralytics==8.1.0 'numpy<2'
-pip install --break-system-packages --force-reinstall opencv-python-headless==4.9.0.80
+# Install deps (ORDER MATTERS — numpy FIRST, then opencv!)
+pip install --break-system-packages ultralytics==8.1.0
+pip install --break-system-packages --force-reinstall 'numpy==1.26.4'
+pip install --break-system-packages 'opencv-python-headless==4.8.1.78'
 find /usr/local/lib -name 'cv2*.so' -path '*/opencv_python/*' -delete
 
-# Convert full dataset + fix paths
-python3 convert_coco.py --coco-dir data/train --output-dir data/yolo_full --val-ratio 0
-cp -r data/yolo/images/val data/yolo_full/images/val
-cp -r data/yolo/labels/val data/yolo_full/labels/val
-sed -i 's|^path: .*|path: /root/task/data/yolo_full|' data/yolo_full/data.yaml
-
-# Train (use CLI args, NOT sed!)
-systemd-run --unit=ainm-train --remain-after-exit bash -c '
-cd /root/task && PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
-python3 -u train.py --data /root/task/data/yolo_full/data.yaml \
-  --model yolov8l.pt --imgsz 1280 --epochs 300 --batch 2 --patience 40 \
-  --device 0 --name <exp_name> --seed <seed> \
-  --lr0 0.01 --optimizer auto \
-  > /tmp/train.log 2>&1'
+# Fix data path
+sed -i 's|^path: .*|path: /root/task/data/yolo|' data/yolo/data.yaml
 ```
 
 ### Common Issues
 | Issue | Fix |
 |-------|-----|
-| libGL.so.1 not found | `pip install --force-reinstall opencv-python-headless==4.9.0.80` + delete cv2*.so |
-| numpy has no attribute trapz | `pip install 'numpy<2'` |
+| numpy.core.multiarray ImportError | `pip install --force-reinstall numpy==1.26.4` (BEFORE opencv!) |
+| libGL.so.1 not found | `pip install opencv-python-headless==4.8.1.78` + delete cv2*.so |
+| opencv pulls numpy 2.x back | Install numpy AFTER opencv, or pin `opencv-python-headless==4.8.1.78` |
 | SyntaxError: keyword repeated | Use CLI args (`--lr0`, `--optimizer`), NOT sed |
 | OOM on A100 | Don't share GPU between YOLO + classifier |
-| VM preempted | Use non-spot VMs |
-| Val data missing in yolo_full | Copy from yolo/images/val and yolo/labels/val |
+| nohup process dies on SSH disconnect | Use `systemd-run --unit=name --remain-after-exit` instead |
 
 ### Infrastructure
-- **SSH Keys:** A100 → us-central VMs; ar2 → europe-west VMs
-- **Data transfer:** VM→VM via tar pipe
+- **SSH Keys:** ainm-norgesgruppen-a100 has keys to all VMs (added via gcloud)
+- **Data transfer:** VM→VM via tar pipe through SSH
 - **All VMs:** Non-spot, systemd-run for persistence
 - **Direct SSH:** `ssh -i ~/.ssh/google_compute_engine root@<IP>`
+- **Tarball location:** `/tmp/task_overnight.tar.gz` on ainm-norgesgruppen-a100 (2.3GB, includes data + scripts)

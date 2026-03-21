@@ -282,7 +282,8 @@ def run_experiment(config, run_idx):
             return None
 
         current_best = get_best_metric()
-        if val_metric > current_best:
+        is_best = val_metric > current_best
+        if is_best:
             log(f"NEW BEST: {val_metric:.4f} > {current_best:.4f} ({duration_min:.1f}min)")
             best_pt_path = TASK_DIR / "runs" / exp_name / "weights" / "best.pt"
             if best_pt_path.exists():
@@ -294,8 +295,8 @@ def run_experiment(config, run_idx):
             append_result(config, val_metric, duration_min, "rejected",
                          f"below {current_best:.4f}")
 
-        # Cleanup run directory to save disk space (keep best model only)
-        cleanup_run(exp_name)
+        # Cleanup run directory to save disk; keep log only for best runs
+        cleanup_run(exp_name, keep_log=is_best)
 
         return val_metric
 
@@ -316,14 +317,17 @@ def run_experiment(config, run_idx):
         return None
 
 
-def cleanup_run(exp_name):
-    """Delete run directory to save disk space. Best model already saved."""
+def cleanup_run(exp_name, keep_log=False):
+    """Delete run directory and log to save disk space. Best model already saved."""
     run_dir = TASK_DIR / "runs" / exp_name
     if run_dir.exists():
         try:
             shutil.rmtree(run_dir)
         except Exception as e:
             log(f"Warning: cleanup failed for {run_dir}: {e}")
+    if not keep_log:
+        log_file = TASK_DIR / f"{exp_name}.log"
+        log_file.unlink(missing_ok=True)
 
 
 def wait_for_gpu():
@@ -343,6 +347,14 @@ def wait_for_gpu():
             return
 
 
+def get_completed_runs():
+    """Count completed runs from results TSV to resume run_idx after restart."""
+    if not RESULTS_TSV.exists():
+        return 0
+    lines = RESULTS_TSV.read_text().strip().split("\n")
+    return max(0, len(lines) - 1)  # subtract header
+
+
 def main():
     rng = random.Random(SEED)
 
@@ -354,10 +366,18 @@ def main():
 
     init_results()
 
+    # Resume from previous runs: advance RNG to stay on same sequence
+    completed = get_completed_runs()
+    if completed > 0:
+        log(f"Resuming after {completed} previous runs (best: {get_best_metric():.4f})")
+        # Advance RNG past completed runs to avoid repeating configs
+        for _ in range(completed):
+            sample_config(rng)
+
     # Wait for GPU to be free (in case L4 is still finishing previous training)
     wait_for_gpu()
 
-    run_idx = 0
+    run_idx = completed
     while True:
         run_idx += 1
         config = sample_config(rng)
