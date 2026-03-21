@@ -80,21 +80,32 @@ export function classifyTask(prompt: string): TaskType {
     return "salary";
   }
 
-  // --- Bank reconciliation (BEFORE supplier-invoice — "Lieferantenrechnungen" contains "lieferant"+"rechnung")
+  // --- Analytical/ledger tasks + bank reconciliation (BEFORE supplier-invoice and invoice-payment)
+  // These are T3 tasks that need the LLM agent, not the orchestrator.
   if (
     has(
       t,
-      "bankavstemming",
-      "kontoutskrift",
-      "kontoauszug",
-      "bank reconciliation",
-      "bank statement",
-      "conciliación bancaria",
-      "extracto bancario",
-      "reconciliação bancária",
-      "extrato bancário",
-      "rapprochement bancaire",
-      "relevé bancaire",
+      // Bank reconciliation
+      "bankavstemming", "kontoutskrift", "kontoauszug",
+      "bank reconciliation", "bank statement",
+      "conciliación bancaria", "extracto bancario",
+      "reconciliação bancária", "extrato bancário",
+      "rapprochement bancaire", "relevé bancaire",
+      // Ledger analysis / cost analysis
+      "analice el libro mayor", "analyze the ledger", "analyser hovedboken",
+      "analysieren sie das hauptbuch", "analysez le grand livre",
+      "costos totales", "total costs increased",
+      "kostnadene økte", "kosten gestiegen",
+      // Reminder fees / late fees (voucher, not payment)
+      "frais de rappel", "purrerente", "reminder fee", "late fee",
+      "mahngebühr", "cargo por demora", "taxa de mora",
+      // Year-end closing / depreciation
+      "clôture annuelle", "year-end closing", "årsavslutning", "årsoppgjør",
+      "amortissement", "depreciation", "avskrivning", "abschreibung",
+      // Error correction
+      "fehler im hauptbuch", "errores en el libro", "erros no livro",
+      "feil i hovedbok", "erreurs dans le grand livre",
+      "korrigere", "correct errors", "corrigir",
     ) ||
     (has(t, "kontoauszug", "kontoutskrift", "bank statement", "relevé") &&
       has(t, "abgleich", "abstimm", "reconcil", "avstemm"))
