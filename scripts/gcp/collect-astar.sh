@@ -102,7 +102,67 @@ if [ "${1:-}" = "--best" ]; then
     echo "Best VM: $BEST_VM (metric: $BEST_METRIC)"
     echo "Downloading best train.py..."
     gcloud compute scp "$BEST_VM:/tmp/astar/train.py.best" \
-      "$TASK_DIR/train.py.best_from_swarm" --zone="$ZONE" --project="$PROJECT" 2>/dev/null && \
+      "$TASK_DIR/train.py.best_from_swarm" --zone="$ZONE" --project="$PROJECT" \
+      --ssh-flag="-o StrictHostKeyChecking=no" 2>/dev/null && \
       echo "Saved: $TASK_DIR/train.py.best_from_swarm" || echo "Download failed"
   fi
+fi
+
+# 5. Verify + integrate if requested
+if [ "${1:-}" = "--integrate" ]; then
+  echo ""
+  echo "╔══════════════════════════════════════════════════════════╗"
+  echo "║  INTEGRATION PIPELINE                                   ║"
+  echo "╚══════════════════════════════════════════════════════════╝"
+
+  # Download best train.py from winning VM
+  BEST_VM=""
+  BEST_METRIC="0"
+  for VM_PAIR in "${VMS[@]}"; do
+    VM=$(echo "$VM_PAIR" | cut -d: -f1)
+    VMID=$(echo "$VM_PAIR" | cut -d: -f2)
+    METRIC=$(gcloud compute ssh "$VM" --zone="$ZONE" --project="$PROJECT" \
+      --ssh-flag="-o StrictHostKeyChecking=no" \
+      --command='grep "kept" /tmp/astar/swarm_results_*.tsv 2>/dev/null | sort -t"	" -k3 -rn | head -1 | cut -f3' 2>/dev/null || echo "0")
+    if [ "$(echo "$METRIC > $BEST_METRIC" | bc 2>/dev/null || echo 0)" = "1" ]; then
+      BEST_METRIC="$METRIC"
+      BEST_VM="$VM"
+    fi
+  done
+
+  if [ -z "$BEST_VM" ]; then
+    echo "No kept results found. Nothing to integrate."
+    exit 0
+  fi
+
+  echo "Step 1: Download best train.py from $BEST_VM (metric: $BEST_METRIC)"
+  gcloud compute scp "$BEST_VM:/tmp/astar/train.py.best" \
+    "$TASK_DIR/train.py.best_from_swarm" --zone="$ZONE" --project="$PROJECT" \
+    --ssh-flag="-o StrictHostKeyChecking=no" 2>/dev/null
+
+  echo "Step 2: Verify locally with full LORO..."
+  # Backup current train.py, swap in swarm best, run LORO
+  cp "$TASK_DIR/train.py" "$TASK_DIR/train.py.pre_swarm_backup"
+  cp "$TASK_DIR/train.py.best_from_swarm" "$TASK_DIR/train.py"
+
+  cd "$TASK_DIR"
+  source ../../.venv/bin/activate 2>/dev/null || true
+  RESULT=$(python train.py 2>&1)
+  VAL_METRIC=$(echo "$RESULT" | grep "^val_metric:" | head -1 | awk '{print $2}')
+
+  echo "  Swarm best LORO (local verify): $VAL_METRIC"
+  echo "  VM reported: $BEST_METRIC"
+  echo ""
+
+  # Restore original
+  cp "$TASK_DIR/train.py.pre_swarm_backup" "$TASK_DIR/train.py"
+
+  echo "$RESULT" | grep "^round_"
+
+  echo ""
+  echo "Step 3: To apply, run:"
+  echo "  cp $TASK_DIR/train.py.best_from_swarm $TASK_DIR/train.py"
+  echo "  # Then port parameter changes to model.py build_prediction()"
+  echo "  # Then: python retrain_gbt.py"
+  echo "  # Then: ASTAR_TOKEN=... python run.py"
 fi
