@@ -11,3 +11,4 @@ timestamp	name	val_metric	model_size_mb	duration_min	status	notes
 2026-03-20 18:13	yolov8l-cls1.5-full	0.9040	84.2	0.0	kept	LIVE SCORE — cls=1.5, full dataset
 2026-03-20 21:06	yolov8l-cls1.5-v2	0.9055	84.2	42.6	kept	LIVE SCORE — new checkpoint, best live!
 2026-03-20 22:17	fast-2stage-convnext	0.8941	200.8	64.5	rejected	LIVE — classifier hurt classification mAP
+2026-03-21 01:03	yolov8l-sgd-cos-seed9	0.9040	84.1	42.9	rejected	LIVE — SGD/cosine/300ep, no improvement over 0.9055
