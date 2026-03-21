@@ -142,6 +142,31 @@ export async function executeSalary(ctx: OrchestratorContext, data: SalaryData):
     throw new Error(`Failed to create employment: ${empRes.message}`);
   }
 
+  // 5b. Employment details (annualSalary, percentage — required before salary specification)
+  let emplId = empRes.ok ? extractId(empRes) : undefined;
+  if (!emplId) {
+    const getEmpl = await ctx.get("/employee/employment", {
+      employeeId: String(empId),
+      fields: "id",
+    });
+    const emplValues = extractValues(getEmpl);
+    emplId = emplValues[0]?.id as number;
+  }
+  if (emplId) {
+    const detailsBody: Record<string, unknown> = {
+      employment: { id: emplId },
+      date: startDate,
+    };
+    const annualComp = data.components.find(c => c.type === "fastlonn");
+    if (annualComp) {
+      detailsBody.annualSalary = annualComp.isAnnual ? annualComp.amount : annualComp.amount * 12;
+    }
+    if (data.percentageOfFullTimeEquivalent) {
+      detailsBody.percentageOfFullTimeEquivalent = data.percentageOfFullTimeEquivalent;
+    }
+    await ctx.post("/employee/employment/details", detailsBody);
+  }
+
   // 6. Get salary types
   const typeRes = await ctx.get("/salary/type", { fields: "id,number,name" });
   const salaryTypes = extractValues(typeRes);

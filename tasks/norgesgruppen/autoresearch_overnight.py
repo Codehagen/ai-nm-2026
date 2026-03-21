@@ -1,28 +1,34 @@
-"""Overnight autoresearch: fine-tune from best model for max progression.
+"""AI-guided swarm autoresearch with Gemini coordination.
 
-Iterates on our best competition model (0.9221 live) with short fine-tuning
-bursts. Each experiment: 20-50 epochs, ~15-30 min on A100, ~30-60 min on L4.
-Keeps improvements, discards regressions.
+Fleet of GPU VMs coordinated by a shared results file. Each VM:
+1. Reads ALL results (from all VMs) via shared results file
+2. Asks Gemini to suggest the next config based on the FULL fleet history
+3. Runs the experiment, appends result to shared file
+4. Repeat
+
+The "swarm intelligence" comes from every VM seeing every other VM's results
+when asking Gemini for the next config.
 
 Usage on each VM:
-    VM_ID=a100-0 GPU_TYPE=a100 nohup python3 autoresearch_overnight.py > overnight.log 2>&1 &
-
-Monitor:
-    tail -f overnight.log
-    cat overnight_results_*.tsv | sort -t$'\t' -k3 -rn | head -20
+    VM_ID=a0 GPU_TYPE=a100 GOOGLE_API_KEY=... nohup python3 autoresearch_overnight.py > overnight.log 2>&1 &
 
 Environment variables:
-    VM_ID    — unique per VM, seeds RNG for different exploration (default: "vm0")
-    GPU_TYPE — "a100" or "l4", adjusts timeout (default: "l4")
+    VM_ID          — unique per VM (default: "vm0")
+    GPU_TYPE       — "a100" or "l4" (default: "l4")
+    GOOGLE_API_KEY — Gemini API key (required for AI mode)
+    MODEL_ID       — Gemini model (default: "gemini-2.5-flash")
 """
 
 import hashlib
+import json
 import math
 import os
 import random
 import shutil
 import subprocess
 import time
+import urllib.request
+import urllib.error
 from datetime import datetime
 from pathlib import Path
 
@@ -32,33 +38,41 @@ MODELS_DIR.mkdir(exist_ok=True)
 
 VM_ID = os.environ.get("VM_ID", "vm0")
 GPU_TYPE = os.environ.get("GPU_TYPE", "l4").lower()
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
+GEMINI_MODEL = os.environ.get("MODEL_ID", "gemini-2.5-flash")
 
-# Timeout: fine-tuning is much faster than from-scratch
+# Hub VM for swarm coordination — pulls results from all VMs, serves merged file
+HUB_IP = os.environ.get("HUB_IP", "10.128.0.13")  # ainm-norgesgruppen-a100
+IS_HUB = os.environ.get("IS_HUB", "0") == "1"
+
 TIMEOUT_HOURS = 1.5 if GPU_TYPE == "a100" else 3.0
 
+# Per-VM results file
 RESULTS_TSV = TASK_DIR / f"overnight_results_{VM_ID}.tsv"
+# Shared fleet results — merged by hub, pulled by workers
+SHARED_RESULTS = TASK_DIR / "overnight_results_fleet.tsv"
 BEST_MODEL = MODELS_DIR / f"best_overnight_{VM_ID}.pt"
 
-# Data: 80/20 split for eval
 DATA_YAML = TASK_DIR / "data" / "yolo" / "data.yaml"
 
-# Base model: our best competition model (scored 0.9221 live)
-# Falls back to yolov8l.pt if best.pt doesn't exist
 BASE_MODEL = MODELS_DIR / "best.pt"
 if not BASE_MODEL.exists():
     BASE_MODEL = TASK_DIR / "yolov8l.pt"
 
-# Seed RNG from VM_ID for different exploration per VM
 SEED = int(hashlib.md5(VM_ID.encode()).hexdigest()[:8], 16) % (2**31)
 
-# ─── Search space: fine-tuning from best model ─────────────────────────
-# Short epoch bursts with varied LR, augmentation, and loss weights.
-# Each experiment fine-tunes the CURRENT best (iterative improvement).
+TSV_HEADER = (
+    "timestamp\tvm_id\tval_metric\tseed\tcls\tbox\tdfl\tmosaic\tmixup\t"
+    "copy_paste\tdegrees\tscale\tepochs\tclose_mosaic\twarmup_epochs\t"
+    "freeze\tlabel_smoothing\tduration_min\tstatus\tnotes\n"
+)
+
+# ─── Search space ────────────────────────────────────────────────────
 SEARCH_SPACE = {
     "epochs":         [20, 30, 30, 40, 50],
     "lr0":            [0.0005, 0.001, 0.001, 0.002, 0.005],
     "lrf":            [0.001, 0.01, 0.01, 0.1],
-    "cos_lr":         [True, True, False],
+    "cos_lr":         [True, False],
     "warmup_epochs":  [1.0, 2.0, 3.0],
     "cls":            [0.8, 0.9, 1.0, 1.0, 1.0, 1.1, 1.2],
     "box":            [5.0, 7.5, 7.5, 10.0],
@@ -73,7 +87,6 @@ SEARCH_SPACE = {
     "label_smoothing": [0.0, 0.0, 0.05, 0.1],
 }
 
-# Fixed
 FIXED = {
     "imgsz":     1280,
     "optimizer": "SGD",
@@ -88,18 +101,15 @@ def log(msg):
 
 
 def init_results():
-    if not RESULTS_TSV.exists():
-        RESULTS_TSV.write_text(
-            "timestamp\tvm_id\tval_metric\tseed\tcls\tbox\tdfl\tmosaic\tmixup\t"
-            "copy_paste\tdegrees\tscale\tepochs\tclose_mosaic\twarmup_epochs\t"
-            "freeze\tlabel_smoothing\tduration_min\tstatus\tnotes\n"
-        )
+    for tsv in [RESULTS_TSV, SHARED_RESULTS]:
+        if not tsv.exists():
+            tsv.write_text(TSV_HEADER)
 
 
-def append_result(config, val_metric, duration_min, status, notes=""):
+def make_result_row(config, val_metric, duration_min, status, notes=""):
     ts = datetime.now().strftime("%Y-%m-%d %H:%M")
     freeze_str = str(config.get("freeze", "none"))
-    row = (
+    return (
         f"{ts}\t{VM_ID}\t{val_metric:.4f}\t{config['seed']}\t"
         f"{config['cls']}\t{config['box']}\t{config['dfl']}\t"
         f"{config['mosaic']}\t{config['mixup']}\t{config['copy_paste']}\t"
@@ -108,11 +118,18 @@ def append_result(config, val_metric, duration_min, status, notes=""):
         f"{freeze_str}\t{config['label_smoothing']}\t"
         f"{duration_min:.1f}\t{status}\t{notes}\n"
     )
-    with open(RESULTS_TSV, "a") as f:
-        f.write(row)
+
+
+def append_result(config, val_metric, duration_min, status, notes=""):
+    row = make_result_row(config, val_metric, duration_min, status, notes)
+    # Write to both per-VM and shared fleet file
+    for tsv in [RESULTS_TSV, SHARED_RESULTS]:
+        with open(tsv, "a") as f:
+            f.write(row)
 
 
 def get_best_metric():
+    """Best metric from this VM's results."""
     if not RESULTS_TSV.exists():
         return 0.0
     best = 0.0
@@ -126,8 +143,62 @@ def get_best_metric():
     return best
 
 
-def sample_config(rng):
-    """Sample a random config from the search space."""
+def get_fleet_results_summary():
+    """Summarize ALL fleet results for Gemini — swarm intelligence."""
+    # Read shared fleet results
+    source = SHARED_RESULTS if SHARED_RESULTS.exists() else RESULTS_TSV
+    if not source.exists():
+        return "No results yet. This is the first run across the fleet."
+
+    lines = source.read_text().strip().split("\n")
+    if len(lines) <= 1:
+        return "No results yet. This is the first run across the fleet."
+
+    header = lines[0]
+    data_lines = lines[1:]
+
+    # Parse and sort
+    parsed = []
+    for line in data_lines:
+        parts = line.split("\t")
+        if len(parts) >= 19:
+            try:
+                metric = float(parts[2])
+                status = parts[18]
+            except (ValueError, IndexError):
+                metric = 0.0
+                status = "unknown"
+            if status in ("kept", "rejected") and metric > 0:
+                parsed.append((metric, line))
+
+    if not parsed:
+        return "No successful results yet. All runs failed."
+
+    parsed.sort(key=lambda x: -x[0])
+    n_total = len(data_lines)
+    n_success = len(parsed)
+    n_kept = sum(1 for _, l in parsed if "kept" in l)
+
+    summary = f"Fleet: {n_total} total runs, {n_success} successful, {n_kept} improvements\n"
+    summary += f"Best metric: {parsed[0][0]:.4f}\n"
+    summary += f"Median metric: {parsed[len(parsed)//2][0]:.4f}\n\n"
+    summary += f"HEADER: {header}\n\n"
+
+    # Top 20 results (the gold — what works)
+    summary += "TOP 20 RESULTS (highest val_metric, from ALL VMs):\n"
+    for metric, line in parsed[:20]:
+        summary += f"  {line}\n"
+
+    # Bottom 5 (what doesn't work)
+    if len(parsed) > 20:
+        summary += "\nBOTTOM 5 (worst performing, avoid these patterns):\n"
+        for metric, line in parsed[-5:]:
+            summary += f"  {line}\n"
+
+    return summary
+
+
+def sample_config_random(rng):
     config = {}
     for key, values in SEARCH_SPACE.items():
         config[key] = rng.choice(values)
@@ -135,24 +206,112 @@ def sample_config(rng):
     return config
 
 
+def sample_config_gemini(rng):
+    """Ask Gemini for next config based on FLEET-WIDE results."""
+    if not GOOGLE_API_KEY:
+        return None
+
+    results_summary = get_fleet_results_summary()
+
+    prompt = f"""You are an expert ML hyperparameter optimizer. You are coordinating a SWARM of {30} GPU VMs, all fine-tuning YOLOv8l for grocery product detection (356 classes, 248 images, 1280px).
+
+This VM is "{VM_ID}". All VMs share results. Your job: suggest the BEST next config for this VM based on what the entire fleet has learned.
+
+FLEET RESULTS:
+{results_summary}
+
+SEARCH SPACE (pick values from these lists, or nearby values):
+{json.dumps({k: [str(v) for v in vs] for k, vs in SEARCH_SPACE.items()}, indent=2)}
+
+FIXED (cannot change): {json.dumps(FIXED)}
+
+Strategy:
+- Analyze which params correlate with top results vs bottom results
+- Exploit winning patterns (configs that improved the metric)
+- But ensure diversity — don't repeat configs that other VMs are already running
+- This VM is "{VM_ID}" — give it a unique angle within the winning region
+- Higher cls (classification loss weight) tends to help since classification is the bottleneck
+- Low or zero mosaic/augmentation often helps for fine-tuning (less noise)
+
+Respond with ONLY a JSON object:
+{{"epochs": int, "lr0": float, "lrf": float, "cos_lr": bool, "warmup_epochs": float, "cls": float, "box": float, "dfl": float, "mosaic": float, "mixup": float, "copy_paste": float, "degrees": float, "scale": float, "close_mosaic": int, "freeze": null_or_int, "label_smoothing": float, "seed": int, "reasoning": "one line why"}}"""
+
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GOOGLE_API_KEY}"
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": 0.9,
+                "maxOutputTokens": 600,
+            }
+        }
+        data = json.dumps(payload).encode()
+        req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            body = json.loads(resp.read().decode())
+
+        text = body["candidates"][0]["content"]["parts"][0]["text"].strip()
+        # Strip markdown code fences
+        if text.startswith("```"):
+            lines = text.split("\n")
+            text = "\n".join(lines[1:])
+        if text.endswith("```"):
+            text = text[:-3]
+        text = text.strip()
+
+        raw = json.loads(text)
+
+        # Log Gemini's reasoning
+        reasoning = raw.pop("reasoning", "no reasoning given")
+        log(f"Gemini reasoning: {reasoning}")
+
+        # Validate and coerce
+        config = {}
+        for key, values in SEARCH_SPACE.items():
+            if key not in raw:
+                config[key] = rng.choice(values)
+                continue
+            val = raw[key]
+            if key == "freeze":
+                config[key] = None if val is None or str(val).lower() in ("null", "none") else int(val)
+            elif key == "cos_lr":
+                config[key] = bool(val)
+            elif key in ("epochs", "close_mosaic"):
+                config[key] = int(val)
+            else:
+                config[key] = float(val)
+
+        config["seed"] = int(raw.get("seed", rng.randint(0, 9999)))
+        return config
+
+    except Exception as e:
+        log(f"Gemini error: {e}")
+        return None
+
+
+def sample_config(rng, use_ai=True):
+    if use_ai and GOOGLE_API_KEY:
+        config = sample_config_gemini(rng)
+        if config is not None:
+            log("Config source: GEMINI AI (fleet-aware)")
+            return config
+    config = sample_config_random(rng)
+    log("Config source: random (fallback)")
+    return config
+
+
 def config_to_name(config, run_idx):
-    """Generate a short experiment name."""
     return f"overnight_{VM_ID}_r{run_idx}"
 
 
 def get_current_best_model():
-    """Return path to the current best model for fine-tuning.
-
-    Uses iterative improvement: if we've found a better model during
-    autoresearch, fine-tune from that. Otherwise use the base model.
-    """
     if BEST_MODEL.exists():
         return str(BEST_MODEL)
     return str(BASE_MODEL)
 
 
 def generate_train_script(config, exp_name):
-    """Generate an inline training script for this config."""
     model_path = get_current_best_model()
 
     freeze_line = ""
@@ -163,7 +322,7 @@ def generate_train_script(config, exp_name):
     if config["label_smoothing"] > 0:
         label_smoothing_line = f"    label_smoothing={config['label_smoothing']},"
 
-    script = f'''
+    return f'''
 import os
 os.environ["WANDB_DISABLED"] = "true"
 os.environ["WANDB_MODE"] = "disabled"
@@ -232,11 +391,9 @@ try:
     print(f"peak_vram_mb: {{peak:.0f}}")
 except: pass
 '''
-    return script
 
 
 def run_experiment(config, run_idx):
-    """Run a single experiment. Returns val_metric or None on failure."""
     exp_name = config_to_name(config, run_idx)
     model_path = get_current_best_model()
     log(f"--- Run {run_idx}: {exp_name} ---")
@@ -249,8 +406,6 @@ def run_experiment(config, run_idx):
         f"freeze={config['freeze']} ls={config['label_smoothing']}")
 
     start = time.time()
-
-    # Write temp training script
     train_script_path = TASK_DIR / f"_tmp_{exp_name}.py"
     train_script_path.write_text(generate_train_script(config, exp_name))
 
@@ -270,11 +425,8 @@ def run_experiment(config, run_idx):
         )
 
         duration_min = (time.time() - start) / 60
-
-        # Cleanup temp script
         train_script_path.unlink(missing_ok=True)
 
-        # Save log
         log_file = TASK_DIR / f"{exp_name}.log"
         log_file.write_text(result.stdout[-50000:] + "\n--- STDERR ---\n" + result.stderr[-10000:])
 
@@ -285,7 +437,6 @@ def run_experiment(config, run_idx):
             cleanup_run(exp_name)
             return None
 
-        # Parse metrics
         val_metric = None
         for line in result.stdout.split("\n"):
             if line.startswith("val_metric:"):
@@ -314,9 +465,7 @@ def run_experiment(config, run_idx):
             append_result(config, val_metric, duration_min, "rejected",
                          f"below {current_best:.4f}")
 
-        # Cleanup run directory to save disk; keep log only for best runs
         cleanup_run(exp_name, keep_log=is_best)
-
         return val_metric
 
     except subprocess.TimeoutExpired:
@@ -337,7 +486,6 @@ def run_experiment(config, run_idx):
 
 
 def cleanup_run(exp_name, keep_log=False):
-    """Delete run directory and log to save disk space. Best model already saved."""
     run_dir = TASK_DIR / "runs" / exp_name
     if run_dir.exists():
         try:
@@ -350,7 +498,6 @@ def cleanup_run(exp_name, keep_log=False):
 
 
 def wait_for_gpu():
-    """Wait until no other python training is running on GPU."""
     while True:
         try:
             result = subprocess.run(
@@ -367,42 +514,143 @@ def wait_for_gpu():
 
 
 def get_completed_runs():
-    """Count completed runs from results TSV to resume run_idx after restart."""
     if not RESULTS_TSV.exists():
         return 0
     lines = RESULTS_TSV.read_text().strip().split("\n")
-    return max(0, len(lines) - 1)  # subtract header
+    return max(0, len(lines) - 1)
+
+
+# ─── Swarm sync ──────────────────────────────────────────────────────
+
+# All VM internal IPs for hub to pull from
+FLEET_IPS = os.environ.get("FLEET_IPS", "").split(",") if os.environ.get("FLEET_IPS") else []
+
+
+def sync_fleet_results():
+    """Sync results across the fleet.
+
+    Hub: pulls overnight_results_*.tsv from all VMs, merges into fleet file.
+    Workers: pull the merged fleet file from hub.
+    """
+    if IS_HUB:
+        _hub_collect_and_merge()
+    else:
+        _worker_pull_fleet()
+
+
+def _hub_collect_and_merge():
+    """Hub: pull per-VM results from all VMs, merge into fleet file."""
+    if not FLEET_IPS:
+        # No fleet IPs configured — just merge local files
+        _merge_local_results()
+        return
+
+    # Pull results from each VM (best-effort, don't block on failures)
+    for ip in FLEET_IPS:
+        ip = ip.strip()
+        if not ip:
+            continue
+        try:
+            subprocess.run(
+                ["scp", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5",
+                 f"root@{ip}:/root/task/overnight_results_*.tsv",
+                 str(TASK_DIR) + "/"],
+                capture_output=True, timeout=15
+            )
+        except Exception:
+            pass
+
+    _merge_local_results()
+    log(f"Hub merged fleet results: {_count_fleet_results()} total")
+
+
+def _merge_local_results():
+    """Merge all local overnight_results_*.tsv into fleet file."""
+    all_rows = set()
+    for f in TASK_DIR.glob("overnight_results_*.tsv"):
+        if f.name == "overnight_results_fleet.tsv":
+            continue
+        for line in f.read_text().strip().split("\n")[1:]:
+            if line.strip():
+                all_rows.add(line.strip())
+
+    with open(SHARED_RESULTS, "w") as f:
+        f.write(TSV_HEADER)
+        for row in sorted(all_rows):
+            f.write(row + "\n")
+
+
+def _worker_pull_fleet():
+    """Worker: pull merged fleet file from hub."""
+    try:
+        subprocess.run(
+            ["scp", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5",
+             f"root@{HUB_IP}:/root/task/overnight_results_fleet.tsv",
+             str(SHARED_RESULTS)],
+            capture_output=True, timeout=15
+        )
+    except Exception:
+        # Can't reach hub — fall back to local-only results
+        pass
+
+
+def _push_results_to_hub():
+    """Worker: push this VM's results to the hub after each experiment."""
+    try:
+        subprocess.run(
+            ["scp", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5",
+             str(RESULTS_TSV),
+             f"root@{HUB_IP}:/root/task/overnight_results_{VM_ID}.tsv"],
+            capture_output=True, timeout=15
+        )
+    except Exception:
+        pass
+
+
+def _count_fleet_results():
+    if not SHARED_RESULTS.exists():
+        return 0
+    return max(0, len(SHARED_RESULTS.read_text().strip().split("\n")) - 1)
 
 
 def main():
     rng = random.Random(SEED)
 
-    log(f"Overnight autoresearch starting")
+    ai_mode = "GEMINI SWARM" if GOOGLE_API_KEY else "RANDOM (no API key)"
+    log(f"Autoresearch starting — mode: {ai_mode}")
     log(f"VM_ID={VM_ID}, GPU_TYPE={GPU_TYPE}, timeout={TIMEOUT_HOURS}h")
-    log(f"RNG seed={SEED} (from VM_ID hash)")
+    log(f"Gemini model: {GEMINI_MODEL}")
     log(f"Data: {DATA_YAML}")
-    log(f"Results: {RESULTS_TSV}")
+    log(f"Base model: {BASE_MODEL}")
+    log(f"Shared results: {SHARED_RESULTS}")
 
     init_results()
 
-    # Resume from previous runs: advance RNG to stay on same sequence
     completed = get_completed_runs()
     if completed > 0:
         log(f"Resuming after {completed} previous runs (best: {get_best_metric():.4f})")
-        # Advance RNG past completed runs to avoid repeating configs
         for _ in range(completed):
-            sample_config(rng)
+            sample_config_random(rng)
 
-    # Wait for GPU to be free (in case L4 is still finishing previous training)
     wait_for_gpu()
 
+    # First 2 runs: random (seed data for Gemini), then AI-guided
     run_idx = completed
     while True:
         run_idx += 1
-        config = sample_config(rng)
+        use_ai = run_idx > (completed + 2)
+
+        # Swarm sync: pull fleet results before asking Gemini
+        if use_ai:
+            try:
+                sync_fleet_results()
+            except Exception as e:
+                log(f"Sync warning: {e}")
+
+        config = sample_config(rng, use_ai=use_ai)
 
         log(f"\n{'='*60}")
-        log(f"Experiment {run_idx}")
+        log(f"Experiment {run_idx} (fleet: {_count_fleet_results()} results)")
         log(f"Best so far: {get_best_metric():.4f}")
         log(f"{'='*60}")
 
@@ -411,7 +659,12 @@ def main():
         except Exception as e:
             log(f"Unexpected error in run {run_idx}: {e}")
 
-        # Brief cooldown between experiments
+        # Push results to hub after each experiment
+        try:
+            _push_results_to_hub()
+        except Exception:
+            pass
+
         time.sleep(10)
 
 
