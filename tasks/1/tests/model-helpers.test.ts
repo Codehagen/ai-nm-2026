@@ -912,6 +912,26 @@ describe("classifyTask — cost analysis vs project", () => {
   });
 });
 
+// ─── Regression: Project lifecycle vs supplier-invoice (Task 29 fix) ─────
+
+describe("classifyTask — project lifecycle vs supplier-invoice", () => {
+  it("classifies Norwegian prosjektsyklus with faktura sub-step as project, not supplier-invoice", () => {
+    expect(classifyTask(
+      "Gjennomfør hele prosjektsyklusen for 'ERP-implementering': 1) Budsjett 400950 kr. 2) Registrer timer. 3) Registrer faktura"
+    )).toBe("project");
+  });
+
+  it("classifies Portuguese lifecycle as project", () => {
+    expect(classifyTask(
+      "Execute o ciclo de vida completo do projeto 'Atualização Sistema Porto' (Porto AS): 1) Criar projeto"
+    )).toBe("project");
+  });
+
+  it("still classifies normal supplier invoice as supplier-invoice", () => {
+    expect(classifyTask("Vi har mottatt leverandørfaktura INV-2026 fra Nordlicht GmbH")).toBe("supplier-invoice");
+  });
+});
+
 // ─── Regression: Monthly closing / year-end vs salary ────────────────────
 
 describe("classifyTask — monthly closing vs salary", () => {

@@ -255,7 +255,8 @@ Respond with ONLY a JSON object:
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
                 "temperature": 0.9,
-                "maxOutputTokens": 600,
+                "maxOutputTokens": 1024,
+                "responseMimeType": "application/json",
             }
         }
         data = json.dumps(payload).encode()
