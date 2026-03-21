@@ -275,7 +275,7 @@ def evaluate_loro():
             # Layer 6.7: Cross-seed empirical distance tables
             if all_observations and round_empirical:
                 h, w, _ = tensor.shape
-                EMP_BLEND = 0.50
+                EMP_BLEND = 0.45
                 settl_pos = [(s['x'] if isinstance(s, dict) else s.x,
                               s['y'] if isinstance(s, dict) else s.y) for s in settlements]
                 for y in range(h):
