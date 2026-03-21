@@ -452,8 +452,10 @@ def evaluate_loro():
             tensor = fill_unobserved_dynamic(tensor, grid, settlements, [], seed)
 
             # Layer 6: GBT blend (with enhanced obs stats + per-cell obs features)
+            # Skip XGBoost for no-obs rounds: model trained on obs features gives garbage when all zeros
             obs_stats = enhanced_obs_stats(all_observations) if all_observations else None
-            gbt_pred = gbt_predict_with_models(gbt_models, grid, settlements, obs_stats=obs_stats, cell_obs=cell_obs)
+            has_obs = bool(all_observations)
+            gbt_pred = gbt_predict_with_models(gbt_models, grid, settlements, obs_stats=obs_stats, cell_obs=cell_obs) if has_obs else None
             if gbt_pred is not None:
                 h, w, _ = tensor.shape
                 for y in range(h):
