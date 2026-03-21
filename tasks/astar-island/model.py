@@ -248,10 +248,16 @@ def load_gbt_models() -> Optional[list]:
 
 
 def compute_obs_stats(observations: list[dict]) -> np.ndarray:
-    """Compute 7 round-level settlement stats from observations."""
+    """Compute 22 enhanced round-level stats from observations.
+
+    Features: base 7 (avg pop/food/wealth/defense, alive_rate, factions, port_rate)
+    + 15 new (min/max/std of pop/food/defense, faction norm, grid settl/ruin rate,
+      food deficit, dead rate, wealth stats).
+    """
     pops, foods, wealths, defenses = [], [], [], []
     factions = set()
     alive_count, total_count, port_count = 0, 0, 0
+    grid_settl_count, grid_ruin_count, grid_total = 0, 0, 0
     for obs in observations:
         for s in obs.get("settlements", []):
             total_count += 1
@@ -264,8 +270,16 @@ def compute_obs_stats(observations: list[dict]) -> np.ndarray:
                 factions.add(s.get("owner_id", -1))
                 if s.get("has_port"):
                     port_count += 1
+        for row in obs.get("grid", []):
+            for code in row:
+                if code not in {10, 5}:
+                    grid_total += 1
+                    if code in {1, 2}:
+                        grid_settl_count += 1
+                    elif code == 3:
+                        grid_ruin_count += 1
     n_queries = max(len(observations), 1)
-    return np.array([
+    base = np.array([
         np.mean(pops) if pops else 0.0,
         np.mean(foods) if foods else 0.0,
         np.mean(wealths) if wealths else 0.0,
@@ -274,16 +288,166 @@ def compute_obs_stats(observations: list[dict]) -> np.ndarray:
         len(factions) / max(n_queries, 1),
         port_count / max(alive_count, 1),
     ])
+    min_food = float(np.min(foods)) if foods else 0.0
+    max_pop = float(np.max(pops)) if pops else 0.0
+    food_std = float(np.std(foods)) if foods else 0.0
+    min_defense = float(np.min(defenses)) if defenses else 0.0
+    defense_std = float(np.std(defenses)) if defenses else 0.0
+    n_factions_norm = len(factions) / 10.0
+    obs_settl_rate = grid_settl_count / max(grid_total, 1)
+    obs_ruin_rate = grid_ruin_count / max(grid_total, 1)
+    avg_food = float(np.mean(foods)) if foods else 0.0
+    avg_pop = float(np.mean(pops)) if pops else 0.0
+    food_deficit = avg_food - avg_pop
+    pop_std = float(np.std(pops)) if pops else 0.0
+    max_food = float(np.max(foods)) if foods else 0.0
+    min_pop = float(np.min(pops)) if pops else 0.0
+    max_defense = float(np.max(defenses)) if defenses else 0.0
+    wealth_mean = float(np.mean(wealths)) if wealths else 0.0
+    wealth_std = float(np.std(wealths)) if wealths else 0.0
+    dead_rate = (total_count - alive_count) / max(total_count, 1)
+    return np.concatenate([base, [min_food, max_pop, food_std, min_defense, defense_std,
+                                   n_factions_norm, obs_settl_rate, obs_ruin_rate, food_deficit,
+                                   pop_std, max_food, min_pop, max_defense, wealth_mean,
+                                   wealth_std, dead_rate]])
+
+
+def compute_cell_obs_features(observations: list[dict], h: int, w: int) -> np.ndarray:
+    """Compute per-cell observation features (23 features per cell).
+
+    For each cell, computes settlement/empty/ruin rates from viewport observations,
+    neighbor settlement density, nearest observed settlement stats, and spatial aggregates.
+    """
+    cell_counts = np.zeros((h, w), dtype=np.int32)
+    cell_settl = np.zeros((h, w), dtype=np.int32)
+    cell_empty = np.zeros((h, w), dtype=np.int32)
+    cell_ruin = np.zeros((h, w), dtype=np.int32)
+    obs_settl_list = []
+    for obs in (observations or []):
+        vp = obs.get("viewport", {})
+        vy, vx = vp.get("y", 0), vp.get("x", 0)
+        obs_grid = obs.get("grid", [])
+        for dy in range(len(obs_grid)):
+            row = obs_grid[dy]
+            for dx in range(len(row)):
+                y2, x2 = vy + dy, vx + dx
+                if 0 <= y2 < h and 0 <= x2 < w:
+                    cell_counts[y2, x2] += 1
+                    code = row[dx]
+                    if code in {1, 2}:
+                        cell_settl[y2, x2] += 1
+                    elif code in {0, 11}:
+                        cell_empty[y2, x2] += 1
+                    elif code == 3:
+                        cell_ruin[y2, x2] += 1
+        for s in obs.get("settlements", []):
+            if s.get("alive", True):
+                obs_settl_list.append((s.get("y", 0), s.get("x", 0),
+                                       s.get("population", 0), s.get("food", 0),
+                                       s.get("wealth", 0), s.get("defense", 0)))
+    total_obs = max(len(observations or []), 1)
+    settl_rate = np.zeros((h, w), dtype=np.float32)
+    ruin_rate = np.zeros((h, w), dtype=np.float32)
+    result = np.zeros((h, w, 23), dtype=np.float32)
+    for y in range(h):
+        for x in range(w):
+            n = cell_counts[y, x]
+            if n > 0:
+                sr = cell_settl[y, x] / n
+                rr = cell_ruin[y, x] / n
+                settl_rate[y, x] = sr
+                ruin_rate[y, x] = rr
+                result[y, x, 0] = sr
+                result[y, x, 1] = cell_empty[y, x] / n
+                result[y, x, 2] = rr
+                result[y, x, 3] = n / total_obs
+    if obs_settl_list:
+        settl_ys = np.array([s[0] for s in obs_settl_list], dtype=np.float32)
+        settl_xs = np.array([s[1] for s in obs_settl_list], dtype=np.float32)
+        settl_pops = np.array([s[2] for s in obs_settl_list], dtype=np.float32)
+        settl_foods = np.array([s[3] for s in obs_settl_list], dtype=np.float32)
+        settl_wealths = np.array([s[4] for s in obs_settl_list], dtype=np.float32)
+        settl_defenses = np.array([s[5] for s in obs_settl_list], dtype=np.float32)
+        pop_max = max(float(np.max(settl_pops)), 1.0)
+        food_max = max(float(np.max(settl_foods)), 1.0)
+        wealth_max = max(float(np.max(settl_wealths)), 1.0)
+        defense_max = max(float(np.max(settl_defenses)), 1.0)
+        for y in range(h):
+            for x in range(w):
+                dists = np.abs(settl_ys - y) + np.abs(settl_xs - x)
+                nearest_idx = int(np.argmin(dists))
+                result[y, x, 7] = settl_pops[nearest_idx] / pop_max
+                result[y, x, 8] = settl_foods[nearest_idx] / food_max
+                result[y, x, 9] = float(dists[nearest_idx]) / max(h + w, 1)
+                result[y, x, 19] = settl_wealths[nearest_idx] / wealth_max
+                result[y, x, 20] = settl_defenses[nearest_idx] / defense_max
+    for y in range(h):
+        for x in range(w):
+            nbr_rates, nbr_count, max_r1 = [], 0, 0.0
+            sum_ruin, sum_settl_r3, sum_ruin_r3 = 0.0, 0.0, 0.0
+            for dy in range(-3, 4):
+                for dx in range(-3, 4):
+                    if dy == 0 and dx == 0:
+                        continue
+                    md = abs(dy) + abs(dx)
+                    ny, nx = y + dy, x + dx
+                    if not (0 <= ny < h and 0 <= nx < w):
+                        continue
+                    if md <= 2:
+                        nbr_rates.append(settl_rate[ny, nx])
+                        if settl_rate[ny, nx] > 0.1:
+                            nbr_count += 1
+                        sum_ruin += ruin_rate[ny, nx]
+                    if md == 1 and settl_rate[ny, nx] > max_r1:
+                        max_r1 = settl_rate[ny, nx]
+                    if md <= 3:
+                        sum_settl_r3 += settl_rate[ny, nx]
+                        sum_ruin_r3 += ruin_rate[ny, nx]
+            result[y, x, 4] = float(np.mean(nbr_rates)) if nbr_rates else 0.0
+            result[y, x, 5] = float(nbr_count)
+            result[y, x, 6] = max_r1
+            result[y, x, 10] = float(sum(nbr_rates))
+            result[y, x, 11] = sum_ruin
+            result[y, x, 12] = result[y, x, 0] + result[y, x, 2]
+            result[y, x, 21] = sum_settl_r3
+            result[y, x, 22] = sum_ruin_r3
+    log_settl = np.zeros((h, w), dtype=np.float32)
+    log_ruin = np.zeros((h, w), dtype=np.float32)
+    for y in range(h):
+        for x in range(w):
+            ls = float(np.log1p(cell_settl[y, x]))
+            lr = float(np.log1p(cell_ruin[y, x]))
+            log_settl[y, x] = ls
+            log_ruin[y, x] = lr
+            result[y, x, 13] = ls
+            result[y, x, 14] = float(np.log1p(cell_counts[y, x]))
+            result[y, x, 15] = lr
+            result[y, x, 16] = float(np.log1p(cell_settl[y, x] + cell_ruin[y, x]))
+    for y in range(h):
+        for x in range(w):
+            s_ls, s_lr = 0.0, 0.0
+            for dy in range(-2, 3):
+                for dx in range(-2, 3):
+                    if (dy == 0 and dx == 0) or abs(dy) + abs(dx) > 2:
+                        continue
+                    ny, nx = y + dy, x + dx
+                    if 0 <= ny < h and 0 <= nx < w:
+                        s_ls += log_settl[ny, nx]
+                        s_lr += log_ruin[ny, nx]
+            result[y, x, 17] = s_ls
+            result[y, x, 18] = s_lr
+    return result
 
 
 def gbt_predict(
     initial_grid: list[list[int]],
     settlements: list,
     obs_stats: Optional[np.ndarray] = None,
+    cell_obs: Optional[np.ndarray] = None,
 ) -> Optional[np.ndarray]:
     """Generate predictions using pre-trained terrain-specific GBT ensembles.
 
-    If obs_stats (7 values) is provided, appends to each cell's features (37 total).
+    Features: 30 cell + 22 obs stats + 23 per-cell obs = 75 total.
     Returns H×W×6 tensor, or None if models not available.
     """
     models_dict = load_gbt_models()
@@ -297,10 +461,14 @@ def gbt_predict(
     if len(features) == 0:
         return None
 
-    # Append round-level observation stats to each cell's features
-    if obs_stats is not None and len(obs_stats) == 7:
-        stats_tile = np.tile(obs_stats, (len(features), 1))
-        features = np.hstack([features, stats_tile])
+    # Append round-level observation stats (22 features)
+    if obs_stats is not None:
+        features = np.hstack([features, np.tile(obs_stats, (len(features), 1))])
+
+    # Append per-cell observation features (23 features)
+    if cell_obs is not None:
+        cell_feats = np.array([cell_obs[y, x] for y, x in coords])
+        features = np.hstack([features, cell_feats])
 
     tensor = np.zeros((h, w, NUM_CLASSES))
     # Static cells
@@ -312,36 +480,26 @@ def gbt_predict(
                 tensor[y, x] = [0, 0, 0, 0, 0, 1]
 
     # Terrain-specific predictions
-    if isinstance(models_dict, dict):
-        # New format: terrain-specific models
-        for i, (y, x) in enumerate(coords):
-            code = initial_grid[y][x]
-            if code in {11, 0}:
-                ttype = "plains"
-            elif code == 4:
-                ttype = "forest"
-            elif code in {1, 2}:
-                ttype = "settl"
-            else:
-                ttype = "plains"  # fallback
+    for i, (y, x) in enumerate(coords):
+        code = initial_grid[y][x]
+        if code in {11, 0}:
+            ttype = "plains"
+        elif code == 4:
+            ttype = "forest"
+        elif code in {1, 2}:
+            ttype = "settl"
+        else:
+            ttype = "plains"
 
-            models = models_dict.get(ttype)
-            if models is None:
-                continue
+        models = models_dict.get(ttype)
+        if models is None:
+            continue
 
-            pred_v = np.zeros(NUM_CLASSES)
-            for cls in range(NUM_CLASSES):
-                pred_v[cls] = models[cls].predict(features[i:i + 1])[0]
-            tensor[y, x] = np.maximum(pred_v, PROB_FLOOR)
-            tensor[y, x] /= tensor[y, x].sum()
-    else:
-        # Legacy format: single model for all cells
-        gbt_flat = np.zeros((len(coords), NUM_CLASSES))
+        pred_v = np.zeros(NUM_CLASSES)
         for cls in range(NUM_CLASSES):
-            gbt_flat[:, cls] = models_dict[cls].predict(features)
-        for i, (y, x) in enumerate(coords):
-            tensor[y, x] = np.maximum(gbt_flat[i], PROB_FLOOR)
-            tensor[y, x] /= tensor[y, x].sum()
+            pred_v[cls] = models[cls].predict(features[i:i + 1])[0]
+        tensor[y, x] = np.maximum(pred_v, PROB_FLOOR)
+        tensor[y, x] /= tensor[y, x].sum()
 
     return tensor
 
@@ -1015,12 +1173,14 @@ def build_prediction(
     # tensor = apply_calibration(tensor, initial_grid, calibration)
 
     # Layer 6: GBT blend — captures feature interactions the tables miss
-    # Pass observation stats so XGBoost can adapt to round's hidden parameters
+    # Enhanced obs stats (22 features) + per-cell obs features (23 features)
     obs_stats = compute_obs_stats(all_observations) if all_observations else None
-    gbt_pred = gbt_predict(initial_grid, settlements, obs_stats=obs_stats)
+    h_map, w_map = len(initial_grid), len(initial_grid[0]) if initial_grid else 0
+    cell_obs = compute_cell_obs_features(all_observations, h_map, w_map) if all_observations else None
+    gbt_pred = gbt_predict(initial_grid, settlements, obs_stats=obs_stats, cell_obs=cell_obs)
     if gbt_pred is not None:
         # Per-terrain blend weights (autoresearch optimized)
-        BLEND_TERRAIN = {"plains": 0.55, "forest": 0.65, "settl": 0.75}
+        BLEND_TERRAIN = {"plains": 0.90, "forest": 0.75, "settl": 0.80}
         h, w, _ = tensor.shape
         for y in range(h):
             for x in range(w):

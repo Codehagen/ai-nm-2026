@@ -1,6 +1,6 @@
 """Retrain the GBT models using local ground truth data (offline).
 
-Trains with 37 features: 30 cell features + 7 round-level observation stats.
+Trains with 75 features: 30 cell + 22 enhanced obs stats + 23 per-cell obs.
 
 Usage:
     cd tasks/astar-island
@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore")
 sys.path.insert(0, os.path.dirname(__file__))
 
 import xgboost as xgb
-from model import _extract_cell_features, compute_obs_stats
+from model import _extract_cell_features, compute_obs_stats, compute_cell_obs_features
 from utils import load_observations
 
 
@@ -36,25 +36,24 @@ ROUNDS = {
 }
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
-
-ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8}
+ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9}
 
 # Per-terrain XGBoost hyperparameters — must match train.py LORO-validated config
 XGB_HPARAMS = {
-    "plains": dict(n_estimators=300, max_depth=5, learning_rate=0.08,
+    "plains": dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.9, min_child_weight=3),
-    "forest": dict(n_estimators=300, max_depth=5, learning_rate=0.08,
+                   colsample_bytree=0.55, min_child_weight=3),
+    "forest": dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.9, min_child_weight=3),
-    "settl":  dict(n_estimators=300, max_depth=5, learning_rate=0.08,
+                   colsample_bytree=0.55, min_child_weight=3),
+    "settl":  dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.9, min_child_weight=3),
+                   colsample_bytree=0.55, min_child_weight=3),
 }
 
 
 def main():
-    print("Retraining GBT models from local data (37 features)...")
+    print("Retraining GBT models (75 features: 30 cell + 22 obs + 23 cell obs)...")
 
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
@@ -68,10 +67,15 @@ def main():
         with open(init_path) as f:
             info = json.load(f)
 
-        # Load observation stats for this round (7 features)
+        # Enhanced obs stats (22 features)
         all_obs = load_observations(round_id)
-        obs_stats = compute_obs_stats(all_obs) if all_obs else np.zeros(7)
+        obs_stats = compute_obs_stats(all_obs) if all_obs else np.zeros(22)
         rw = ROUND_WEIGHTS.get(rnum, 1.0)
+
+        # Per-cell obs features (23 features per cell)
+        g0 = info["initial_states"][0]["grid"]
+        h0, w0 = len(g0), len(g0[0]) if g0 else 0
+        cell_obs = compute_cell_obs_features(all_obs, h0, w0) if all_obs else np.zeros((h0, w0, 23))
 
         for seed in range(5):
             gt_path = os.path.join(DATA_DIR, f"gt_r{rnum}_seed{seed}.npy")
@@ -84,9 +88,11 @@ def main():
             feats, coords = _extract_cell_features(grid, settlements)
             targets = np.array([gt[y, x] for y, x in coords])
 
-            # Append obs stats to get 37 features per cell
-            stats_tile = np.tile(obs_stats, (len(feats), 1))
-            feats = np.hstack([feats, stats_tile])
+            # Append obs stats (30 + 22 = 52)
+            feats = np.hstack([feats, np.tile(obs_stats, (len(feats), 1))])
+            # Append per-cell obs features (52 + 23 = 75)
+            cell_feats = np.array([cell_obs[y, x] for y, x in coords])
+            feats = np.hstack([feats, cell_feats])
 
             for i, (y, x) in enumerate(coords):
                 code = grid[y][x]
@@ -138,7 +144,7 @@ def main():
         pickle.dump(models, f)
 
     total = sum(len(X_data[t]) for t in X_data)
-    print(f"\nSaved GBT models: {total} total samples, {len(ROUNDS)} rounds, 37 features")
+    print(f"\nSaved GBT models: {total} total samples, {len(ROUNDS)} rounds, 75 features")
 
 
 if __name__ == "__main__":
