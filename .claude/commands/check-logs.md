@@ -14,12 +14,12 @@ Analyze the most recent agent runs, diagnose failures, and propose fixes.
 
 ## Steps
 
-### 1. Load the latest solve entries
+### 1. Load the latest solve entries FROM THE GCP VM
 
-Read the last 10 lines from the summary log to get an overview:
+**IMPORTANT: Logs are on the GCP VM, NOT local.** Always fetch from the VM:
 
 ```bash
-tail -10 tasks/1/logs/solves.jsonl
+ssh -i ~/.ssh/gcp_ainm -o StrictHostKeyChecking=no walgermo@34.158.87.44 "tail -10 ~/task1/logs/solves.jsonl"
 ```
 
 Parse each line and display a table with: timestamp, status, taskType, apiCalls, apiErrors, elapsedMs, error (if any).
@@ -34,9 +34,20 @@ Flag any entries where:
 - All calls returned 403 (credentials issue)
 - `taskType` contains "failed" (orchestrator failure → LLM fallback)
 
-### 3. Read detail logs for flagged entries
+### 3. Read detail logs for flagged entries FROM THE GCP VM
 
-For each flagged entry, find the matching detail log in `tasks/1/logs/details/` by timestamp. Read it and analyze the full `toolCallDetails` array.
+For each flagged entry, fetch the detail log from the VM by timestamp:
+
+```bash
+ssh -i ~/.ssh/gcp_ainm -o StrictHostKeyChecking=no walgermo@34.158.87.44 "cat ~/task1/logs/details/<timestamp>.json"
+```
+
+Or get the latest:
+```bash
+ssh -i ~/.ssh/gcp_ainm -o StrictHostKeyChecking=no walgermo@34.158.87.44 "cat ~/task1/logs/details/\$(ls -t ~/task1/logs/details/ | head -1)"
+```
+
+Analyze the full `toolCallDetails` array.
 
 Look for these patterns:
 - **Thrashing**: 3+ errors on the same endpoint path

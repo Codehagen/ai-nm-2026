@@ -1,5 +1,7 @@
 # /map-task — Map Competition Task Number After a Single Run
 
+**ALL LOGS ARE ON THE GCP VM** — always use `ssh -i ~/.ssh/gcp_ainm -o StrictHostKeyChecking=no walgermo@34.158.87.44` to read logs. Never read local `tasks/1/logs/` — they are stale.
+
 After running ONE submission and checking the dashboard, use this to record which task number was assigned.
 
 ## Usage
