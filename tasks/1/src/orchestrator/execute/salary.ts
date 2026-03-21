@@ -120,6 +120,25 @@ export async function executeSalary(ctx: OrchestratorContext, data: SalaryData):
       typeId = typeByNumber.get(num);
     }
 
+    // Fallback: search by name if number lookup fails
+    if (!typeId) {
+      const namePatterns: Record<string, string[]> = {
+        fastlonn: ["fastlønn", "fast lønn", "månedslønn", "base salary", "grunnlønn"],
+        bonus: ["bonus", "tillegg", "gratiale"],
+        timelonn: ["timelønn", "hourly", "timesats"],
+        faste_tillegg: ["faste tillegg", "fast tillegg", "supplement"],
+        overtid: ["overtid", "overtime"],
+      };
+      const patterns = namePatterns[comp.type] ?? [comp.type, comp.description ?? ""];
+      const match = salaryTypes.find((st) =>
+        patterns.some((p) => (st.name as string)?.toLowerCase().includes(p))
+      );
+      typeId = match?.id as number | undefined;
+    }
+    // Final fallback: use first salary type (usually fastlønn)
+    if (!typeId) {
+      typeId = salaryTypes[0]?.id as number | undefined;
+    }
     if (!typeId) throw new Error(`Salary type not found for ${comp.type}`);
 
     await ctx.post("/salary/specification", {
