@@ -226,7 +226,9 @@
       "Bash(bash package_ensemble.sh models/best_cls10_final.pt models/fleet/best_a100_9_s35.pt models/fleet/best_a100_3_s25.pt)",
       "Bash(bash:*)",
       "Bash(node:*)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(grep -r \"vercel\\\\|Vercel\\\\|deploy\\\\|production\\\\|staging\" /Users/walgermo/Utvikling/ai-nm-2026/tasks/1/ --include=*.ts --include=*.js --include=*.json --include=*.md)",
+      "Bash(find /Users/walgermo -path *memory* -name *.md)"
     ]
   }
 }
