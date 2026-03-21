@@ -167,7 +167,7 @@ def compute_cell_obs_features(observations, h, w):
     total_obs = max(len(observations or []), 1)
     settl_rate = np.zeros((h, w), dtype=np.float32)
     ruin_rate = np.zeros((h, w), dtype=np.float32)
-    result = np.zeros((h, w, 17), dtype=np.float32)
+    result = np.zeros((h, w, 19), dtype=np.float32)
     for y in range(h):
         for x in range(w):
             n = cell_counts[y, x]
@@ -238,13 +238,36 @@ def compute_cell_obs_features(observations, h, w):
             result[y, x, 11] = sum_ruin
             result[y, x, 12] = result[y, x, 0] + result[y, x, 2]  # self settl + ruin = dynamic rate
     # Add absolute settlement/ruin counts (log-normalized)
+    log_settl = np.zeros((h, w), dtype=np.float32)
+    log_ruin = np.zeros((h, w), dtype=np.float32)
     for y in range(h):
         for x in range(w):
             n = cell_counts[y, x]
-            result[y, x, 13] = float(np.log1p(cell_settl[y, x]))  # log1p count of settl observations
+            ls = float(np.log1p(cell_settl[y, x]))
+            lr = float(np.log1p(cell_ruin[y, x]))
+            log_settl[y, x] = ls
+            log_ruin[y, x] = lr
+            result[y, x, 13] = ls                                  # log1p count of settl observations
             result[y, x, 14] = float(np.log1p(n))                  # log1p total observation count
-            result[y, x, 15] = float(np.log1p(cell_ruin[y, x]))   # log1p count of ruin observations
+            result[y, x, 15] = lr                                   # log1p count of ruin observations
             result[y, x, 16] = float(np.log1p(cell_settl[y, x] + cell_ruin[y, x]))  # log1p dynamic count
+    # Neighbor sum of log-settl counts in r2
+    for y in range(h):
+        for x in range(w):
+            sum_log_settl_r2 = 0.0
+            sum_log_ruin_r2 = 0.0
+            for dy in range(-2, 3):
+                for dx in range(-2, 3):
+                    if dy == 0 and dx == 0:
+                        continue
+                    if abs(dy) + abs(dx) > 2:
+                        continue
+                    ny, nx = y + dy, x + dx
+                    if 0 <= ny < h and 0 <= nx < w:
+                        sum_log_settl_r2 += log_settl[ny, nx]
+                        sum_log_ruin_r2 += log_ruin[ny, nx]
+            result[y, x, 17] = sum_log_settl_r2
+            result[y, x, 18] = sum_log_ruin_r2
     return result
 
 
@@ -262,7 +285,7 @@ ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6
 
 
 def train_gbt_models(train_rounds):
-    """Train terrain-specific XGBoost on given rounds (63 features: 30 cell + 16 obs stats + 17 cell obs)."""
+    """Train terrain-specific XGBoost on given rounds (65 features: 30 cell + 16 obs stats + 19 cell obs)."""
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
     W_data = {"plains": [], "forest": [], "settl": []}
