@@ -30,6 +30,21 @@ VMS=(
   "ainm-astar-s8:s8"
   "ainm-astar-s9:s9"
   "ainm-astar-s10:s10"
+  "ainm-astar-n1:n1"
+  "ainm-astar-n2:n2"
+  "ainm-astar-n3:n3"
+  "ainm-astar-n4:n4"
+  "ainm-astar-n5:n5"
+  "ainm-astar-n6:n6"
+  "ainm-astar-n7:n7"
+  "ainm-astar-n8:n8"
+  "ainm-astar-n9:n9"
+  "ainm-astar-n10:n10"
+  "ainm-astar-c1:c1"
+  "ainm-astar-c2:c2"
+  "ainm-astar-c3:c3"
+  "ainm-astar-c4:c4"
+  "ainm-astar-c5:c5"
 )
 
 TOP_N=${2:-10}

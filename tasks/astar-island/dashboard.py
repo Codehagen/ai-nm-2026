@@ -37,6 +37,21 @@ VMS = [
     ("ainm-astar-s8", "s8", "c2-30", "directional", "Direction Scout"),
     ("ainm-astar-s9", "s9", "c2-30", "l7_tuning", "L7 Tuner"),
     ("ainm-astar-s10", "s10", "c2-30", "xgb_tuning", "XGB Optimizer"),
+    ("ainm-astar-n1", "n1", "n2-32", "r7_adaptive", "R7 Fixer II"),
+    ("ainm-astar-n2", "n2", "n2-32", "expansion_features", "Expansion II"),
+    ("ainm-astar-n3", "n3", "n2-32", "distance_decay", "Distance II"),
+    ("ainm-astar-n4", "n4", "n2-32", "r7_adaptive", "R7 Fixer III"),
+    ("ainm-astar-n5", "n5", "n2-32", "expansion_features", "Expansion III"),
+    ("ainm-astar-n6", "n6", "n2-32", "faction_analysis", "Faction II"),
+    ("ainm-astar-n7", "n7", "n2-32", "port_trade", "Port & Trade II"),
+    ("ainm-astar-n8", "n8", "n2-32", "winter_raiding", "Winter II"),
+    ("ainm-astar-n9", "n9", "n2-32", "terrain_interaction", "Terrain II"),
+    ("ainm-astar-n10", "n10", "n2-32", "directional", "Direction II"),
+    ("ainm-astar-c1", "c1", "c2-30", "general", "Creative I"),
+    ("ainm-astar-c2", "c2", "c2-30", "general", "Creative II"),
+    ("ainm-astar-c3", "c3", "c2-30", "l7_tuning", "L7 Tuner II"),
+    ("ainm-astar-c4", "c4", "c2-30", "xgb_tuning", "XGB Opt II"),
+    ("ainm-astar-c5", "c5", "c2-30", "general", "Creative III"),
 ]
 
 REFRESH_SEC = 60
