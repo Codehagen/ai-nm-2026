@@ -1,12 +1,13 @@
 /**
  * Deterministic supplier invoice executor.
- * Handles voucher structure and auto-books to ledger.
+ * Handles invoices, receipts, and voucher structure with auto-booking.
  */
 
 import type { SupplierInvoiceData } from "../schemas/supplier-invoice.js";
 import {
   OrchestratorContext,
   createSupplier,
+  ensureDepartment,
   getLedgerAccount,
   extractId,
   extractValue,
@@ -22,37 +23,53 @@ const INPUT_VAT_MAP: Record<string, number> = {
 };
 
 export async function executeSupplierInvoice(ctx: OrchestratorContext, data: SupplierInvoiceData): Promise<void> {
-  // Default empty dates to today (LLM may return "" when prompt doesn't specify dates)
+  // Default empty dates to today
   const today = getOsloDate();
   if (!data.invoiceDate) data.invoiceDate = today;
   if (!data.dueDate) data.dueDate = today;
 
-  // Cross-validate amounts: if amountExclVat * (1 + vatPercent/100) ≈ amountInclVat, trust amountInclVat
+  // Bidirectional amount validation
   const vatRate = parseFloat(data.vatPercent) / 100;
-  const calculatedInclVat = Math.round(data.amountExclVat * (1 + vatRate) * 100) / 100;
-  if (Math.abs(calculatedInclVat - data.amountInclVat) > 1 && data.amountInclVat > 0) {
-    // Trust amountInclVat and recalculate amountExclVat
+  if (data.amountInclVat > 0 && data.amountExclVat <= 0) {
+    // Have incl, calculate excl
     data.amountExclVat = Math.round(data.amountInclVat / (1 + vatRate) * 100) / 100;
+  } else if (data.amountExclVat > 0 && data.amountInclVat <= 0) {
+    // Have excl, calculate incl
+    data.amountInclVat = Math.round(data.amountExclVat * (1 + vatRate) * 100) / 100;
+  } else if (data.amountInclVat > 0 && data.amountExclVat > 0) {
+    // Both present — cross-validate, trust amountInclVat
+    const calculatedInclVat = Math.round(data.amountExclVat * (1 + vatRate) * 100) / 100;
+    if (Math.abs(calculatedInclVat - data.amountInclVat) > 1) {
+      data.amountExclVat = Math.round(data.amountInclVat / (1 + vatRate) * 100) / 100;
+    }
   }
 
-  // 1. Create supplier
+  // 1. Create department if specified (receipts often belong to a department)
+  if (data.departmentName) {
+    await ensureDepartment(ctx, data.departmentName);
+  }
+
+  // 2. Create supplier
   const supplierId = await createSupplier(ctx, data.supplier);
 
-  // 2. Get ledger accounts
+  // 3. Get ledger accounts
   const expenseAccountId = await getLedgerAccount(ctx, data.expenseAccount);
   const supplierAccountId = await getLedgerAccount(ctx, "2400"); // Leverandørgjeld
 
-  // 3. Create supplier invoice with voucher
+  // 4. Create supplier invoice with voucher
   const vatTypeId = INPUT_VAT_MAP[data.vatPercent] ?? 1;
+  const voucherDescription = data.invoiceNumber
+    ? `Faktura ${data.invoiceNumber} fra ${data.supplier.name}`
+    : `${data.description} - ${data.supplier.name}`;
 
   const res = await ctx.post("/supplierInvoice", {
-    invoiceNumber: data.invoiceNumber,
+    invoiceNumber: data.invoiceNumber || undefined,
     invoiceDate: data.invoiceDate,
     invoiceDueDate: data.dueDate,
     supplier: { id: supplierId },
     voucher: {
       date: data.invoiceDate,
-      description: `Faktura ${data.invoiceNumber} fra ${data.supplier.name}`,
+      description: voucherDescription,
       postings: [
         {
           row: 1,
@@ -66,7 +83,7 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
         {
           row: 2,
           date: data.invoiceDate,
-          description: `${data.supplier.name}`,
+          description: data.supplier.name,
           account: { id: supplierAccountId },
           supplier: { id: supplierId },
           amountGross: -data.amountInclVat,
@@ -77,7 +94,7 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
   });
   if (!res.ok) throw new Error(`Failed to create supplier invoice: ${res.message}`);
 
-  // 4. Book the voucher to the ledger (auto-book in model.ts pattern)
+  // 5. Book the voucher to the ledger
   const val = extractValue(res);
   const voucher = val.voucher as Record<string, unknown> | undefined;
   const voucherId = voucher?.id;

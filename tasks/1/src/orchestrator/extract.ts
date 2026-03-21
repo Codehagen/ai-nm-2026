@@ -59,24 +59,45 @@ IF A PDF/IMAGE IS ATTACHED (employment contract / arbeidskontrakt):
 - CRITICAL: If the salary is listed as 'årslønn' (annual salary), set isAnnual=true. The executor will divide by 12 to get monthly rate. Do NOT divide yourself.
 - Use the exact department name from the document (e.g. 'Lager', 'IT'), not a generic name.`,
   "project": "Extract project details, project manager (employee), and customer. If the prompt mentions invoicing, set invoice.create=true and extract products.",
-  "supplier-invoice": "Extract supplier details, invoice number, dates, amounts, and description. Figure out the appropriate expense account (7300=office services, 6300=insurance/rent, 4300=goods for resale, 6800=IT/software). Calculate amount including VAT from amount excluding VAT if needed.",
+  "supplier-invoice": `Extract supplier details, invoice number, dates, amounts, and description. Figure out the appropriate expense account (7300=office services, 6300=insurance/rent, 4300=goods for resale, 6800=IT/software, 6540=office supplies, 6100=freight/shipping). Calculate amount including VAT from amount excluding VAT if needed.
+
+IF the attached document is a RECEIPT (kvittering/recibo/receipt/Quittung/reçu):
+- The STORE/VENDOR on the receipt is the supplier name
+- Extract the receipt total INCLUDING VAT as amountInclVat
+- Calculate amountExclVat = amountInclVat / (1 + vatRate). For 25% VAT: amountExclVat = amountInclVat / 1.25
+- Set invoiceDate from the receipt date
+- If the prompt mentions a department name, extract it as departmentName
+- The receipt description should summarize what was purchased`,
   "timesheet": "Extract employee, project, customer, and time entries (activity name, date, hours). If the prompt also asks to invoice, set invoice.create=true and extract invoice products.",
   "credit-note": "Extract customer and determine if this is for an existing invoice (isExistingInvoice=true) or needs a new invoice created first (createNewInvoice=true). Extract products if creating a new invoice.",
 };
 
 function buildExtractionPrompt(request: SolveRequest, taskType: string): string {
   const instructions = TASK_INSTRUCTIONS[taskType] || "";
-  return `Extract structured data from this accounting task prompt.
+  const hasFiles = request.files.length > 0;
+  const fileContext = hasFiles
+    ? `\nATTACHED FILES: ${request.files.map((f) => f.filename).join(", ")}. Extract ALL data from these documents — they are the source of truth. Data in documents takes precedence over the text prompt.`
+    : "";
+
+  return `Extract structured data from this accounting task prompt.${fileContext}
+
+EXTRACTION PROCESS — THINK STEP BY STEP:
+1. Identify the document type (invoice, receipt, contract, bank statement) and language
+2. Extract entity info (names, org numbers, emails, bank accounts)
+3. Extract dates — convert DD.MM.YYYY to YYYY-MM-DD
+4. Extract financial data (amounts, VAT rates, account numbers)
+5. Validate: does amountExclVat × (1 + vatRate) ≈ amountInclVat?
 
 ${instructions}
 
-IMPORTANT RULES:
-- Extract names, numbers, amounts EXACTLY as written in the prompt (they are used for scoring)
-- Dates should be in YYYY-MM-DD format
-- If a date is not specified, leave it empty (the system will use today's date)
-- Amounts should be numbers (no currency symbols)
-- VAT defaults to 25% unless otherwise specified
-- Product/item names should be preserved exactly as in the prompt
+FORMAT RULES:
+- Names, numbers, amounts: extract EXACTLY as written (used for scoring)
+- Dates: YYYY-MM-DD format. Convert DD.MM.YYYY → YYYY-MM-DD
+- Norwegian numbers: 1.234,56 → 1234.56 (period = thousands, comma = decimal)
+- Norwegian personnummer: 11 digits (DDMMYYXXXXX)
+- Annual salary (årslønn): set isAnnual=true, do NOT divide by 12 yourself
+- VAT defaults to 25% unless specified
+- If a date is not specified, leave it empty (system uses today)
 
 PROMPT:
 ${request.prompt}`;
