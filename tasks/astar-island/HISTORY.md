@@ -164,9 +164,21 @@ Ran in parallel with feature agent, tuning:
 | R11 | 2026-03-19 | 85.09 | 35 | 86.12 | 140.28 | |
 | R12 | 2026-03-20 | — | — | 32.27* | — | Skipped (no observations) |
 | R13 | 2026-03-20 | **93.94** | **1** | 93.35 | **167.64** | Autoresearch model, top score |
-| R14 | 2026-03-21 | pending | — | — | — | Retrained on R1-R13 |
+| R14 | 2026-03-21 | **85.85** | **8** | pending | **169.98** | High expansion, retrained on R1-R13 |
 
 *R12: no observations available, can't retroactively query simulator
+
+### Round Type Classification
+
+| Type | Rounds | Avg LORO | Characteristics |
+|------|--------|---------|-----------------|
+| Extinction | R4, R8, R10 | 93.3 | min_food>0.07, <12 ports, <44 factions |
+| Medium | R1, R2, R5, R9, R13 | 89.0 | Balanced expansion/collapse |
+| High expansion | R6, R7, R11, R14 | 79.0* | settl_rate>0.15, >100 ports, >50 factions |
+
+*R7 (71.8) is an outlier — sharp distance cutoff unlike other expansion rounds
+
+**Key insight: High expansion rounds are our weakness. Fixing these is the biggest lever.**
 
 ### Key Milestones
 
@@ -175,12 +187,16 @@ Ran in parallel with feature agent, tuning:
 - **R8**: Cross-seed empirical tables deployed (+16.5 points on R8 backtest)
 - **R10**: Fixed critical bug where cross-seed observations weren't being passed
 - **R13**: Autoresearch overnight session (76 features, +1.17 WAVG) → rank #1
-- **R14**: Retrained GBT on 12 rounds (81,535 samples), submitted 2026-03-21
+- **R14**: Score 85.85, rank 8. High expansion round. Retrained GBT on 13 rounds (88,459 samples). 3 autoresearch agents launched targeting expansion fixes, hidden params, and parameter tuning.
 
-### Leaderboard Position (as of R14 submission)
+### Leaderboard Position (as of R14 scoring)
 
-Our R13 weighted score: 93.94 × 1.8856 = **~177.15** (competing for #1)
-R14 weight: 1.9799 — a score of 93+ would give **~184**, clear #1.
+Best weighted: R14 = 85.85 × 1.9799 = **169.98** (top 10 range)
+R13 weighted: 93.94 × 1.8856 = 177.15 (still our leaderboard score — higher raw score)
+
+The leaderboard uses MAX(round_score × round_weight). Our leaderboard score is whichever
+of R13 or R14 gives a higher weighted value. R13 (177.15) > R14 (169.98), so R13 remains
+our leaderboard score.
 
 ## Files
 

@@ -54,7 +54,7 @@ SMOOTH_WEIGHT = 0.0  # disabled — hurts score
 # L7 observation-ratio correction strengths per class:
 # [empty, settlement, port, ruin, forest, mountain]
 # Safe L7: zero for rare classes (port, ruin) — prevents catastrophic KL
-L7_STRENGTHS = np.array([1.20, 0.80, 0.0, 0.0, 1.30, 0.0])
+L7_STRENGTHS = np.array([1.40, 1.00, 0.0, 0.0, 1.50, 0.0])
 L7_MIN_OBS = np.array([200, 50, 30, 20, 100, 0])  # min obs count per class
 L7_ADJ_MIN = 0.80  # hard safety clamp
 L7_ADJ_MAX = 1.25
@@ -63,13 +63,13 @@ L7_ADJ_MAX = 1.25
 XGB_HPARAMS = {
     "plains": dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.50, min_child_weight=3),
+                   colsample_bytree=0.55, min_child_weight=3),
     "forest": dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.50, min_child_weight=3),
+                   colsample_bytree=0.55, min_child_weight=3),
     "settl":  dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.50, min_child_weight=3),
+                   colsample_bytree=0.55, min_child_weight=3),
 }
 
 # ──────────────────────────────────────────────────────────────
@@ -89,14 +89,16 @@ ROUNDS = {
     11: "324fde07-1670-4202-b199-7aa92ecb40ee",
     12: "795bfb1f-54bd-4f39-a526-9868b36f7ebd",
     13: "7b4bda99-6165-4221-97cc-27880f5e6d95",
+    14: "d0a2c894-2162-4d49-86cf-435b9013f3b8",
 }
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 
 def enhanced_obs_stats(observations):
-    """Compute enhanced round-level obs stats (22 features: base 7 + 15 new)."""
-    base = compute_obs_stats(observations) if observations else np.zeros(23)
+    """Compute enhanced round-level obs stats (26 features: base 7 + 19 new)."""
+    full = compute_obs_stats(observations) if observations else np.zeros(23)
+    base = full[:7]  # only use first 7 base features
     pops, foods, defenses, wealths = [], [], [], []
     factions = set()
     alive_count, total_count = 0, 0
@@ -138,26 +140,30 @@ def enhanced_obs_stats(observations):
     wealth_mean = float(np.mean(wealths)) if wealths else 0.0
     wealth_std = float(np.std(wealths)) if wealths else 0.0
     dead_rate = (total_count - alive_count) / max(total_count, 1)
-    return np.concatenate([base, [min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate, food_deficit, pop_std, max_food, min_pop, max_defense, wealth_mean, wealth_std, dead_rate]])
+    # Raiding/trade/winter indicators
+    wealth_depleted_rate = sum(1 for w in wealths if w < 10) / max(len(wealths), 1)  # raiding signal
+    defense_mean = float(np.mean(defenses)) if defenses else 0.0
+    high_defense_rate = sum(1 for d in defenses if d > defense_mean + defense_std) / max(len(defenses), 1) if defenses else 0.0  # active raiding
+    food_pop_ratio = avg_food / max(avg_pop, 1.0)  # winter severity signal
+    return np.concatenate([base, [min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate, food_deficit, pop_std, max_food, min_pop, max_defense, wealth_mean, wealth_std, dead_rate, wealth_depleted_rate, high_defense_rate, food_pop_ratio]])
 
 
 def compute_cell_obs_features(observations, h, w):
-    """Compute per-cell observation features (23 features per cell):
+    """Compute per-cell observation features (21 features per cell):
     [obs_settl_rate, obs_empty_rate, obs_ruin_rate, obs_freq,
      neighbor_settl_rate_r2, neighbor_settl_count_r2, max_neighbor_settl_rate_r1,
      nearest_obs_settl_pop, nearest_obs_settl_food, nearest_obs_settl_dist,
      sum_settl_r2, sum_ruin_r2, dynamic_rate,
      log_settl_count, log_total_count, log_ruin_count, log_dynamic_count,
      sum_log_settl_r2, sum_log_ruin_r2,
-     nearest_obs_settl_wealth, nearest_obs_settl_defense,
-     faction_diversity_r3, contested_area]
+     nearest_obs_settl_wealth, nearest_obs_settl_defense]
     """
     cell_counts = np.zeros((h, w), dtype=np.int32)
     cell_settl = np.zeros((h, w), dtype=np.int32)
     cell_empty = np.zeros((h, w), dtype=np.int32)
     cell_ruin = np.zeros((h, w), dtype=np.int32)
-    # Collect per-settlement observations: (y, x, population, food, wealth, defense, owner_id) for alive settlements
-    obs_settl_list = []  # list of (y, x, pop, food, wealth, defense, owner_id)
+    # Collect per-settlement observations: (y, x, population, food, wealth, defense) for alive settlements
+    obs_settl_list = []  # list of (y, x, pop, food, wealth, defense)
     for obs in (observations or []):
         vp = obs.get("viewport", {})
         vy, vx = vp.get("y", 0), vp.get("x", 0)
@@ -180,12 +186,11 @@ def compute_cell_obs_features(observations, h, w):
             if s.get("alive", True):
                 sx, sy = s.get("x", 0), s.get("y", 0)
                 obs_settl_list.append((sy, sx, s.get("population", 0), s.get("food", 0),
-                                       s.get("wealth", 0), s.get("defense", 0),
-                                       s.get("owner_id", -1)))
+                                       s.get("wealth", 0), s.get("defense", 0)))
     total_obs = max(len(observations or []), 1)
     settl_rate = np.zeros((h, w), dtype=np.float32)
     ruin_rate = np.zeros((h, w), dtype=np.float32)
-    result = np.zeros((h, w, 23), dtype=np.float32)
+    result = np.zeros((h, w, 21), dtype=np.float32)
     for y in range(h):
         for x in range(w):
             n = cell_counts[y, x]
@@ -292,20 +297,6 @@ def compute_cell_obs_features(observations, h, w):
                         sum_log_ruin_r2 += log_ruin[ny, nx]
             result[y, x, 17] = sum_log_settl_r2
             result[y, x, 18] = sum_log_ruin_r2
-    # Compute faction diversity per cell (radius 3): count unique owner_ids among nearby settlements
-    if obs_settl_list:
-        settl_ys_arr = np.array([s[0] for s in obs_settl_list], dtype=np.float32)
-        settl_xs_arr = np.array([s[1] for s in obs_settl_list], dtype=np.float32)
-        settl_owners = np.array([s[6] for s in obs_settl_list], dtype=np.int32)
-        max_factions = max(len(set(settl_owners)), 1)
-        for y in range(h):
-            for x in range(w):
-                dists_r3 = np.abs(settl_ys_arr - y) + np.abs(settl_xs_arr - x)
-                nearby_mask = dists_r3 <= 3
-                if np.any(nearby_mask):
-                    unique_owners = len(set(settl_owners[nearby_mask].tolist()))
-                    result[y, x, 21] = unique_owners / max_factions  # normalized faction diversity
-                    result[y, x, 22] = float(unique_owners >= 2)  # contested area indicator
     return result
 
 
@@ -319,7 +310,7 @@ def load_round_data(round_num):
     return initial_states, gts
 
 
-ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 12: 1.05**11, 13: 1.05**12}
+ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 12: 1.05**11, 13: 1.05**12, 14: 1.05**13}
 
 
 def train_gbt_models(train_rounds):
@@ -395,15 +386,13 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=No
     features, coords = _extract_cell_features(initial_grid, settlements)
     if len(features) == 0:
         return None
-    # Append obs stats (always 39 features)
-    if obs_stats is None:
-        obs_stats = np.zeros(39)
-    features = np.hstack([features, np.tile(obs_stats, (len(features), 1))])
-    # Append per-cell obs features (always 23 features)
-    if cell_obs is None:
-        cell_obs = np.zeros((h, w, 23))
-    cell_feats = np.array([cell_obs[y, x] for y, x in coords])
-    features = np.hstack([features, cell_feats])
+    # Append obs stats to match training (46 features)
+    if obs_stats is not None:
+        features = np.hstack([features, np.tile(obs_stats, (len(features), 1))])
+    # Append per-cell obs features (50 features total)
+    if cell_obs is not None:
+        cell_feats = np.array([cell_obs[y, x] for y, x in coords])
+        features = np.hstack([features, cell_feats])
     tensor = np.zeros((h, w, NUM_CLASSES))
     for y in range(h):
         for x in range(w):
@@ -427,7 +416,7 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=No
 
 def evaluate_loro():
     """Run full LORO and return (avg, per_round_dict)."""
-    test_rounds = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+    test_rounds = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
     results = {}
 
     for held_out in test_rounds:
@@ -585,7 +574,7 @@ if __name__ == "__main__":
         print(f"round_{r}_score: {s:.4f}")
 
     # Weighted average (competition metric: 1.05^(round-1))
-    weights = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 12: 1.05**11, 13: 1.05**12}
+    weights = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 12: 1.05**11, 13: 1.05**12, 14: 1.05**13}
     w_avg = sum(per_round[r] * weights[r] for r in per_round) / sum(weights[r] for r in per_round)
     print(f"weighted_avg: {w_avg:.4f}")
 
