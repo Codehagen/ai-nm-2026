@@ -55,7 +55,7 @@ SMOOTH_WEIGHT = 0.0  # disabled — hurts score
 # L7 observation-ratio correction strengths per class:
 # [empty, settlement, port, ruin, forest, mountain]
 # Safe L7: zero for rare classes (port, ruin) — prevents catastrophic KL
-L7_STRENGTHS = np.array([1.20, 0.80, 0.0, 0.0, 1.30, 0.0])
+L7_STRENGTHS = np.array([1.40, 1.00, 0.0, 0.0, 1.50, 0.0])
 L7_MIN_OBS = np.array([200, 50, 30, 20, 100, 0])  # min obs count per class
 L7_ADJ_MIN = 0.80  # hard safety clamp
 L7_ADJ_MAX = 1.25
@@ -284,7 +284,7 @@ def evaluate_loro():
             # Layer 6.7: Cross-seed empirical distance tables
             if all_observations and round_empirical:
                 h, w, _ = tensor.shape
-                EMP_BLEND = 0.50
+                EMP_BLEND = 0.40
                 grid_arr = np.array(grid)
                 settl_pos = [(s['x'] if isinstance(s, dict) else s.x,
                               s['y'] if isinstance(s, dict) else s.y) for s in settlements]

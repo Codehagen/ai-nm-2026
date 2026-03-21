@@ -72,35 +72,35 @@ def get_default_experiments() -> list[dict]:
       - params: dict of param_name -> new_value
     """
     return [
-        # EMP_BLEND sweep (current=0.40)
-        {"name": "emp35", "desc": "EMP_BLEND=0.35", "params": {"EMP_BLEND": "0.35"}},
-        {"name": "emp38", "desc": "EMP_BLEND=0.38", "params": {"EMP_BLEND": "0.38"}},
-        {"name": "emp42", "desc": "EMP_BLEND=0.42", "params": {"EMP_BLEND": "0.42"}},
+        # EMP_BLEND sweep (current=0.50 in evaluate_loro)
+        {"name": "emp40", "desc": "EMP_BLEND=0.40", "params": {"EMP_BLEND": "0.40"}},
         {"name": "emp45", "desc": "EMP_BLEND=0.45", "params": {"EMP_BLEND": "0.45"}},
-        {"name": "emp50", "desc": "EMP_BLEND=0.50", "params": {"EMP_BLEND": "0.50"}},
+        {"name": "emp55", "desc": "EMP_BLEND=0.55", "params": {"EMP_BLEND": "0.55"}},
 
-        # Per-terrain blend sweep (current: p=0.55, f=0.65, s=0.75)
-        {"name": "blend_low", "desc": "blend p=0.45 f=0.55 s=0.65",
-         "params": {"plains": "0.45", "forest": "0.55", "settl": "0.65"}},
-        {"name": "blend_high", "desc": "blend p=0.60 f=0.70 s=0.80",
-         "params": {"plains": "0.60", "forest": "0.70", "settl": "0.80"}},
+        # Per-terrain blend (current: p=1.00, f=1.00, s=1.00 in train.py)
+        {"name": "blend_095", "desc": "all blend=0.95",
+         "params": {"plains": "0.95", "forest": "0.95", "settl": "0.95"}},
+        {"name": "blend_090", "desc": "all blend=0.90",
+         "params": {"plains": "0.90", "forest": "0.90", "settl": "0.90"}},
 
-        # XGB regularization
-        {"name": "reg_alpha05", "desc": "reg_alpha=0.5 all terrains",
-         "params": {"reg_alpha": "0.5"}},
-
-        # L7 strength tuning
-        {"name": "l7_strong", "desc": "L7 stronger [2.0, 1.5, 0, 0, 2.0, 0]",
-         "params": {"L7_STRENGTHS": "np.array([2.00, 1.50, 0.0, 0.0, 2.00, 0.0])"}},
+        # L7 strength sweep (current: [1.40, 1.00, 0, 0, 1.50, 0])
+        {"name": "l7_strong", "desc": "L7 stronger [1.60, 1.20, 0, 0, 1.70, 0]",
+         "params": {"L7_STRENGTHS": "np.array([1.60, 1.20, 0.0, 0.0, 1.70, 0.0])"}},
         {"name": "l7_weak", "desc": "L7 weaker [1.20, 0.80, 0, 0, 1.30, 0]",
          "params": {"L7_STRENGTHS": "np.array([1.20, 0.80, 0.0, 0.0, 1.30, 0.0])"}},
+        {"name": "l7_wide", "desc": "L7 wider clamp [0.70-1.40]",
+         "params": {"L7_ADJ_MIN": "0.70", "L7_ADJ_MAX": "1.40"}},
 
-        # Baseline (no changes — sanity check)
+        # XGB hyperparameters
+        {"name": "xgb_depth6", "desc": "max_depth=6 all terrains",
+         "params": {"max_depth": "6"}},
+        {"name": "xgb_800", "desc": "n_estimators=800 all terrains",
+         "params": {"n_estimators": "800"}},
+        {"name": "xgb_lr005", "desc": "learning_rate=0.05 (slower)",
+         "params": {"learning_rate": "0.05"}},
+
+        # Baseline sanity check
         {"name": "baseline", "desc": "BASELINE (no changes)", "params": {}},
-
-        # Combined: best guesses
-        {"name": "combo1", "desc": "EMP=0.42 + blend p=0.50 f=0.60 s=0.70",
-         "params": {"EMP_BLEND": "0.42", "plains": "0.50", "forest": "0.60", "settl": "0.70"}},
     ]
 
 

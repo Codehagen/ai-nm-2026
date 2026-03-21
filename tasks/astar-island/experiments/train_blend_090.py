@@ -46,7 +46,7 @@ from dtos import TERRAIN_TO_CLASS, NUM_CLASSES, PROB_FLOOR
 # GBT blend weight: how much to trust XGBoost vs heuristic (0-1)
 BLEND_WEIGHT = 0.35
 # Per-terrain blend overrides (None = use BLEND_WEIGHT)
-BLEND_TERRAIN = {"plains": 1.00, "forest": 1.00, "settl": 1.00}
+BLEND_TERRAIN = {"plains": 0.90, "forest": 0.90, "settl": 0.90}
 
 # Smoothing: blend final prediction with uniform prior to reduce overconfidence
 # This helps on rounds where hidden params deviate most from training data
@@ -55,7 +55,7 @@ SMOOTH_WEIGHT = 0.0  # disabled — hurts score
 # L7 observation-ratio correction strengths per class:
 # [empty, settlement, port, ruin, forest, mountain]
 # Safe L7: zero for rare classes (port, ruin) — prevents catastrophic KL
-L7_STRENGTHS = np.array([1.20, 0.80, 0.0, 0.0, 1.30, 0.0])
+L7_STRENGTHS = np.array([1.40, 1.00, 0.0, 0.0, 1.50, 0.0])
 L7_MIN_OBS = np.array([200, 50, 30, 20, 100, 0])  # min obs count per class
 L7_ADJ_MIN = 0.80  # hard safety clamp
 L7_ADJ_MAX = 1.25
