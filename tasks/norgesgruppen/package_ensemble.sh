@@ -29,6 +29,9 @@ if [ "$TOTAL_MB" -gt 400 ]; then
     exit 1
 fi
 
+# Remove stale zip to prevent appending
+rm -f "$OUTPUT"
+
 # Create staging
 STAGING=$(mktemp -d)
 cp run_ensemble.py "$STAGING/run.py"

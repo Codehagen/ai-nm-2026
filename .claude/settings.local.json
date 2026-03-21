@@ -203,7 +203,25 @@
       "Bash(rm -rf _subval)",
       "Bash(mkdir _subval)",
       "Bash(bash package.sh models/best_full_300ep_a2.pt 2>&1)",
-      "Bash(pkill -f 'cloudflared tunnel')"
+      "Bash(pkill -f 'cloudflared tunnel')",
+      "Bash(gcloud auth:*)",
+      "Bash(gcloud config:*)",
+      "Bash(wc -l /Users/walgermo/Utvikling/ai-nm-2026/tasks/norgesgruppen/run*.py)",
+      "Bash(grep -r \"per_class\\\\|class_weight\\\\|confidence\" /Users/walgermo/Utvikling/ai-nm-2026/tasks/norgesgruppen/run*.py)",
+      "Bash(grep -E \"\\\\.\\(ts|js\\)$\")",
+      "Bash(grep -n \"import.*yolo\\\\|from.*YOLO\\\\|YOLOv\" /Users/walgermo/Utvikling/ai-nm-2026/tasks/norgesgruppen/*.py)",
+      "Bash(gh api:*)",
+      "Bash(gh search:*)",
+      "Bash(du:*)",
+      "Bash(bash package_ensemble.sh models/fleet/best_a100_9_s35.pt models/fleet/best_a100_3_s25.pt models/fleet/best_a100_6_s30.pt)",
+      "Bash(for vm:*)",
+      "Bash(bash -c '\nPROJECT=\"ai-nm26osl-1823\"\n\nlaunch\\(\\) {\n    local CW=$1 VM=$2 ZONE=$3\n    echo \"Starting cls=$CW on $VM \\($ZONE\\)...\"\n    gcloud compute ssh \"$VM\" --zone=\"$ZONE\" --project=\"$PROJECT\" --command=\"\ncd /root/task\nnohup python train.py \\\\\n    --model models/best.pt \\\\\n    --epochs 50 \\\\\n    --patience 15 \\\\\n    --cls-weight $CW \\\\\n    --optimizer SGD \\\\\n    --cos-lr \\\\\n    --lr0 0.002 \\\\\n    --seed 35 \\\\\n    --name exp_cls${CW} \\\\\n    > /tmp/train.log 2>&1 &\necho Training_started_cls=$CW\n\" 2>/dev/null\n}\n\nlaunch 1.0 ainm-norgesgruppen-a100 us-central1-f &\nlaunch 1.5 ainm-norgesgruppen-a100-2 us-central1-f &\nlaunch 2.0 ainm-norgesgruppen-a100-3 us-central1-f &\nlaunch 2.5 ainm-norgesgruppen-a100-6 us-central1-f &\nlaunch 3.0 ainm-norgesgruppen-a100-9 us-central1-b &\nwait\necho \"All cls-weight training jobs launched\"\n')",
+      "Bash(bash -c '\ngcloud compute ssh ainm-norgesgruppen-a100-9 --zone=us-central1-b --project=ai-nm26osl-1823 --command=\"tail -5 /tmp/train.log 2>/dev/null\" 2>/dev/null\n')",
+      "Bash(bash -c '\nPROJECT=\"ai-nm26osl-1823\"\n\nlaunch\\(\\) {\n    local CW=$1 VM=$2 ZONE=$3\n    echo \"Starting cls=$CW on $VM...\"\n    gcloud compute ssh \"$VM\" --zone=\"$ZONE\" --project=\"$PROJECT\" --command=\"\ncd /root/task\nnohup python3 train.py \\\\\n    --model models/best.pt \\\\\n    --epochs 50 \\\\\n    --patience 15 \\\\\n    --cls-weight $CW \\\\\n    --optimizer SGD \\\\\n    --cos-lr \\\\\n    --lr0 0.002 \\\\\n    --seed 35 \\\\\n    --name exp_cls${CW} \\\\\n    > /tmp/train.log 2>&1 &\necho Training_started_cls=$CW\n\" 2>/dev/null\n}\n\nlaunch 1.0 ainm-norgesgruppen-a100 us-central1-f &\nlaunch 1.5 ainm-norgesgruppen-a100-2 us-central1-f &\nlaunch 2.0 ainm-norgesgruppen-a100-3 us-central1-f &\nlaunch 2.5 ainm-norgesgruppen-a100-6 us-central1-f &\nlaunch 3.0 ainm-norgesgruppen-a100-9 us-central1-b &\nwait\necho \"All launched\"\n')",
+      "Bash(bash -c '\nsleep 15\ngcloud compute ssh ainm-norgesgruppen-a100-9 --zone=us-central1-b --project=ai-nm26osl-1823 --command=\"tail -10 /tmp/train.log 2>/dev/null; echo ---; ps aux | grep python3 | grep -v grep | head -3\" 2>/dev/null\n')",
+      "Bash(tar --exclude='node_modules' --exclude='logs' --exclude='.env*' --exclude='models' -czf /tmp/task1.tar.gz .)",
+      "Bash(scp -i ~/.ssh/gcp_ainm -o StrictHostKeyChecking=no /tmp/task1.tar.gz walgermo@34.158.87.44:~/task1.tar.gz)",
+      "Bash(scp:*)"
     ]
   }
 }

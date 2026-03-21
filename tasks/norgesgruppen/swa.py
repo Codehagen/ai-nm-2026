@@ -46,10 +46,20 @@ def average_checkpoints(model_paths, output_path):
     # Load first checkpoint as template
     template = torch.load(str(model_paths[0]), map_location="cpu", weights_only=False)
     if "model" in template:
-        template["model"].load_state_dict(avg_sd, strict=False)
+        # Use strict=True to catch mismatches
+        template["model"].load_state_dict(avg_sd, strict=True)
         # Clear optimizer state (not needed for inference)
         template.pop("optimizer", None)
-        template.pop("ema", None)
+        # Keep EMA — YOLO uses ema.model for inference, update it with averaged weights
+        if "ema" in template and template["ema"] is not None:
+            try:
+                template["ema"].load_state_dict(avg_sd, strict=True)
+                print("Updated EMA with averaged weights")
+            except Exception as e:
+                # EMA might be a different structure, try setting ema to None
+                # so YOLO falls back to model weights
+                print(f"EMA update failed ({e}), removing EMA")
+                template.pop("ema", None)
 
     torch.save(template, str(output_path))
     size_mb = Path(output_path).stat().st_size / (1024 * 1024)

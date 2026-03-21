@@ -173,8 +173,8 @@ Raw score normalized: `correctness = points_earned / max_points`
 
 If correctness = 1.0, you get an efficiency bonus (up to **double** the tier score):
 
-- **Call efficiency** — fewer API calls = higher bonus
-- **Error cleanliness** — fewer 4xx errors = higher bonus
+- **Call efficiency** — fewer WRITE calls (POST, PUT, DELETE, PATCH) = higher bonus. **GET requests are NOT counted** — read as much as you need.
+- **Error cleanliness** — fewer 4xx errors on WRITE calls = higher bonus
 
 | Scenario (Tier 2 task) | Score |
 |------------------------|-------|
@@ -218,7 +218,7 @@ This gives you time to build a solid agent on simpler tasks before tackling the 
 | Limit | Verified teams | Unverified teams |
 |-------|---------------|-----------------|
 | Concurrent submissions | 3 | 1 |
-| Per task per day | 5 | 2 |
+| Per task per day | 10 | 3 |
 
 ---
 

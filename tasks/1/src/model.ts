@@ -8,6 +8,7 @@ import { TripletexClient, type TxResult } from "./tripletex.js";
 import { classifyTask } from "./task-classifier.js";
 import { buildSystemPrompt } from "./prompt-builder.js";
 import { logSolve } from "./logger.js";
+import { preprocessFiles } from "./file-utils.js";
 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_API_KEY,
@@ -293,14 +294,17 @@ export async function solve(
   // Track failed POST bodies per entity identity to detect value-change on retry
   const failedPosts = new Map<string, Record<string, unknown>>();
 
+  // Preprocess files: decode CSVs to text (LLMs can't read CSV content parts)
+  const { csvText, nativeFiles } = preprocessFiles(request.files);
+
   // Build user message content parts
   const content: Array<
     | { type: "text"; text: string }
     | { type: "image"; image: string }
     | { type: "file"; data: string; mediaType: string; filename?: string }
-  > = [{ type: "text", text: request.prompt }];
+  > = [{ type: "text", text: csvText ? `${request.prompt}\n\n${csvText}` : request.prompt }];
 
-  for (const f of request.files) {
+  for (const f of nativeFiles) {
     if (f.mime_type.startsWith("image/")) {
       content.push({ type: "image", image: f.content_base64 });
     } else {

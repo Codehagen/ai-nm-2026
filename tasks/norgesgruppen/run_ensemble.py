@@ -1,12 +1,13 @@
-"""NorgesGruppen Object Detection — 3-Model Ensemble with Multi-scale WBF.
+"""NorgesGruppen Object Detection — 3-Model Multi-scale Ensemble with WBF.
 
-Runs 3 YOLOv8l models (different training configs) at multiple scales,
-then fuses all predictions with Weighted Boxes Fusion.
+Best model (model_a) runs 3-pass (960, 1280, 1280+TTA) for multi-scale coverage.
+Other models run 1-pass (1280+TTA) for diversity.
+Total: 5 passes fused with Weighted Boxes Fusion.
 
 Models:
-  - model_a.pt: finetune-cos (AdamW, cos_lr, lr=0.002)
-  - model_b.pt: ftcos-sgd (SGD, cos_lr, lr=0.002)
-  - model_c.pt: sgd-seed42 (SGD, cos_lr, lr=0.002, seed=42)
+  - model_a.pt: best overnight (a100-9, seed=35, mAP 0.9747)
+  - model_b.pt: 2nd best (a100-3, seed=25, mAP 0.9656)
+  - model_c.pt: 3rd best (a100-6, seed=30, mAP 0.9639)
 
 Executed as: python run.py --input /data/images --output /output/predictions.json
 """
@@ -75,25 +76,62 @@ def main():
         all_boxes, all_scores, all_labels = [], [], []
         img_w, img_h = 0, 0
 
-        for model in models:
-            # Each model runs at 1280 + TTA
-            boxes, scores, labels, img_w, img_h = run_model(
-                model, img_path, device, 1280, augment=True
-            )
-            if boxes:
-                all_boxes.append(boxes)
-                all_scores.append(scores)
-                all_labels.append(labels)
+        # Model A (best): 3-pass multi-scale
+        # Pass 1: 960 no TTA (catches large products)
+        boxes, scores, labels, img_w, img_h = run_model(
+            models[0], img_path, device, 960, augment=False
+        )
+        if boxes:
+            all_boxes.append(boxes)
+            all_scores.append(scores)
+            all_labels.append(labels)
+
+        # Pass 2: 1280 no TTA (training scale, clean signal)
+        boxes, scores, labels, img_w, img_h = run_model(
+            models[0], img_path, device, 1280, augment=False
+        )
+        if boxes:
+            all_boxes.append(boxes)
+            all_scores.append(scores)
+            all_labels.append(labels)
+
+        # Pass 3: 1280 + TTA (training scale, augmented)
+        boxes, scores, labels, _, _ = run_model(
+            models[0], img_path, device, 1280, augment=True
+        )
+        if boxes:
+            all_boxes.append(boxes)
+            all_scores.append(scores)
+            all_labels.append(labels)
+
+        # Model B: 1280 + TTA
+        boxes, scores, labels, _, _ = run_model(
+            models[1], img_path, device, 1280, augment=True
+        )
+        if boxes:
+            all_boxes.append(boxes)
+            all_scores.append(scores)
+            all_labels.append(labels)
+
+        # Model C: 1280 + TTA
+        boxes, scores, labels, _, _ = run_model(
+            models[2], img_path, device, 1280, augment=True
+        )
+        if boxes:
+            all_boxes.append(boxes)
+            all_scores.append(scores)
+            all_labels.append(labels)
 
         if not all_boxes:
             continue
 
-        # Weighted Boxes Fusion across all model outputs
+        # Weighted Boxes Fusion — 5 passes
+        # model_a: 960(w=1), 1280(w=2), 1280+TTA(w=3); model_b: TTA(w=2); model_c: TTA(w=1)
         fused_boxes, fused_scores, fused_labels = weighted_boxes_fusion(
             all_boxes, all_scores, all_labels,
             iou_thr=0.55,
             skip_box_thr=0.001,
-            weights=[3, 2, 1],  # weight best model highest
+            weights=[1, 2, 3, 2, 1],
         )
 
         for box, score, label in zip(fused_boxes, fused_scores, fused_labels):
@@ -112,7 +150,7 @@ def main():
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         json.dump(predictions, f)
-    print(f"Wrote {len(predictions)} predictions for {len(image_files)} images (3-model ensemble)")
+    print(f"Wrote {len(predictions)} predictions for {len(image_files)} images (3-model multi-scale ensemble, 5 passes)")
 
 
 if __name__ == "__main__":

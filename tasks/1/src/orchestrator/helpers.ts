@@ -211,15 +211,16 @@ export async function ensureEmployee(
     const values = extractValues(getRes);
     const existing = values[0];
     if (existing) {
-      const needsUpdate =
+      const needsNameUpdate =
         (data.firstName && existing.firstName !== data.firstName) ||
         (data.lastName && existing.lastName !== data.lastName);
-      if (needsUpdate) {
+      const needsDobUpdate = !existing.dateOfBirth;
+      if (needsNameUpdate || needsDobUpdate) {
         await ctx.put(`/employee/${existing.id}`, {
           id: existing.id,
           version: existing.version,
-          firstName: data.firstName,
-          lastName: data.lastName,
+          firstName: data.firstName || existing.firstName,
+          lastName: data.lastName || existing.lastName,
           dateOfBirth: existing.dateOfBirth || "1990-01-15",
         });
       }

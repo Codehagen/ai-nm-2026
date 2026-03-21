@@ -44,23 +44,50 @@ export async function executeSalary(ctx: OrchestratorContext, data: SalaryData):
   const divId = await ensureDivision(ctx);
 
   // 4. Employment (required for salary specs)
-  const empRes = await ctx.post("/employee/employment", {
+  let empRes = await ctx.post("/employee/employment", {
     employee: { id: empId },
     startDate: `${year}-${String(month).padStart(2, "0")}-01`,
     division: { id: divId },
   });
-  if (!empRes.ok) {
-    if (empRes.status === 422) {
-      // Already exists — that's fine, verify
+  if (!empRes.ok && empRes.status === 422) {
+    // Check if it's a dateOfBirth error — fix employee and retry
+    const isDobError = empRes.validationMessages?.some(
+      (v) => v.field?.includes("dateOfBirth")
+    );
+    if (isDobError) {
+      // GET employee to get version, then PUT dateOfBirth
+      const getEmp = await ctx.get("/employee", {
+        email: data.employee.email || `${data.employee.firstName.toLowerCase()}.${data.employee.lastName.toLowerCase()}@example.org`,
+        fields: "id,version,dateOfBirth,firstName,lastName",
+      });
+      const empValues = extractValues(getEmp);
+      if (empValues[0]) {
+        await ctx.put(`/employee/${empValues[0].id}`, {
+          id: empValues[0].id,
+          version: empValues[0].version,
+          firstName: empValues[0].firstName,
+          lastName: empValues[0].lastName,
+          dateOfBirth: empValues[0].dateOfBirth || "1990-01-15",
+        });
+      }
+      // Retry employment creation
+      empRes = await ctx.post("/employee/employment", {
+        employee: { id: empId },
+        startDate: `${year}-${String(month).padStart(2, "0")}-01`,
+        division: { id: divId },
+      });
+    }
+    // If still 422, check if employment already exists
+    if (!empRes.ok && empRes.status === 422) {
       const getRes = await ctx.get("/employee/employment", {
         employeeId: String(empId),
         fields: "id,division",
       });
       const values = extractValues(getRes);
       if (values.length === 0) throw new Error(`Failed to create employment: ${empRes.message}`);
-    } else {
-      throw new Error(`Failed to create employment: ${empRes.message}`);
     }
+  } else if (!empRes.ok) {
+    throw new Error(`Failed to create employment: ${empRes.message}`);
   }
 
   // 5. Get salary types

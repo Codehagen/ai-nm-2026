@@ -9,6 +9,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import type { ZodSchema } from "zod";
 import type { SolveRequest } from "../dtos.js";
+import { preprocessFiles } from "../file-utils.js";
 
 import { InvoiceSchema } from "./schemas/invoice.js";
 import { SalarySchema } from "./schemas/salary.js";
@@ -95,8 +96,15 @@ export async function extractForTask(taskType: string, request: SolveRequest, si
     ],
   }];
 
-  // Add file attachments
-  for (const f of request.files) {
+  // Preprocess files: decode CSVs to text, keep PDFs/images as native content parts
+  const { csvText, nativeFiles } = preprocessFiles(request.files);
+  if (csvText) {
+    messages[0].content[0] = {
+      type: "text" as const,
+      text: buildExtractionPrompt(request, taskType) + "\n\n" + csvText,
+    };
+  }
+  for (const f of nativeFiles) {
     if (f.mime_type.startsWith("image/")) {
       messages[0].content.push({ type: "image" as const, image: f.content_base64 });
     } else {

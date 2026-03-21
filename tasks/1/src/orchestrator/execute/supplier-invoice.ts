@@ -27,6 +27,14 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
   if (!data.invoiceDate) data.invoiceDate = today;
   if (!data.dueDate) data.dueDate = today;
 
+  // Cross-validate amounts: if amountExclVat * (1 + vatPercent/100) ≈ amountInclVat, trust amountInclVat
+  const vatRate = parseFloat(data.vatPercent) / 100;
+  const calculatedInclVat = Math.round(data.amountExclVat * (1 + vatRate) * 100) / 100;
+  if (Math.abs(calculatedInclVat - data.amountInclVat) > 1 && data.amountInclVat > 0) {
+    // Trust amountInclVat and recalculate amountExclVat
+    data.amountExclVat = Math.round(data.amountInclVat / (1 + vatRate) * 100) / 100;
+  }
+
   // 1. Create supplier
   const supplierId = await createSupplier(ctx, data.supplier);
 

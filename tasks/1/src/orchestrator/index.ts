@@ -6,6 +6,7 @@
 import type { SolveRequest, SolveResponse } from "../dtos.js";
 import { TripletexClient } from "../tripletex.js";
 import { classifyTask, type TaskType } from "../task-classifier.js";
+import { classifyFromFiles } from "../file-utils.js";
 import { logSolve } from "../logger.js";
 import { solve } from "../model.js";
 import { extractForTask, hasSchema } from "./extract.js";
@@ -73,7 +74,13 @@ export async function orchestrate(
   signal?: AbortSignal,
 ): Promise<SolveResponse> {
   const startMs = Date.now();
-  const taskType = classifyTask(request.prompt);
+  let taskType = classifyTask(request.prompt);
+
+  // Boost classification with file metadata if text classification is uncertain
+  if (taskType === "unknown" && request.files.length > 0) {
+    const fileHint = classifyFromFiles(request.files);
+    if (fileHint) taskType = fileHint as TaskType;
+  }
 
   console.log(`[orchestrator] Task type: ${taskType}`);
 
