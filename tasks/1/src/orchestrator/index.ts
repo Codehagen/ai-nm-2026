@@ -76,10 +76,18 @@ export async function orchestrate(
   const startMs = Date.now();
   let taskType = classifyTask(request.prompt);
 
-  // Boost classification with file metadata if text classification is uncertain
-  if (taskType === "unknown" && request.files.length > 0) {
+  // File hints override weak text classifications (e.g. "department" when a receipt PDF is attached)
+  // Strong task types (salary, invoice, supplier-invoice, project, timesheet, credit-note) are kept.
+  // Weak matches (department, customer, product, employee, unknown) can be overridden by file hints.
+  if (request.files.length > 0) {
     const fileHint = classifyFromFiles(request.files);
-    if (fileHint) taskType = fileHint as TaskType;
+    if (fileHint) {
+      const weakTypes = new Set(["unknown", "department", "customer", "product", "employee", "contact"]);
+      if (weakTypes.has(taskType)) {
+        console.log(`[orchestrator] File hint overrides ${taskType} → ${fileHint}`);
+        taskType = fileHint as TaskType;
+      }
+    }
   }
 
   console.log(`[orchestrator] Task type: ${taskType}`);

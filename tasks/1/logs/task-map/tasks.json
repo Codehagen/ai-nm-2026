@@ -22,7 +22,7 @@
     "19": { "tier": 3, "score": 1.77, "tries": 1, "taskType": "salary", "description": "PDF employment contract — create employee with all details from PDF", "hasFiles": true },
     "20": { "tier": null, "score": null, "tries": 0, "taskType": null, "description": null, "hasFiles": null },
     "21": { "tier": 3, "score": 2.36, "tries": 1, "taskType": "salary", "description": "PDF offer letter — onboarding: create employee, department, employment, salary from PDF", "hasFiles": true },
-    "22": { "tier": null, "score": null, "tries": 0, "taskType": null, "description": null, "hasFiles": null },
+    "22": { "tier": 3, "score": 0, "tries": 1, "taskType": "supplier-invoice", "description": "Receipt expense registration — register receipt as supplier invoice in specific department with VAT", "hasFiles": true },
     "23": { "tier": 3, "score": 0, "tries": 1, "taskType": "voucher", "description": "Bank reconciliation — CSV bank statement, match payments to invoices", "hasFiles": true },
     "24": { "tier": 3, "score": 0, "tries": 1, "taskType": "voucher", "description": "Error correction in ledger — find 4 errors in vouchers (wrong acct, duplicate, missing VAT, ...)", "hasFiles": false },
     "25": { "tier": null, "score": null, "tries": 0, "taskType": null, "description": null, "hasFiles": null },
