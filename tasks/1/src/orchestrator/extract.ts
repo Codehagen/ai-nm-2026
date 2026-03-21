@@ -28,7 +28,7 @@ const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const EXTRACT_MODEL_ID = process.env.EXTRACT_MODEL_ID || "gemini-3.1-pro-preview";
+const EXTRACT_MODEL_ID = "anthropic/claude-opus-4.6";
 const FALLBACK_MODEL_ID = process.env.FALLBACK_MODEL_ID || "gemini-3.1-flash-lite-preview";
 const EXTRACT_TIMEOUT_MS = 45_000; // 45s before falling back to faster model
 
@@ -63,7 +63,11 @@ IF A PDF/IMAGE IS ATTACHED (employment contract / arbeidskontrakt):
 - CRITICAL: If the salary is listed as 'årslønn' (annual salary), set isAnnual=true. The executor will divide by 12 to get monthly rate. Do NOT divide yourself.
 - Use the exact department name from the document (e.g. 'Lager', 'IT'), not a generic name.`,
   "project": "Extract project details, project manager (employee), and customer. If the prompt mentions invoicing, set invoice.create=true and extract products.",
-  "supplier-invoice": `Extract supplier details, invoice number, dates, amounts, and description. Figure out the appropriate expense account (7300=office services, 6300=insurance/rent, 4300=goods for resale, 6800=IT/software, 6540=office supplies, 6100=freight/shipping). Calculate amount including VAT from amount excluding VAT if needed.
+  "supplier-invoice": `Extract supplier details, invoice number, dates, amounts, and description.
+
+EXPENSE ACCOUNT — CRITICAL: If the prompt explicitly mentions an account number (e.g. "Konto 6500", "account 7300", "cuenta 6800"), use THAT EXACT number. Only use these defaults if NO account is specified: 7300=office services, 6300=insurance/rent, 4300=goods for resale, 6800=IT/software, 6540=office supplies, 6100=freight/shipping.
+
+Calculate amount including VAT from amount excluding VAT if needed.
 
 IF the attached document is a RECEIPT (kvittering/recibo/receipt/Quittung/reçu):
 - The STORE/VENDOR on the receipt is the supplier name

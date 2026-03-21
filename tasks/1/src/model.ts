@@ -18,7 +18,7 @@ const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const MODEL_ID = process.env.MODEL_ID || "gemini-3.1-pro-preview";
+const MODEL_ID = "anthropic/claude-opus-4.6";
 const FALLBACK_MODEL_ID = process.env.FALLBACK_MODEL_ID || "gemini-3.1-flash-lite-preview";
 
 /** Select the right provider based on model ID */

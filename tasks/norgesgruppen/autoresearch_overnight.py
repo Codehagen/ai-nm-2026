@@ -185,16 +185,20 @@ def get_fleet_results_summary():
     summary += f"Median metric: {parsed[len(parsed)//2][0]:.4f}\n\n"
     summary += f"HEADER: {header}\n\n"
 
-    # Top 20 results (the gold — what works)
-    summary += "TOP 20 RESULTS (highest val_metric, from ALL VMs):\n"
-    for metric, line in parsed[:20]:
-        summary += f"  {line}\n"
+    # Top 10 + bottom 5 (keep it compact for Gemini token budget)
+    summary += "TOP 10 (best configs):\n"
+    for metric, line in parsed[:10]:
+        # Only include key columns: val_metric, cls, box, dfl, mosaic, mixup, epochs, lr0, close_mosaic, freeze, label_smoothing
+        parts = line.split("\t")
+        if len(parts) >= 17:
+            summary += f"  metric={parts[2]} cls={parts[4]} box={parts[5]} dfl={parts[6]} mosaic={parts[7]} mixup={parts[8]} ep={parts[12]} lr0=? cm={parts[13]} freeze={parts[15]} ls={parts[16]}\n"
 
-    # Bottom 5 (what doesn't work)
-    if len(parsed) > 20:
-        summary += "\nBOTTOM 5 (worst performing, avoid these patterns):\n"
+    if len(parsed) > 10:
+        summary += "\nBOTTOM 5 (avoid):\n"
         for metric, line in parsed[-5:]:
-            summary += f"  {line}\n"
+            parts = line.split("\t")
+            if len(parts) >= 17:
+                summary += f"  metric={parts[2]} cls={parts[4]} box={parts[5]} dfl={parts[6]} mosaic={parts[7]} mixup={parts[8]} ep={parts[12]} cm={parts[13]} freeze={parts[15]} ls={parts[16]}\n"
 
     return summary
 
@@ -226,37 +230,22 @@ def sample_config_gemini(rng):
 
     results_summary = get_fleet_results_summary()
 
-    prompt = f"""You are an expert ML hyperparameter optimizer. You are coordinating a SWARM of {30} GPU VMs, all fine-tuning YOLOv8l for grocery product detection (356 classes, 248 images, 1280px).
+    prompt = f"""HPO for YOLOv8l fine-tuning. 356 grocery classes, 248 imgs, 1280px. Suggest next config.
 
-This VM is "{VM_ID}". All VMs share results. Your job: suggest the BEST next config for this VM based on what the entire fleet has learned.
-
-FLEET RESULTS:
 {results_summary}
 
-SEARCH SPACE (pick values from these lists, or nearby values):
-{json.dumps({k: [str(v) for v in vs] for k, vs in SEARCH_SPACE.items()}, indent=2)}
+Return ONLY JSON with these keys (no markdown, no explanation):
+epochs(int) lr0(float) lrf(float) cos_lr(bool) warmup_epochs(float) cls(float) box(float) dfl(float) mosaic(float) mixup(float) copy_paste(float) degrees(float) scale(float) close_mosaic(int) freeze(null or int) label_smoothing(float) seed(int 0-9999) reasoning(string)
 
-FIXED (cannot change): {json.dumps(FIXED)}
-
-Strategy:
-- Analyze which params correlate with top results vs bottom results
-- Exploit winning patterns (configs that improved the metric)
-- But ensure diversity — don't repeat configs that other VMs are already running
-- This VM is "{VM_ID}" — give it a unique angle within the winning region
-- Higher cls (classification loss weight) tends to help since classification is the bottleneck
-- Low or zero mosaic/augmentation often helps for fine-tuning (less noise)
-
-Respond with ONLY a JSON object:
-{{"epochs": int, "lr0": float, "lrf": float, "cos_lr": bool, "warmup_epochs": float, "cls": float, "box": float, "dfl": float, "mosaic": float, "mixup": float, "copy_paste": float, "degrees": float, "scale": float, "close_mosaic": int, "freeze": null_or_int, "label_smoothing": float, "seed": int, "reasoning": "one line why"}}"""
+Exploit what works in top results. Avoid patterns from bottom results."""
 
     try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GOOGLE_API_KEY}"
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
-                "temperature": 0.9,
-                "maxOutputTokens": 1024,
-                "responseMimeType": "application/json",
+                "temperature": 0.8,
+                "maxOutputTokens": 8192,
             }
         }
         data = json.dumps(payload).encode()

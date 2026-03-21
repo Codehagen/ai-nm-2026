@@ -260,7 +260,8 @@
       "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" __NEW_LINE_603bd112f13438ad__ echo \"=== Check supplier invoice fields in detail ===\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/supplierInvoice?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01&fields=id,invoiceNumber,invoiceDate,supplier\\(name,organizationNumber\\),amount,amountCurrency,amountExcludingVat,amountExcludingVatCurrency,voucher\\(postings\\(account\\(number,name\\),amountGross,amount,department\\(name\\),vatType\\(name,percentage\\)\\)\\)&count=2&sorting=-id\")",
       "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" echo \"=== Account 7350 ===\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/ledger/account?number=7350&fields=id,number,name,vatType\\(name,percentage\\),vatLocked\")",
       "Bash(/dev/null echo:*)",
-      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/ledger/account?numberFrom=6000&numberTo=7999&fields=id,number,name,vatType\\(name,percentage\\),vatLocked&count=100\")"
+      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/ledger/account?numberFrom=6000&numberTo=7999&fields=id,number,name,vatType\\(name,percentage\\),vatLocked&count=100\")",
+      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" echo \"=== Account 6500 ===\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/ledger/account?number=6500&fields=number,name,vatType\\(percentage\\),vatLocked\")"
     ]
   }
 }

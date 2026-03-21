@@ -132,7 +132,7 @@ export async function orchestrate(
       const apiErrors = ctx.apiCalls.filter((c) => !c.ok).length;
       logSolve({
         timestamp: new Date().toISOString(),
-        model: process.env.EXTRACT_MODEL_ID || process.env.MODEL_ID || "gemini-3.1-pro-preview",
+        model: "anthropic/claude-opus-4.6",
         taskType: `orchestrator:${taskType}`,
         prompt: request.prompt,
         filesCount: request.files.length,
