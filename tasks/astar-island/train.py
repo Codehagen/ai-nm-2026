@@ -166,7 +166,7 @@ def compute_cell_obs_features(observations, h, w):
                 obs_settl_list.append((sy, sx, s.get("population", 0), s.get("food", 0)))
     total_obs = max(len(observations or []), 1)
     settl_rate = np.zeros((h, w), dtype=np.float32)
-    result = np.zeros((h, w, 10), dtype=np.float32)
+    result = np.zeros((h, w, 11), dtype=np.float32)
     for y in range(h):
         for x in range(w):
             n = cell_counts[y, x]
@@ -218,6 +218,7 @@ def compute_cell_obs_features(observations, h, w):
             result[y, x, 4] = float(np.mean(nbr_rates_r2)) if nbr_rates_r2 else 0.0
             result[y, x, 5] = float(nbr_count)
             result[y, x, 6] = max_r1
+            result[y, x, 10] = float(sum(nbr_rates_r2))  # sum (not mean) of settlement rates in r2
     return result
 
 
@@ -235,7 +236,7 @@ ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6
 
 
 def train_gbt_models(train_rounds):
-    """Train terrain-specific XGBoost on given rounds (56 features: 30 cell + 16 obs stats + 10 cell obs)."""
+    """Train terrain-specific XGBoost on given rounds (57 features: 30 cell + 16 obs stats + 11 cell obs)."""
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
     W_data = {"plains": [], "forest": [], "settl": []}
