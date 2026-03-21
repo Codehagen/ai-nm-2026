@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-21T08:38:36.443Z",
+  "prompt": "Registrer 8 timer for Kari Olsen (kari.olsen@example.org) på aktiviteten \"Utvikling\" i prosjektet \"Webportal\" for Nordfjord AS (org.nr 912345678). Timesats: 1200 kr/t. Generer en prosjektfaktura til kunden basert på de registrerte timene.",
+  "files": [],
+  "base_url": "https://api.tripletex.io",
+  "raw_files": []
+}

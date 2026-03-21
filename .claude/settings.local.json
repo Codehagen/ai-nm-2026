@@ -196,7 +196,14 @@
       "Bash(echo \"EXIT: $?\")",
       "mcp__excalidraw__create_element",
       "mcp__excalidraw__query_elements",
-      "mcp__excalidraw__get_resource"
+      "mcp__excalidraw__get_resource",
+      "Bash(bash package.sh models/fleet/best_a100_9_s35.pt 2>&1)",
+      "WebFetch(domain:github.com)",
+      "Bash(grep -n \"\\\\.date\\\\b\" /Users/walgermo/Utvikling/ai-nm-2026/tasks/1/src/orchestrator/execute/*.ts)",
+      "Bash(rm -rf _subval)",
+      "Bash(mkdir _subval)",
+      "Bash(bash package.sh models/best_full_300ep_a2.pt 2>&1)",
+      "Bash(pkill -f 'cloudflared tunnel')"
     ]
   }
 }

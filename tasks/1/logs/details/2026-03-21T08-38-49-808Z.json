@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-03-21T08:38:49.808Z",
+  "model": "orchestrator-failed",
+  "taskType": "orchestrator:timesheet:failed",
+  "prompt": "Registrer 8 timer for Kari Olsen (kari.olsen@example.org) på aktiviteten \"Utvikling\" i prosjektet \"Webportal\" for Nordfjord AS (org.nr 912345678). Timesats: 1200 kr/t. Generer en prosjektfaktura til kunden basert på de registrerte timene.",
+  "filesCount": 0,
+  "steps": 1,
+  "toolCalls": 2,
+  "apiCalls": 2,
+  "apiErrors": 2,
+  "elapsedMs": 13365,
+  "status": "error",
+  "error": "Failed to create or find department",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "body": {
+        "name": "Avdeling",
+        "departmentNumber": "1"
+      },
+      "status": 403,
+      "errorMessage": "POST /department → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": false,
+      "params": {
+        "departmentNumber": "1",
+        "fields": "id,name"
+      },
+      "status": 403,
+      "errorMessage": "GET /department → 403"
+    }
+  ]
+}

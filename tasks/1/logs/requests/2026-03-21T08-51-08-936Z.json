@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-21T08:51:08.936Z",
+  "prompt": "Create and send an invoice to the customer Brightstone Ltd (org no. 836973569) for 29950 NOK excluding VAT. The invoice is for Analysis Report.",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

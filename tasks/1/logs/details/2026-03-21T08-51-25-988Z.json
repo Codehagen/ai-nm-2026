@@ -1,0 +1,104 @@
+{
+  "timestamp": "2026-03-21T08:51:25.988Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "orchestrator:invoice",
+  "prompt": "Create and send an invoice to the customer Brightstone Ltd (org no. 836973569) for 29950 NOK excluding VAT. The invoice is for Analysis Report.",
+  "filesCount": 0,
+  "steps": 1,
+  "toolCalls": 7,
+  "apiCalls": 7,
+  "apiErrors": 0,
+  "elapsedMs": 17051,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Brightstone Ltd",
+        "isCustomer": true,
+        "organizationNumber": "836973569"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "name": "Analysis Report",
+        "priceExcludingVatCurrency": 29950,
+        "vatType": {
+          "id": 3
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1920",
+        "fields": "id,version,bankAccountNumber,name"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/368622411",
+      "ok": true,
+      "body": {
+        "id": 368622411,
+        "version": 0,
+        "name": "Bankinnskudd",
+        "bankAccountNumber": "86011117947"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "customer": {
+          "id": 108333590
+        },
+        "orderDate": "2026-03-21",
+        "deliveryDate": "2026-03-21",
+        "orderLines": [
+          {
+            "product": {
+              "id": 84414309
+            },
+            "count": 1,
+            "unitPriceExcludingVatCurrency": 29950,
+            "vatType": {
+              "id": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDate": "2026-03-21",
+        "invoiceDueDate": "2026-04-04",
+        "orders": [
+          {
+            "id": 401997746
+          }
+        ]
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147580044/:send",
+      "ok": true,
+      "params": {
+        "sendType": "EMAIL"
+      },
+      "body": {}
+    }
+  ]
+}

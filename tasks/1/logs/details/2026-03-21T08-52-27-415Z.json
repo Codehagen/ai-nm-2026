@@ -1,0 +1,124 @@
+{
+  "timestamp": "2026-03-21T08:52:27.415Z",
+  "model": "orchestrator-failed",
+  "taskType": "orchestrator:salary:failed",
+  "prompt": "Run payroll for James Williams (james.williams@example.org) for this month. The base salary is 34950 NOK. Add a one-time bonus of 15450 NOK on top of the base salary. If the salary API is unavailable, you can use manual vouchers on salary accounts (5000-series) to record the payroll expense.",
+  "filesCount": 0,
+  "steps": 1,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 2,
+  "elapsedMs": 18242,
+  "status": "error",
+  "error": "Failed to create employment: Validering feilet.",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "name": "Avdeling",
+        "departmentNumber": "1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "body": {
+        "firstName": "James",
+        "lastName": "Williams",
+        "email": "james.williams@example.org",
+        "dateOfBirth": "1990-01-15",
+        "userType": "STANDARD",
+        "department": {
+          "id": 926689
+        }
+      },
+      "status": 422,
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "email",
+          "message": "Det finnes allerede en bruker med denne e-postadressen.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "email": "james.williams@example.org",
+        "fields": "id,firstName,lastName,version,dateOfBirth"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/division",
+      "ok": true,
+      "params": {
+        "fields": "id,name",
+        "count": "1"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/municipality",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/division",
+      "ok": true,
+      "body": {
+        "name": "Hovedenhet",
+        "startDate": "2026-03-21",
+        "municipalityDate": "2026-03-21",
+        "organizationNumber": "000000000",
+        "municipality": {
+          "id": 1
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee/employment",
+      "ok": false,
+      "body": {
+        "employee": {
+          "id": 18609383
+        },
+        "startDate": "2026-03-01",
+        "division": {
+          "id": 108333600
+        }
+      },
+      "status": 422,
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "employee.dateOfBirth",
+          "message": "Feltet må fylles ut.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/employee/employment",
+      "ok": true,
+      "params": {
+        "employeeId": "18609383",
+        "fields": "id,division"
+      }
+    }
+  ]
+}

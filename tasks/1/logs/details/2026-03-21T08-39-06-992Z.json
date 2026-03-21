@@ -1,0 +1,71 @@
+{
+  "timestamp": "2026-03-21T08:39:06.992Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "timesheet",
+  "prompt": "Registrer 8 timer for Kari Olsen (kari.olsen@example.org) på aktiviteten \"Utvikling\" i prosjektet \"Webportal\" for Nordfjord AS (org.nr 912345678). Timesats: 1200 kr/t. Generer en prosjektfaktura til kunden basert på de registrerte timene.",
+  "filesCount": 0,
+  "steps": 2,
+  "toolCalls": 5,
+  "apiCalls": 5,
+  "apiErrors": 5,
+  "elapsedMs": 17182,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "name": "Avdeling",
+        "departmentNumber": "1"
+      },
+      "errorMessage": "POST /department → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      },
+      "errorMessage": "GET /employee → 403"
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "isCustomer": true,
+        "name": "Nordfjord AS",
+        "organizationNumber": "912345678"
+      },
+      "errorMessage": "POST /customer → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/activity",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "fields": "id",
+        "name": "Utvikling"
+      },
+      "errorMessage": "GET /activity → 403"
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": false,
+      "status": 403,
+      "params": {
+        "number": "1920",
+        "fields": "id,version,bankAccountNumber,name"
+      },
+      "errorMessage": "GET /ledger/account → 403"
+    }
+  ]
+}
