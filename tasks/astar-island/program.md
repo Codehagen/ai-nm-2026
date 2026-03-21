@@ -3,11 +3,11 @@
 ## Task Selection
 
 This task optimizes a probabilistic prediction model for a Norse civilization simulator.
-Each eval takes ~175 seconds (9-fold LORO with XGBoost retraining). No GPU required.
+Each eval takes ~500 seconds (13-fold LORO with XGBoost retraining). No GPU required.
 
 ## Setup
 
-1. **Branch**: `git checkout -b autoresearch/<tag>` from main
+1. **Branch**: `git checkout -b autoresearch/<tag>` from `autoresearch/r16`
 2. **Read**: `train.py` (eval harness + tunable params), `model.py` (production pipeline, READ ONLY)
 3. **Baseline**: `cd tasks/astar-island && python train.py > run.log 2>&1`
 4. **Init results.tsv**: header + baseline entry
@@ -23,15 +23,25 @@ Each eval takes ~175 seconds (9-fold LORO with XGBoost retraining). No GPU requi
 
 The LORO evaluation builds predictions in layers for each held-out round:
 
-1. **Layer 1 (Static)**: Distance-based coastal/inland priors from GT tables (calibrated R1-R10, 45 maps)
+1. **Layer 1 (Static)**: Distance-based coastal/inland priors from GT tables (calibrated R1-R15, 65 maps)
 2. **Layer 3 (Context)**: adj_forests, coastal, settlement adjacency priors for all dynamic cells
-3. **Layer 6 (GBT Blend)**: Terrain-specific XGBoost (37 features: 30 cell + 7 obs stats)
-   - Per-terrain blend weights: plains=0.55, forest=0.65, settl=0.75
-4. **Layer 6.7 (Cross-seed Empirical)**: Pool observations across all seeds, group by (terrain, distance, coastal), blend at EMP_BLEND=0.40
+3. **Layer 6 (GBT Blend)**: Terrain-specific XGBoost (76 features: 30 cell + 23 obs stats + 23 per-cell obs)
+   - Per-terrain blend weights: plains=1.00, forest=1.00, settl=1.00
+   - SKIPPED for rounds with 0 observations (R12 excluded from eval)
+4. **Layer 6.7 (Cross-seed Empirical)**: Pool observations across all seeds, group by (terrain, distance, coastal), blend at EMP_BLEND=0.50
 5. **Layer 7 (L7 Correction)**: Observation ratio correction — adjusts predictions to match observed terrain frequencies
-   - Strengths: [1.60, 1.20, 0.0, 0.0, 1.70, 0.0] (zero for port/ruin)
-   - Per-class clamp: empty [0.75-1.30], settl [0.35-1.35], forest [0.75-1.30]
+   - Strengths: [1.40, 1.00, 0.0, 0.0, 1.50, 0.0] (zero for port/ruin)
+   - Per-class clamp: empty [0.80-1.25], settl [0.40-1.30], forest [0.80-1.25]
+   - Obs count gating: [200, 50, 30, 20, 100, 0]
 6. **Layer 8 (Per-cell Empirical)**: Blend model with per-cell observation frequencies (MIN_SAMPLES=50, effectively disabled)
+
+### Feature alignment (CRITICAL)
+
+Train and inference use IDENTICAL extractors imported from model.py:
+- `compute_obs_stats()` → 23 features
+- `compute_cell_obs_features()` → 23 features per cell
+- `_extract_cell_features()` → 30 features per cell
+- **Total: 76 features**
 
 ## Tunable parameters in train.py
 
@@ -39,42 +49,86 @@ Located in the `TUNABLE PARAMETERS` section at the top of train.py:
 
 ```python
 BLEND_WEIGHT = 0.35                    # Global GBT blend (overridden by per-terrain)
-BLEND_TERRAIN = {"plains": 0.55, "forest": 0.65, "settl": 0.75}
-L7_STRENGTHS = np.array([1.60, 1.20, 0.0, 0.0, 1.70, 0.0])
+BLEND_TERRAIN = {"plains": 1.00, "forest": 1.00, "settl": 1.00}
+L7_STRENGTHS = np.array([1.40, 1.00, 0.0, 0.0, 1.50, 0.0])
 L7_MIN_OBS = np.array([200, 50, 30, 20, 100, 0])
 L7_ADJ_MIN = 0.80
 L7_ADJ_MAX = 1.25
-XGB_HPARAMS = {per-terrain dicts with n_estimators, max_depth, learning_rate, etc.}
+XGB_HPARAMS = {per-terrain dicts with n_estimators=600, max_depth=5, learning_rate=0.08,
+               reg_alpha=0.1, reg_lambda=2.0, subsample=0.9, colsample_bytree=0.55, min_child_weight=3}
 ```
 
 Also tunable within evaluate_loro():
-- `EMP_BLEND = 0.40` — weight for cross-seed empirical tables
+- `EMP_BLEND = 0.50` — weight for cross-seed empirical tables
 - L7 per-class clamp bounds (adj_min, adj_max arrays)
+
+## Current baseline: WAVG=89.39 (2026-03-21)
+
+### Per-round LORO scores (weakest first)
+```
+R7  = 72.54  ← extreme expansion, sharp distance cutoff (BIGGEST OPPORTUNITY)
+R1  = 85.55  ← medium expansion
+R14 = 85.67  ← medium
+R5  = 86.52  ← medium expansion
+R6  = 87.56  ← very high expansion
+R11 = 87.74  ← very high expansion
+R2  = 92.14  ← high expansion
+R15 = 92.42  ← medium
+R10 = 92.99  ← total extinction
+R9  = 93.08  ← medium
+R13 = 93.89  ← medium-low
+R4  = 94.26  ← extinction
+R8  = 95.26  ← extinction
+```
+
+**Pattern: Strong on extinction rounds, weak on expansion rounds.**
 
 ## What to try
 
-### Likely gains (+0.05 to +0.30)
-- Fine-tune EMP_BLEND (try 0.38, 0.42, 0.35, 0.45)
-- Fine-tune per-terrain blend weights (try +-0.05 on each)
-- L7 strength tuning (try stronger empty/forest correction)
-- XGB regularization (reg_alpha, reg_lambda, min_child_weight)
-- L7 per-class clamp bounds (wider for settlement on extinction rounds)
+### High potential (+0.50 to +3.00)
+- **Round-type detection**: Classify expansion vs extinction from obs_stats, use different parameters
+- **Adaptive distance tables**: Scale tables based on detected expansion rate
+- **Per-round-type blend weights**: Trust XGBoost more on expansion rounds
+- **Expansion pressure gradient**: Non-linear distance decay for high-expansion rounds
 
-### Possible gains (+0.00 to +0.10)
-- XGB learning rate (0.05, 0.10)
-- n_estimators (400, 500 — slower but potentially better)
+### Medium potential (+0.10 to +0.50)
+- Fine-tune EMP_BLEND (try 0.40, 0.45, 0.48, 0.52, 0.55)
+- Fine-tune per-terrain blend weights (sweep ±0.05 on each)
+- L7 strength tuning per class
+- colsample_bytree: 0.45, 0.50, 0.55, 0.60
 - Per-terrain XGB hyperparameters (different depth/lr per terrain)
-- L7 MIN_OBS thresholds
 
-### What NOT to do (proven failures)
+### New feature ideas (+0.10 to +1.00)
+- Terrain diversity in radius 3/5 (count distinct terrain types)
+- Settlement viability: food access / competition ratio
+- Port BFS distance over passable terrain
+- Faction diversity per cell radius (conflict zone)
+- Defense variance across observations (raiding indicator)
+- Wealth depletion rate (raiding/no-trade signal)
+- Forest reclamation rate from obs grids
+
+### Low potential (+0.00 to +0.10)
+- XGB learning rate (0.05, 0.10)
+- n_estimators (700, 800 — slower)
+- L7 MIN_OBS thresholds
+- SMOOTH_WEIGHT: 0.01-0.03 (currently disabled)
+
+## What NOT to do (proven failures)
+
 - KNN round matching (-9.80)
 - Probability sharpening (-0.28)
 - LightGBM (-0.33)
 - Spatial L7 BFS (-0.39)
 - Viability scoring (-0.15 to -0.66)
-- Cross-seed transfer in Layer 4 (-0.50)
-- Re-enable Layer 2 Bayesian observations (adds noise)
-- Increase PROB_FLOOR (hurts badly)
+- Cross-seed transfer Layer 4 (-0.50)
+- Layer 2 Bayesian observations (adds noise)
+- Increase PROB_FLOOR (catastrophic)
+- Simulator blend (+0.00, 30s overhead)
+- n_ports feature (no improvement)
+- Voronoi territory size (non-monotonic, no signal)
+- Center of mass distance (near-zero correlation)
+- Residual learning (worse than direct prediction)
+- Global features like settl_ratio/forest_ratio (R7=68 but R2/R6 drop)
 
 ## Run command
 
@@ -83,7 +137,7 @@ cd tasks/astar-island && python train.py > run.log 2>&1
 grep "^val_metric:" run.log
 ```
 
-Time budget: ~175 seconds per eval (9-fold LORO with XGBoost retraining per fold).
+Time budget: ~500 seconds per eval (13-fold LORO with XGBoost retraining per fold).
 
 ## The experiment loop
 
@@ -97,7 +151,7 @@ LOOP FOREVER:
 6. If empty/crash: `tail -n 50 run.log` to debug
 7. Log to results.tsv: `commit\tval_metric\tmemory_gb\tdiff_lines\tstatus\tdescription\treject_reason`
 8. If improved: `git add tasks/astar-island/results.tsv && git commit --amend --no-edit`
-9. If worse: record hash+result in results.tsv, then `git reset --hard <previous kept commit>`
+9. If worse: record hash+result in results.tsv, then `git checkout -- tasks/astar-island/train.py` (revert)
 
 ## Scoring
 
@@ -107,8 +161,8 @@ score = 100 * exp(-3 * entropy_weighted_KL_divergence)
 - NEVER let any probability be 0.0 (KL divergence -> infinity)
 - Entropy weighting means high-uncertainty cells matter most
 
-## Current best: WAVG=87.36
+## Data available
 
-Progression: 80.07 (baseline) -> 89.01 (coastal split) -> 93.88 (GBT) -> 86.91 (9-round LORO) -> 87.36 (10-round LORO)
-
-Per-round scores (LORO): R1=86.48 R2=89.15 R4=93.44 R5=84.93 R6=85.47 R7=70.70 R8=94.03 R9=91.85 R10=89.71
+13 rounds with GT + observations: R1, R2, R4-R11, R13-R15
+R12: GT only (0 observations) — excluded from LORO
+R3: excluded (different dynamics)
