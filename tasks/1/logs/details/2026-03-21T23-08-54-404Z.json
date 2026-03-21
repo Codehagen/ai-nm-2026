@@ -1,0 +1,134 @@
+{
+  "timestamp": "2026-03-21T23:08:54.404Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "orchestrator:project",
+  "prompt": "Create the project Debug42 linked to the customer Clearwater Ltd (org no. 872682023). The project manager is Test Person (test.person@example.org).",
+  "filesCount": 0,
+  "steps": 1,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 3,
+  "elapsedMs": 9910,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "count": "1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "body": {
+        "name": "Avdeling",
+        "departmentNumber": "1"
+      },
+      "status": 422,
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "departmentNumber",
+          "message": "Nummeret er i bruk.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true,
+      "params": {
+        "departmentNumber": "1",
+        "fields": "id,name"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": false,
+      "body": {
+        "firstName": "Test",
+        "lastName": "Person",
+        "email": "test.person@example.org",
+        "dateOfBirth": "1990-01-15",
+        "userType": "STANDARD",
+        "department": {
+          "id": 844789
+        }
+      },
+      "status": 422,
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "email",
+          "message": "Det finnes allerede en bruker med denne e-postadressen.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "email": "test.person@example.org",
+        "fields": "id,firstName,lastName,version,dateOfBirth"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Clearwater Ltd",
+        "isCustomer": true,
+        "organizationNumber": "872682023"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true,
+      "body": {
+        "name": "Debug42",
+        "projectManager": {
+          "id": 18443378
+        },
+        "customer": {
+          "id": 108453607
+        },
+        "isInternal": false,
+        "startDate": "2026-03-22"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/project/402044982",
+      "ok": false,
+      "body": {
+        "id": 402044982,
+        "version": 0,
+        "projectManager": {
+          "id": 18686654
+        }
+      },
+      "status": 422,
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "Internt felt (employeeId)",
+          "message": "Oppgitt prosjektleder har ikke fått tilgang som prosjektleder i kontoen: Test Person.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    }
+  ]
+}

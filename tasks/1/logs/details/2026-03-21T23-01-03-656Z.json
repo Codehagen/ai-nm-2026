@@ -1,0 +1,115 @@
+{
+  "timestamp": "2026-03-21T23:01:03.656Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "orchestrator:project",
+  "prompt": "Create the project Analyse Test linked to the customer TestKunde AS (org no. 999888777). The project manager is Test Person (test.person@example.org).",
+  "filesCount": 0,
+  "steps": 1,
+  "toolCalls": 7,
+  "apiCalls": 7,
+  "apiErrors": 2,
+  "elapsedMs": 8437,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "count": "1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "body": {
+        "name": "Avdeling",
+        "departmentNumber": "1"
+      },
+      "status": 422,
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "departmentNumber",
+          "message": "Nummeret er i bruk.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true,
+      "params": {
+        "departmentNumber": "1",
+        "fields": "id,name"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true,
+      "body": {
+        "firstName": "Test",
+        "lastName": "Person",
+        "email": "test.person@example.org",
+        "dateOfBirth": "1990-01-15",
+        "userType": "STANDARD",
+        "department": {
+          "id": 844789
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "TestKunde AS",
+        "isCustomer": true,
+        "organizationNumber": "999888777"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true,
+      "body": {
+        "name": "Analyse Test",
+        "projectManager": {
+          "id": 18443378
+        },
+        "customer": {
+          "id": 108451198
+        },
+        "isInternal": false,
+        "startDate": "2026-03-22"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/project/402044421",
+      "ok": false,
+      "body": {
+        "id": 402044421,
+        "version": 0,
+        "projectManager": {
+          "id": 18686654
+        }
+      },
+      "status": 422,
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "Internt felt (employeeId)",
+          "message": "Oppgitt prosjektleder har ikke fått tilgang som prosjektleder i kontoen: Test Person.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    }
+  ]
+}

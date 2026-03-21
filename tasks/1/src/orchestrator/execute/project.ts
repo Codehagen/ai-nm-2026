@@ -31,13 +31,11 @@ export async function executeProject(ctx: OrchestratorContext, data: ProjectData
     departmentId: deptId,
   });
 
-  // 3. Grant PM entitlements so the named employee can be assigned as project manager
-  if (pmId !== adminId) {
-    await ctx.put("/employee/entitlement/:grantEntitlementsByTemplate", {}, {
-      employeeId: String(pmId),
-      template: "ALL_PRIVILEGES",
-    });
-  }
+  // 3. Grant PM entitlements — ALWAYS grant (the condition pmId !== adminId was being skipped somehow)
+  await ctx.put("/employee/entitlement/:grantEntitlementsByTemplate", {}, {
+    employeeId: String(pmId),
+    template: "ALL_PRIVILEGES",
+  });
 
   // 4. Customer
   const custId = await createCustomer(ctx, data.customer);

@@ -183,6 +183,23 @@ function getErrorHint(
     return 'SupplierInvoiceDTO does NOT have amountOutstanding or balance fields. Use fields=* to see all available fields, or use: id, invoiceNumber, invoiceDate, supplier, amount.';
   }
 
+  // Employment invalid fields — these belong on employment/details, not employment
+  if (method === "POST" && path.includes("employee/employment") && !path.includes("details") &&
+      vm?.some((v) => ["employmentType","percentageOfFullTimeEquivalent","occupationCode","workingHoursScheme"].includes(v.field ?? ""))) {
+    return 'STOP: employmentType, percentageOfFullTimeEquivalent, occupationCode, workingHoursScheme do NOT go on POST /employee/employment. They go on POST /employee/employment/details. Employment only needs: employee.id, startDate, division.id.';
+  }
+
+  // Voucher posting missing customer/supplier on receivables/payables accounts
+  if (method === "POST" && path.includes("ledger/voucher") &&
+      vm?.some((v) => v.message?.includes("Kunde mangler") || v.message?.includes("Leverandør mangler"))) {
+    return 'Posting to account 1500 (kundefordringer) REQUIRES customer.id on the posting. Posting to account 2400 (leverandørgjeld) REQUIRES supplier.id. Add the customer or supplier object to EACH posting row that uses these accounts.';
+  }
+
+  // Voucher already sent to ledger — don't retry
+  if (path.includes("voucher") && vm?.some((v) => v.message?.includes("Bokførte bilag"))) {
+    return 'This voucher is already sent to the ledger. Do NOT try to send it again or modify it. Move on to the next step.';
+  }
+
   return null;
 }
 

@@ -286,7 +286,11 @@
       "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" __NEW_LINE_3b5d7059e41aa172__ echo \"=== Check project PM in detail ===\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/project/402042441?fields=id,name,projectManager\\(id,displayName,email,firstName,lastName\\),customer\\(name\\),isFixedPrice,fixedprice,version\")",
       "Bash(/dev/null __NEW_LINE_3b5d7059e41aa172__ echo echo '=== Find Oliver Brown employee ===' curl -s -u 0:$TOKEN \"https://kkpqfuj-amager.tripletex.dev/v2/employee?email=oliver.brown@example.org&fields=id,firstName,lastName,email\")",
       "Bash(/dev/null __NEW_LINE_3b5d7059e41aa172__ echo echo '=== Check solve log for PUT details ===' tail -1 /Users/walgermo/Utvikling/ai-nm-2026/tasks/1/logs/solves.jsonl)",
-      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" __NEW_LINE_d61edf2b02890f5a__ echo \"=== Test entitlement granting for Oliver Brown \\(18681443\\) ===\" curl -v -u \"0:$TOKEN\" -H \"Content-Type: application/json\" -X PUT \"https://kkpqfuj-amager.tripletex.dev/v2/employee/entitlement/:grantEntitlementsByTemplate?employeeId=18681443&template=ALL_PRIVILEGES\" -d '{}')"
+      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" __NEW_LINE_d61edf2b02890f5a__ echo \"=== Test entitlement granting for Oliver Brown \\(18681443\\) ===\" curl -v -u \"0:$TOKEN\" -H \"Content-Type: application/json\" -X PUT \"https://kkpqfuj-amager.tripletex.dev/v2/employee/entitlement/:grantEntitlementsByTemplate?employeeId=18681443&template=ALL_PRIVILEGES\" -d '{}')",
+      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" __NEW_LINE_b81af726e1030b8f__ echo \"=== What does GET /employee?count=1 return? ===\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/employee?fields=id,firstName,lastName&count=1\")",
+      "Bash(/dev/null __NEW_LINE_b81af726e1030b8f__ echo echo '=== And employee 18686654 ===' curl -s -u 0:$TOKEN https://kkpqfuj-amager.tripletex.dev/v2/employee/18686654?fields=id,firstName,lastName)",
+      "Bash(/dev/null __NEW_LINE_b81af726e1030b8f__ echo echo '=== Check compiled code for the condition ===' grep -B2 -A3 'pmId !== adminId' dist/orchestrator/execute/project.js)",
+      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\")"
     ]
   }
 }
