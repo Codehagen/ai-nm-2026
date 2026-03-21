@@ -45,8 +45,9 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
   }
 
   // 1. Create department if specified (receipts often belong to a department)
+  let departmentId: number | undefined;
   if (data.departmentName) {
-    await ensureDepartment(ctx, data.departmentName);
+    departmentId = await ensureDepartment(ctx, data.departmentName);
   }
 
   // 2. Create supplier
@@ -65,8 +66,9 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
     const acctVal = (acctRes.data as Record<string, unknown>)?.value as Record<string, unknown> | undefined;
     const vatLocked = acctVal?.vatLocked as boolean | undefined;
     const acctVatType = acctVal?.vatType as Record<string, unknown> | undefined;
-    if (vatLocked && acctVatType?.id) {
-      vatTypeId = acctVatType.id as number;
+    if (vatLocked) {
+      // Locked VAT — use the account's type, or 0% exempt if vatType is null
+      vatTypeId = (acctVatType?.id as number) ?? INPUT_VAT_MAP["0"] ?? 6;
     }
   }
   const voucherDescription = data.invoiceNumber
@@ -74,7 +76,7 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
     : `${data.description} - ${data.supplier.name}`;
 
   const res = await ctx.post("/supplierInvoice", {
-    invoiceNumber: data.invoiceNumber || undefined,
+    invoiceNumber: (data.invoiceNumber && data.invoiceNumber !== "N/A" && data.invoiceNumber !== "n/a") ? data.invoiceNumber : undefined,
     invoiceDate: data.invoiceDate,
     invoiceDueDate: data.dueDate,
     supplier: { id: supplierId },
@@ -90,6 +92,7 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
           amountGross: data.amountInclVat,
           amountGrossCurrency: data.amountInclVat,
           vatType: { id: vatTypeId },
+          ...(departmentId ? { department: { id: departmentId } } : {}),
         },
         {
           row: 2,

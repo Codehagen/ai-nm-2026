@@ -138,6 +138,12 @@ function getErrorHint(
     return 'Voucher postings MUST balance (sum of all amountGross = 0). Check that debit (positive) and credit (negative) amounts are equal.';
   }
 
+  // Invoice GET — invalid field names
+  if (method === "GET" && path.includes("/invoice") && !path.includes("supplierInvoice") &&
+      result.status === 400 && result.message?.includes("does not match a field")) {
+    return 'InvoiceDTO valid fields: id, invoiceNumber, invoiceDate, customer, amount, ehfSendStatus, orders, isCreditNote. Do NOT use: totalAmount, remainingAmount, dueDate, status, balance. Use fields=* for full list.';
+  }
+
   return null;
 }
 
