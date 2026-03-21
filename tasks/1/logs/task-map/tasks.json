@@ -20,7 +20,7 @@
     "17": { "tier": 2, "score": 3.50, "tries": 10, "taskType": null, "description": null, "hasFiles": false },
     "18": { "tier": 2, "score": 2.67, "tries": 12, "taskType": null, "description": null, "hasFiles": false },
     "19": { "tier": 3, "score": 1.77, "tries": 1, "taskType": "salary", "description": "PDF employment contract — create employee with all details from PDF", "hasFiles": true },
-    "20": { "tier": null, "score": null, "tries": 0, "taskType": null, "description": null, "hasFiles": null },
+    "20": { "tier": 3, "score": 1.50, "tries": 1, "taskType": "supplier-invoice", "description": "PDF supplier invoice — register invoice from PDF attachment with correct expense account + VAT", "hasFiles": true },
     "21": { "tier": 3, "score": 2.36, "tries": 2, "taskType": "salary", "description": "PDF offer letter — onboarding: employee, dept, employment, salary, standardTime from PDF", "hasFiles": true },
     "22": { "tier": 3, "score": 0, "tries": 2, "taskType": "supplier-invoice", "description": "Receipt expense — register receipt as supplier invoice in named department. Scoring checks PDF fields.", "hasFiles": true },
     "23": { "tier": 3, "score": 0, "tries": 1, "taskType": "voucher", "description": "Bank reconciliation — CSV bank statement, match payments to invoices", "hasFiles": true },
