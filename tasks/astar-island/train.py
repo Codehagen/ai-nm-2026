@@ -92,6 +92,7 @@ ROUNDS = {
     13: "7b4bda99-6165-4221-97cc-27880f5e6d95",
     14: "d0a2c894-2162-4d49-86cf-435b9013f3b8",
     15: "cc5442dd-bc5d-418b-911b-7eb960cb0390",
+    16: "8f664aed-8839-4c85-bed0-77a2cac7c6f5",
 }
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -111,7 +112,7 @@ def load_round_data(round_num):
     return initial_states, gts
 
 
-ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 12: 1.05**11, 13: 1.05**12, 14: 1.05**13, 15: 1.05**14}
+ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 13: 1.05**12, 14: 1.05**13, 15: 1.05**14, 16: 1.05**15}
 
 
 def train_gbt_models(train_rounds):
@@ -196,30 +197,42 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=No
         cell_obs = np.zeros((h, w, 23))
     cell_feats = np.array([cell_obs[y, x] for y, x in coords])
     features = np.hstack([features, cell_feats])
+
+    # Build terrain type array for all coords
+    grid_arr = np.array(initial_grid)
     tensor = np.zeros((h, w, NUM_CLASSES))
-    for y in range(h):
-        for x in range(w):
-            if initial_grid[y][x] == 10:
-                tensor[y, x] = [1, 0, 0, 0, 0, 0]
-            elif initial_grid[y][x] == 5:
-                tensor[y, x] = [0, 0, 0, 0, 0, 1]
-    for i, (y, x) in enumerate(coords):
-        code = initial_grid[y][x]
-        ttype = "plains" if code in {11, 0} else ("forest" if code == 4 else ("settl" if code in {1, 2} else "plains"))
+    tensor[grid_arr == 10] = [1, 0, 0, 0, 0, 0]
+    tensor[grid_arr == 5] = [0, 0, 0, 0, 0, 1]
+
+    # Batch predict per terrain type (18 predict calls instead of ~7200)
+    coord_arr = np.array(coords)  # (n_cells, 2)
+    codes = np.array([initial_grid[y][x] for y, x in coords])
+    terrain_masks = {
+        "plains": np.isin(codes, [11, 0]),
+        "forest": codes == 4,
+        "settl": np.isin(codes, [1, 2]),
+    }
+
+    for ttype, mask in terrain_masks.items():
+        if not mask.any():
+            continue
         models = models_dict.get(ttype)
         if models is None:
             continue
-        pred_v = np.zeros(NUM_CLASSES)
-        for cls in range(NUM_CLASSES):
-            pred_v[cls] = models[cls].predict(features[i:i + 1])[0]
-        tensor[y, x] = np.maximum(pred_v, PROB_FLOOR)
-        tensor[y, x] /= tensor[y, x].sum()
+        batch_feats = features[mask]
+        batch_coords = coord_arr[mask]
+        preds = np.column_stack([models[cls].predict(batch_feats) for cls in range(NUM_CLASSES)])
+        preds = np.maximum(preds, PROB_FLOOR)
+        preds /= preds.sum(axis=1, keepdims=True)
+        for j in range(len(batch_coords)):
+            tensor[batch_coords[j, 0], batch_coords[j, 1]] = preds[j]
+
     return tensor
 
 
 def evaluate_loro():
     """Run full LORO and return (avg, per_round_dict)."""
-    test_rounds = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15]  # R12 excluded: 0 observations
+    test_rounds = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16]  # R12 excluded: 0 observations
     results = {}
 
     for held_out in test_rounds:
@@ -253,24 +266,26 @@ def evaluate_loro():
             tensor = build_static_prediction(grid)
             tensor = fill_unobserved_dynamic(tensor, grid, settlements, [], seed)
 
-            # Layer 6: GBT blend (with obs stats + per-cell obs features from model.py)
-            # Skip XGBoost for no-obs rounds: model trained on obs features gives garbage when all zeros
+            # Layer 6: GBT blend (vectorized)
             has_obs = bool(all_observations)
             gbt_pred = gbt_predict_with_models(gbt_models, grid, settlements, obs_stats=obs_stats, cell_obs=cell_obs) if has_obs else None
             if gbt_pred is not None:
+                grid_arr = np.array(grid)
                 h, w, _ = tensor.shape
-                for y in range(h):
-                    for x in range(w):
-                        code = grid[y][x]
-                        if code not in {10, 5}:
-                            ttype = "plains" if code in {11, 0} else ("forest" if code == 4 else ("settl" if code in {1, 2} else "plains"))
-                            bw = BLEND_TERRAIN.get(ttype, BLEND_WEIGHT)
-                            tensor[y, x] = (1 - bw) * tensor[y, x] + bw * gbt_pred[y, x]
+                # Build per-cell blend weight array
+                bw_arr = np.zeros((h, w))
+                for ttype, codes in [("plains", [11, 0]), ("forest", [4]), ("settl", [1, 2])]:
+                    mask = np.isin(grid_arr, codes)
+                    bw_arr[mask] = BLEND_TERRAIN.get(ttype, BLEND_WEIGHT)
+                dynamic = ~np.isin(grid_arr, [10, 5])
+                bw_3d = bw_arr[..., np.newaxis]
+                tensor[dynamic] = (1 - bw_3d[dynamic]) * tensor[dynamic] + bw_3d[dynamic] * gbt_pred[dynamic]
 
             # Layer 6.7: Cross-seed empirical distance tables
             if all_observations and round_empirical:
                 h, w, _ = tensor.shape
                 EMP_BLEND = 0.50
+                grid_arr = np.array(grid)
                 settl_pos = [(s['x'] if isinstance(s, dict) else s.x,
                               s['y'] if isinstance(s, dict) else s.y) for s in settlements]
                 for y in range(h):
@@ -285,7 +300,7 @@ def evaluate_loro():
                         if key in round_empirical:
                             tensor[y, x] = (1 - EMP_BLEND) * tensor[y, x] + EMP_BLEND * round_empirical[key]
 
-            # Layer 7: Observation ratio correction
+            # Layer 7: Observation ratio correction (vectorized)
             if all_observations:
                 obs_cls = np.zeros(NUM_CLASSES)
                 obs_total = 0
@@ -298,35 +313,24 @@ def evaluate_loro():
                 if obs_total > 100:
                     obs_freq = obs_cls / obs_total
                     h, w, _ = tensor.shape
-                    model_avg = np.zeros(NUM_CLASSES)
-                    m_count = 0
-                    for y in range(h):
-                        for x in range(w):
-                            if grid[y][x] not in {10, 5}:
-                                model_avg += tensor[y, x]
-                                m_count += 1
-                    if m_count > 0:
-                        model_avg /= m_count
-                        ratio = obs_freq / np.maximum(model_avg, 1e-6)
-                        # Safe L7: gate by observation count, clamp adjustments
-                        strengths = L7_STRENGTHS.copy()
-                        for c in range(NUM_CLASSES):
-                            if obs_cls[c] < L7_MIN_OBS[c]:
-                                strengths[c] = 0.0
-                        adj = 1.0 + strengths * (ratio - 1.0)
-                        # Per-class clamp: wider for settlement (handles extreme rounds)
-                        adj_min = np.array([0.75, 0.35, 1.00, 1.00, 0.75, 1.00])
-                        adj_max = np.array([1.30, 1.35, 1.00, 1.00, 1.30, 1.00])
-                        adj = np.clip(adj, adj_min, adj_max)
-                        for y in range(h):
-                            for x in range(w):
-                                if grid[y][x] in {10, 5}:
-                                    continue
-                                tensor[y, x] *= adj
-                                tensor[y, x] = np.maximum(tensor[y, x], PROB_FLOOR)
-                                tensor[y, x] /= tensor[y, x].sum()
+                    grid_arr = np.array(grid)
+                    dynamic = ~np.isin(grid_arr, [10, 5])
+                    model_avg = tensor[dynamic].mean(axis=0)
+                    ratio = obs_freq / np.maximum(model_avg, 1e-6)
+                    strengths = L7_STRENGTHS.copy()
+                    for c in range(NUM_CLASSES):
+                        if obs_cls[c] < L7_MIN_OBS[c]:
+                            strengths[c] = 0.0
+                    adj = 1.0 + strengths * (ratio - 1.0)
+                    adj_min = np.array([0.75, 0.35, 1.00, 1.00, 0.75, 1.00])
+                    adj_max = np.array([1.30, 1.35, 1.00, 1.00, 1.30, 1.00])
+                    adj = np.clip(adj, adj_min, adj_max)
+                    # Apply to all dynamic cells at once
+                    tensor[dynamic] *= adj[np.newaxis, :]
+                    tensor[dynamic] = np.maximum(tensor[dynamic], PROB_FLOOR)
+                    tensor[dynamic] /= tensor[dynamic].sum(axis=1, keepdims=True)
 
-            # Layer 8: Per-cell empirical correction from observation grids
+            # Layer 8: Per-cell empirical (effectively disabled with MIN_SAMPLES=50)
             if all_observations:
                 h, w, _ = tensor.shape
                 cell_counts = np.zeros((h, w), dtype=np.int32)
@@ -343,20 +347,21 @@ def evaluate_loro():
                                 cls = TERRAIN_TO_CLASS.get(obs_grid[dy][dx], 0)
                                 cell_terrain[y2, x2, cls] += 1
 
-                MIN_SAMPLES = 50  # effectively disabled until repeated viewports
-                EMP_WEIGHT_PER_SAMPLE = 0.03
-                MAX_EMP_WEIGHT = 0.30
-                for y in range(h):
-                    for x in range(w):
-                        n = cell_counts[y, x]
-                        if n >= MIN_SAMPLES and grid[y][x] not in {10, 5}:
-                            emp = cell_terrain[y, x] / n
-                            emp = np.maximum(emp, PROB_FLOOR)
-                            emp /= emp.sum()
-                            alpha = min(MAX_EMP_WEIGHT, n * EMP_WEIGHT_PER_SAMPLE)
-                            tensor[y, x] = (1 - alpha) * tensor[y, x] + alpha * emp
-                            tensor[y, x] = np.maximum(tensor[y, x], PROB_FLOOR)
-                            tensor[y, x] /= tensor[y, x].sum()
+                MIN_SAMPLES = 50
+                grid_arr = np.array(grid)
+                dynamic = ~np.isin(grid_arr, [10, 5])
+                enough = (cell_counts >= MIN_SAMPLES) & dynamic
+                if enough.any():
+                    EMP_WEIGHT_PER_SAMPLE = 0.03
+                    MAX_EMP_WEIGHT = 0.30
+                    n = cell_counts[enough, np.newaxis]
+                    emp = cell_terrain[enough] / n
+                    emp = np.maximum(emp, PROB_FLOOR)
+                    emp /= emp.sum(axis=1, keepdims=True)
+                    alpha = np.minimum(MAX_EMP_WEIGHT, cell_counts[enough] * EMP_WEIGHT_PER_SAMPLE)[:, np.newaxis]
+                    tensor[enough] = (1 - alpha) * tensor[enough] + alpha * emp
+                    tensor[enough] = np.maximum(tensor[enough], PROB_FLOOR)
+                    tensor[enough] /= tensor[enough].sum(axis=1, keepdims=True)
 
             tensor = normalize_prediction(tensor)
             score = compute_score(tensor, gt)
@@ -379,7 +384,7 @@ if __name__ == "__main__":
         print(f"round_{r}_score: {s:.4f}")
 
     # Weighted average (competition metric: 1.05^(round-1))
-    weights = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 12: 1.05**11, 13: 1.05**12, 14: 1.05**13, 15: 1.05**14}
+    weights = ROUND_WEIGHTS
     w_avg = sum(per_round[r] * weights[r] for r in per_round) / sum(weights[r] for r in per_round)
     print(f"weighted_avg: {w_avg:.4f}")
 
