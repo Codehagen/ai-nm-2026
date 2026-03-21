@@ -62,7 +62,7 @@ IF A PDF/IMAGE IS ATTACHED (employment contract / arbeidskontrakt):
 - Extract ALL fields from the document: dateOfBirth (fødselsdato → convert DD.MM.YYYY to YYYY-MM-DD), nationalIdentityNumber (personnummer, 11 digits), bankAccountNumber (bankkonto), departmentName (avdeling), occupationCode (stillingskode/STYRK, 4 digits), percentageOfFullTimeEquivalent (stillingsprosent, e.g. 80.0), startDate (tiltredelse → convert DD.MM.YYYY to YYYY-MM-DD).
 - CRITICAL: If the salary is listed as 'årslønn' (annual salary), set isAnnual=true. The executor will divide by 12 to get monthly rate. Do NOT divide yourself.
 - Use the exact department name from the document (e.g. 'Lager', 'IT'), not a generic name.`,
-  "project": "Extract project details, project manager (employee), and customer. If the prompt mentions invoicing, set invoice.create=true and extract products.",
+  "project": "Extract project details, project manager (employee), and customer. If the prompt mentions invoicing or a milestone payment, set invoice.create=true and extract products. CRITICAL: If the prompt says 'invoice X% of the fixed price' or 'facturez X% du prix fixe' or 'X% des Festpreises', calculate the ACTUAL amount (fixedPrice * X / 100) and use that as the product price. Do NOT use the full fixed price as the product price.",
   "supplier-invoice": `Extract supplier details, invoice number, dates, amounts, and description.
 
 EXPENSE ACCOUNT — CRITICAL: If the prompt explicitly mentions an account number (e.g. "Konto 6500", "account 7300", "cuenta 6800"), use THAT EXACT number. Only use these defaults if NO account is specified: 7300=office services, 6300=insurance/rent, 4300=goods for resale, 6800=IT/software, 6540=office supplies, 6100=freight/shipping.
