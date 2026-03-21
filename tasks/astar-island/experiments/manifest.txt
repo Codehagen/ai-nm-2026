@@ -1,0 +1,12 @@
+emp35|train_emp35.py|EMP_BLEND=0.35
+emp38|train_emp38.py|EMP_BLEND=0.38
+emp42|train_emp42.py|EMP_BLEND=0.42
+emp45|train_emp45.py|EMP_BLEND=0.45
+emp50|train_emp50.py|EMP_BLEND=0.50
+blend_low|train_blend_low.py|blend p=0.45 f=0.55 s=0.65
+blend_high|train_blend_high.py|blend p=0.60 f=0.70 s=0.80
+reg_alpha05|train_reg_alpha05.py|reg_alpha=0.5 all terrains
+l7_strong|train_l7_strong.py|L7 stronger [2.0, 1.5, 0, 0, 2.0, 0]
+l7_weak|train_l7_weak.py|L7 weaker [1.20, 0.80, 0, 0, 1.30, 0]
+baseline|train_baseline.py|BASELINE (no changes)
+combo1|train_combo1.py|EMP=0.42 + blend p=0.50 f=0.60 s=0.70
