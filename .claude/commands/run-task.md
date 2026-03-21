@@ -3,8 +3,10 @@
 Complete workflow for running one competition task, mapping it, analyzing it, and improving.
 
 ## Prerequisites
-- GCP VM running with tunnel (use `/tunnel` if not)
+- GCP VM running with ngrok tunnel (use `/tunnel` if not)
+- ngrok URL: `https://hypertragical-birdie-unjocose.ngrok-free.dev` (persistent)
 - Competition dashboard open at https://app.ainm.no/submit/tripletex
+- Logs are ON THE VM, not local. SSH: `ssh -i ~/.ssh/gcp_ainm walgermo@<VM_IP>`
 
 ## Pipeline
 
