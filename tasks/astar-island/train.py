@@ -92,18 +92,22 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 
 def enhanced_obs_stats(observations):
-    """Compute enhanced round-level obs stats (16 features: base 7 + 9 new)."""
+    """Compute enhanced round-level obs stats (22 features: base 7 + 15 new)."""
     base = compute_obs_stats(observations) if observations else np.zeros(7)
-    pops, foods, defenses = [], [], []
+    pops, foods, defenses, wealths = [], [], [], []
     factions = set()
+    alive_count, total_count = 0, 0
     # Grid-level settlement/ruin rate
     grid_settl_count, grid_ruin_count, grid_total = 0, 0, 0
     for obs in (observations or []):
         for s in obs.get("settlements", []):
+            total_count += 1
             if s.get("alive", True):
+                alive_count += 1
                 pops.append(s.get("population", 0))
                 foods.append(s.get("food", 0))
                 defenses.append(s.get("defense", 0))
+                wealths.append(s.get("wealth", 0))
                 factions.add(s.get("owner_id", -1))
         for row in obs.get("grid", []):
             for code in row:
@@ -126,7 +130,12 @@ def enhanced_obs_stats(observations):
     food_deficit = avg_food - avg_pop  # positive = surplus, negative = deficit
     pop_std = float(np.std(pops)) if pops else 0.0
     max_food = float(np.max(foods)) if foods else 0.0
-    return np.concatenate([base, [min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate, food_deficit, pop_std, max_food]])
+    min_pop = float(np.min(pops)) if pops else 0.0
+    max_defense = float(np.max(defenses)) if defenses else 0.0
+    wealth_mean = float(np.mean(wealths)) if wealths else 0.0
+    wealth_std = float(np.std(wealths)) if wealths else 0.0
+    dead_rate = (total_count - alive_count) / max(total_count, 1)
+    return np.concatenate([base, [min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate, food_deficit, pop_std, max_food, min_pop, max_defense, wealth_mean, wealth_std, dead_rate]])
 
 
 def compute_cell_obs_features(observations, h, w):
@@ -287,7 +296,7 @@ ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6
 
 
 def train_gbt_models(train_rounds):
-    """Train terrain-specific XGBoost on given rounds (67 features: 30 cell + 18 obs stats + 19 cell obs)."""
+    """Train terrain-specific XGBoost on given rounds (71 features: 30 cell + 22 obs stats + 19 cell obs)."""
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
     W_data = {"plains": [], "forest": [], "settl": []}
