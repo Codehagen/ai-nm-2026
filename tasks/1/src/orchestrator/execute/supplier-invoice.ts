@@ -44,6 +44,13 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
     }
   }
 
+  // Fix expense account for meals/representation keywords (extraction often picks 7100 instead of 7350)
+  const descLower = (data.description || "").toLowerCase();
+  if (["kundemøte", "lunsj", "middag", "restaurant", "meeting lunch", "déjeuner",
+       "mittagessen", "almuerzo", "representasjon", "kaffemøte"].some(k => descLower.includes(k))) {
+    data.expenseAccount = "7350";
+  }
+
   // 1. Create department if specified (receipts often belong to a department)
   let departmentId: number | undefined;
   if (data.departmentName) {
