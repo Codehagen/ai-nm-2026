@@ -248,7 +248,10 @@
       "Bash($B cookie-import-browser:*)",
       "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B scroll 2)",
       "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B snapshot -i)",
-      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B click @e23 2)"
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B click @e23 2)",
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B click @e21 2)",
+      "Bash(/dev/null $B text)",
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B cookie-import-browser chrome 2)"
     ]
   }
 }

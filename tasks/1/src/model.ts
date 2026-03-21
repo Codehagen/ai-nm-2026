@@ -40,13 +40,20 @@ export function truncateForLLM(result: TxResult, method: string, path?: string):
   const data = result.data as Record<string, unknown>;
   if (!data?.values || !Array.isArray(data.values)) return result;
 
+  // Lookup paths — reference data the LLM needs in full to pick the right entry
+  const isLookup = path && (
+    path.includes("/costCategory") ||
+    path.includes("/paymentType") ||
+    path.includes("/rateCategory") ||
+    path.includes("/activity") ||
+    path.includes("/salary/type")
+  );
   // Analytical paths need more data (ledger postings for cost analysis, voucher inspection)
   const isAnalytical = path && (
     path.includes("/ledger/posting") ||
-    path.includes("/ledger/voucher") ||
-    path.includes("/salary/type")
+    path.includes("/ledger/voucher")
   );
-  const limit = isAnalytical ? 200 : 5;
+  const limit = isAnalytical ? 200 : isLookup ? 50 : 5;
 
   if (data.values.length > limit) {
     return {
@@ -601,7 +608,7 @@ export async function solve(
         // Never let logging crash the agent
       }
     },
-    timeout: { totalMs: 250_000, stepMs: 60_000 }, // 250s total, 60s per step (ngrok — no tunnel timeout)
+    timeout: { totalMs: 180_000, stepMs: 55_000 }, // 180s primary, 55s/step — leaves 100s for fallback model
     abortSignal: signal,
   });
 
