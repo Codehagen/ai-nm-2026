@@ -167,7 +167,7 @@ def compute_cell_obs_features(observations, h, w):
     total_obs = max(len(observations or []), 1)
     settl_rate = np.zeros((h, w), dtype=np.float32)
     ruin_rate = np.zeros((h, w), dtype=np.float32)
-    result = np.zeros((h, w, 15), dtype=np.float32)
+    result = np.zeros((h, w, 17), dtype=np.float32)
     for y in range(h):
         for x in range(w):
             n = cell_counts[y, x]
@@ -237,12 +237,14 @@ def compute_cell_obs_features(observations, h, w):
                         sum_ruin += ruin_rate[ny, nx]
             result[y, x, 11] = sum_ruin
             result[y, x, 12] = result[y, x, 0] + result[y, x, 2]  # self settl + ruin = dynamic rate
-    # Add absolute settlement counts (log-normalized)
+    # Add absolute settlement/ruin counts (log-normalized)
     for y in range(h):
         for x in range(w):
             n = cell_counts[y, x]
             result[y, x, 13] = float(np.log1p(cell_settl[y, x]))  # log1p count of settl observations
             result[y, x, 14] = float(np.log1p(n))                  # log1p total observation count
+            result[y, x, 15] = float(np.log1p(cell_ruin[y, x]))   # log1p count of ruin observations
+            result[y, x, 16] = float(np.log1p(cell_settl[y, x] + cell_ruin[y, x]))  # log1p dynamic count
     return result
 
 
@@ -260,7 +262,7 @@ ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6
 
 
 def train_gbt_models(train_rounds):
-    """Train terrain-specific XGBoost on given rounds (61 features: 30 cell + 16 obs stats + 15 cell obs)."""
+    """Train terrain-specific XGBoost on given rounds (63 features: 30 cell + 16 obs stats + 17 cell obs)."""
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
     W_data = {"plains": [], "forest": [], "settl": []}
