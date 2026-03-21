@@ -128,14 +128,20 @@ def enhanced_obs_stats(observations):
 
 
 def compute_cell_obs_features(observations, h, w):
-    """Compute per-cell observation features (7 features per cell):
+    """Compute per-cell observation features (10 features per cell):
     [obs_settl_rate, obs_empty_rate, obs_ruin_rate, obs_freq,
-     neighbor_settl_rate_r2, neighbor_settl_count_r2, max_neighbor_settl_rate_r1]
+     neighbor_settl_rate_r2, neighbor_settl_count_r2, max_neighbor_settl_rate_r1,
+     nearest_obs_settl_pop, nearest_obs_settl_food, nearest_obs_settl_dist]
+
+    The last 3 capture: avg population/food of nearest observed alive settlement
+    and distance to it.
     """
     cell_counts = np.zeros((h, w), dtype=np.int32)
     cell_settl = np.zeros((h, w), dtype=np.int32)
     cell_empty = np.zeros((h, w), dtype=np.int32)
     cell_ruin = np.zeros((h, w), dtype=np.int32)
+    # Collect per-settlement observations: (y, x, population, food) for alive settlements
+    obs_settl_list = []  # list of (y, x, pop, food)
     for obs in (observations or []):
         vp = obs.get("viewport", {})
         vy, vx = vp.get("y", 0), vp.get("x", 0)
@@ -153,9 +159,14 @@ def compute_cell_obs_features(observations, h, w):
                         cell_empty[y2, x2] += 1
                     elif code == 3:
                         cell_ruin[y2, x2] += 1
+        # Collect alive settlement stats from this observation
+        for s in obs.get("settlements", []):
+            if s.get("alive", True):
+                sx, sy = s.get("x", 0), s.get("y", 0)
+                obs_settl_list.append((sy, sx, s.get("population", 0), s.get("food", 0)))
     total_obs = max(len(observations or []), 1)
     settl_rate = np.zeros((h, w), dtype=np.float32)
-    result = np.zeros((h, w, 6), dtype=np.float32)
+    result = np.zeros((h, w, 10), dtype=np.float32)
     for y in range(h):
         for x in range(w):
             n = cell_counts[y, x]
@@ -166,9 +177,25 @@ def compute_cell_obs_features(observations, h, w):
                 result[y, x, 1] = cell_empty[y, x] / n
                 result[y, x, 2] = cell_ruin[y, x] / n
                 result[y, x, 3] = n / total_obs
+    # Compute nearest observed settlement stats for each cell
+    if obs_settl_list:
+        # Build arrays for fast nearest-neighbor lookup
+        settl_ys = np.array([s[0] for s in obs_settl_list], dtype=np.float32)
+        settl_xs = np.array([s[1] for s in obs_settl_list], dtype=np.float32)
+        settl_pops = np.array([s[2] for s in obs_settl_list], dtype=np.float32)
+        settl_foods = np.array([s[3] for s in obs_settl_list], dtype=np.float32)
+        # Normalize population and food for feature stability
+        pop_max = max(float(np.max(settl_pops)), 1.0)
+        food_max = max(float(np.max(settl_foods)), 1.0)
+        for y in range(h):
+            for x in range(w):
+                dists = np.abs(settl_ys - y) + np.abs(settl_xs - x)
+                nearest_idx = int(np.argmin(dists))
+                nearest_dist = float(dists[nearest_idx])
+                result[y, x, 7] = settl_pops[nearest_idx] / pop_max
+                result[y, x, 8] = settl_foods[nearest_idx] / food_max
+                result[y, x, 9] = nearest_dist / max(h + w, 1)  # normalized distance
     # Compute neighbor settlement rates (radius 2) and max settl rate at radius 1
-    result_new = np.zeros((h, w, 7), dtype=np.float32)
-    result_new[:, :, :6] = result
     for y in range(h):
         for x in range(w):
             nbr_rates_r2 = []
@@ -188,10 +215,10 @@ def compute_cell_obs_features(observations, h, w):
                             nbr_count += 1
                         if md == 1 and settl_rate[ny, nx] > max_r1:
                             max_r1 = settl_rate[ny, nx]
-            result_new[y, x, 4] = float(np.mean(nbr_rates_r2)) if nbr_rates_r2 else 0.0
-            result_new[y, x, 5] = float(nbr_count)
-            result_new[y, x, 6] = max_r1
-    return result_new
+            result[y, x, 4] = float(np.mean(nbr_rates_r2)) if nbr_rates_r2 else 0.0
+            result[y, x, 5] = float(nbr_count)
+            result[y, x, 6] = max_r1
+    return result
 
 
 def load_round_data(round_num):
@@ -208,7 +235,7 @@ ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6
 
 
 def train_gbt_models(train_rounds):
-    """Train terrain-specific XGBoost on given rounds (53 features: 30 cell + 16 obs stats + 7 cell obs)."""
+    """Train terrain-specific XGBoost on given rounds (56 features: 30 cell + 16 obs stats + 10 cell obs)."""
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
     W_data = {"plains": [], "forest": [], "settl": []}
