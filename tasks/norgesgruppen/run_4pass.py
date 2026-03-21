@@ -1,7 +1,7 @@
-"""NorgesGruppen Object Detection — Multi-scale WBF + TTA Inference.
+"""NorgesGruppen Object Detection — 4-pass WBF + TTA Inference.
 
-3-pass inference (960, 1280, 1280+TTA) with Weighted Boxes Fusion.
-Optimized params from inference autoresearch sweep (0.8823 held-out test).
+4-pass inference (960, 1280, 1280+TTA, 960+TTA) with Weighted Boxes Fusion.
+Per-pass confidence thresholds to filter noise from low-res and boost TTA recall.
 
 Executed as: python run.py --input /data/images --output /output/predictions.json
 """
@@ -19,11 +19,11 @@ from ultralytics import YOLO
 from ensemble_boxes import weighted_boxes_fusion
 
 
-def run_at_scale(model, img_path, device, imgsz, augment=False):
+def run_at_scale(model, img_path, device, imgsz, conf=0.01, augment=False):
     """Run inference at a specific scale, return normalized boxes, scores, labels, and original image dims."""
     results = model(
         str(img_path), device=device, verbose=False,
-        imgsz=imgsz, conf=0.01, iou=0.7, max_det=500, augment=augment,
+        imgsz=imgsz, conf=conf, iou=0.7, max_det=500, augment=augment,
     )
     boxes_norm, scores, labels = [], [], []
     img_h, img_w = 0, 0
@@ -64,22 +64,29 @@ def main():
         all_boxes, all_scores, all_labels = [], [], []
         img_w, img_h = 0, 0
 
-        # Pass 1: 960 no TTA (fast, catches large products)
-        boxes, scores, labels, img_w, img_h = run_at_scale(model, img_path, device, 960)
+        # Pass 1: 960 no TTA (weight=1, conf=0.02 — filter noise from low-res)
+        boxes, scores, labels, img_w, img_h = run_at_scale(model, img_path, device, 960, conf=0.02)
         if boxes:
             all_boxes.append(boxes)
             all_scores.append(scores)
             all_labels.append(labels)
 
-        # Pass 2: 1280 no TTA (training scale, clean signal)
-        boxes, scores, labels, img_w, img_h = run_at_scale(model, img_path, device, 1280)
+        # Pass 2: 1280 no TTA (weight=2, conf=0.01 — training scale, clean signal)
+        boxes, scores, labels, img_w, img_h = run_at_scale(model, img_path, device, 1280, conf=0.01)
         if boxes:
             all_boxes.append(boxes)
             all_scores.append(scores)
             all_labels.append(labels)
 
-        # Pass 3: 1280 + TTA (training scale, augmented)
-        boxes, scores, labels, _, _ = run_at_scale(model, img_path, device, 1280, augment=True)
+        # Pass 3: 1280 + TTA (weight=3, conf=0.005 — catch more from augmented)
+        boxes, scores, labels, _, _ = run_at_scale(model, img_path, device, 1280, conf=0.005, augment=True)
+        if boxes:
+            all_boxes.append(boxes)
+            all_scores.append(scores)
+            all_labels.append(labels)
+
+        # Pass 4: 960 + TTA (weight=2, conf=0.02 — new additional pass)
+        boxes, scores, labels, _, _ = run_at_scale(model, img_path, device, 960, conf=0.02, augment=True)
         if boxes:
             all_boxes.append(boxes)
             all_scores.append(scores)
@@ -88,12 +95,13 @@ def main():
         if not all_boxes:
             continue
 
-        # Weighted Boxes Fusion — optimized params from sweep
+        # Weighted Boxes Fusion — best params + 4-pass weights
         fused_boxes, fused_scores, fused_labels = weighted_boxes_fusion(
             all_boxes, all_scores, all_labels,
             iou_thr=0.65,
             skip_box_thr=0.01,
-            weights=[1, 2, 3],
+            weights=[1, 2, 3, 2],
+            conf_type='max',
         )
 
         for box, score, label in zip(fused_boxes, fused_scores, fused_labels):

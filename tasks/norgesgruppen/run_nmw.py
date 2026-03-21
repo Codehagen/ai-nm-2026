@@ -1,7 +1,7 @@
-"""NorgesGruppen Object Detection — Multi-scale WBF + TTA Inference.
+"""NorgesGruppen Object Detection — Multi-scale NMW + TTA Inference.
 
-3-pass inference (960, 1280, 1280+TTA) with Weighted Boxes Fusion.
-Optimized params from inference autoresearch sweep (0.8823 held-out test).
+3-pass inference (960, 1280, 1280+TTA) with Non-Maximum Weighted fusion.
+NMW may handle dense shelf products differently than WBF.
 
 Executed as: python run.py --input /data/images --output /output/predictions.json
 """
@@ -16,7 +16,7 @@ _torch_load = torch.load
 torch.load = lambda *args, **kwargs: _torch_load(*args, **{**kwargs, "weights_only": False})
 
 from ultralytics import YOLO
-from ensemble_boxes import weighted_boxes_fusion
+from ensemble_boxes import non_maximum_weighted
 
 
 def run_at_scale(model, img_path, device, imgsz, augment=False):
@@ -88,8 +88,8 @@ def main():
         if not all_boxes:
             continue
 
-        # Weighted Boxes Fusion — optimized params from sweep
-        fused_boxes, fused_scores, fused_labels = weighted_boxes_fusion(
+        # Non-Maximum Weighted fusion — alternative to WBF for dense products
+        fused_boxes, fused_scores, fused_labels = non_maximum_weighted(
             all_boxes, all_scores, all_labels,
             iou_thr=0.65,
             skip_box_thr=0.01,

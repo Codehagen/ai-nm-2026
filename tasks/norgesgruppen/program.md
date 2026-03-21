@@ -27,8 +27,9 @@ Timeout: 300 seconds inference on NVIDIA L4
   - Pass 2: 1280 no TTA (training scale, clean signal)
   - Pass 3: 1280 + TTA (augmented)
   - WBF fusion with weights [1, 2, 3]
-- **Key settings**: conf=0.01, iou=0.7 (per-pass NMS), WBF iou_thr=0.55, skip_box_thr=0.001
+- **Key settings**: conf=0.01, iou=0.7 (per-pass NMS), WBF iou_thr=0.65, skip_box_thr=0.01, conf_type=avg
 - **Precision**: bbox round(2), score round(6) — free +0.0008 from better IoU matching
+- **WBF sweep (best_full_300ep_a2)**: iou=0.65+avg beats iou=0.55+avg by 0.0003, conf_type=max hurts (-0.001)
 
 ## Known issues
 

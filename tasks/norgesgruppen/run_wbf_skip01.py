@@ -88,10 +88,10 @@ def main():
         if not all_boxes:
             continue
 
-        # Weighted Boxes Fusion — optimized params from sweep
+        # Weighted Boxes Fusion — variant: skip_box_thr=0.01 only
         fused_boxes, fused_scores, fused_labels = weighted_boxes_fusion(
             all_boxes, all_scores, all_labels,
-            iou_thr=0.65,
+            iou_thr=0.55,
             skip_box_thr=0.01,
             weights=[1, 2, 3],
         )
