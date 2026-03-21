@@ -549,10 +549,16 @@ export async function solve(
     prepareStep: ({ steps, stepNumber }) => {
       return buildAdaptiveGuidance(steps, stepNumber, baseSystem);
     },
-    onStepFinish: ({ stepNumber, toolCalls }) => {
-      for (const tc of toolCalls) {
-        const input = tc.input as { method: string; path: string };
-        console.log(`[step ${stepNumber}] ${input.method} ${input.path}`);
+    onStepFinish: (event) => {
+      try {
+        for (const tc of event.toolCalls ?? []) {
+          const input = tc.input as { method?: string; path?: string } | undefined;
+          if (input?.method && input?.path) {
+            console.log(`[step ${event.stepNumber}] ${input.method} ${input.path}`);
+          }
+        }
+      } catch {
+        // Never let logging crash the agent
       }
     },
     timeout: { totalMs: 100_000, stepMs: 30_000 }, // 100s total, 30s per step (cloudflared timeout ~120s)
