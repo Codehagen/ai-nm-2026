@@ -68,24 +68,26 @@ TSV_HEADER = (
     "freeze\tlabel_smoothing\tduration_min\tstatus\tnotes\n"
 )
 
-# ─── Search space ────────────────────────────────────────────────────
+# ─── Search space: NARROWED based on 506 experiments ─────────────────
+# Winners: cls=1.1-1.2, close_mosaic=3, freeze=None, box=5-7.5
+# Losers: mosaic=0.5 (worst keep rate), freeze=10/15, box=10
 SEARCH_SPACE = {
-    "epochs":         [20, 30, 30, 40, 50],
-    "lr0":            [0.0005, 0.001, 0.001, 0.002, 0.005],
-    "lrf":            [0.001, 0.01, 0.01, 0.1],
-    "cos_lr":         [True, False],
+    "epochs":         [20, 30, 30, 40],
+    "lr0":            [0.0005, 0.001, 0.001, 0.002],
+    "lrf":            [0.001, 0.01, 0.01],
+    "cos_lr":         [True, True, False],
     "warmup_epochs":  [1.0, 2.0, 3.0],
-    "cls":            [0.8, 0.9, 1.0, 1.0, 1.0, 1.1, 1.2],
-    "box":            [5.0, 7.5, 7.5, 10.0],
-    "dfl":            [1.0, 1.5, 1.5, 2.0],
-    "mosaic":         [0.0, 0.3, 0.5, 0.8, 1.0],
-    "mixup":          [0.0, 0.05, 0.1, 0.15],
-    "copy_paste":     [0.0, 0.05, 0.1],
+    "cls":            [1.0, 1.1, 1.1, 1.2, 1.2, 1.3],
+    "box":            [5.0, 7.5, 7.5],
+    "dfl":            [1.0, 1.5, 1.5],
+    "mosaic":         [0.0, 0.3, 0.8, 1.0],
+    "mixup":          [0.0, 0.05, 0.05, 0.1],
+    "copy_paste":     [0.0, 0.0, 0.05],
     "degrees":        [0.0, 5.0, 10.0],
-    "scale":          [0.3, 0.5, 0.5],
-    "close_mosaic":   [3, 5, 10],
-    "freeze":         [None, None, None, 10, 15],
-    "label_smoothing": [0.0, 0.0, 0.05, 0.1],
+    "scale":          [0.3, 0.5],
+    "close_mosaic":   [3, 3, 5],
+    "freeze":         [None, None, None, None],
+    "label_smoothing": [0.0, 0.0, 0.05, 0.05],
 }
 
 FIXED = {

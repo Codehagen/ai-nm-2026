@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-03-21T20:21:40.909Z",
+  "prompt": "Precisamos da despesa de Kundemøte lunsj deste recibo registada no departamento Økonomi. Use a conta de despesas correta e garanta o tratamento correto do IVA.",
+  "filesCount": 1,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 100010,
+  "status": "error",
+  "error": "The operation was aborted due to timeout"
+}

@@ -17,6 +17,8 @@
     "test:watch": "vitest tests/mock-crud.test.ts",
     "test:conformance": "vitest run tests/conformance.test.ts",
     "mock:start": "tsx src/mock/server.ts",
+    "verify": "tsx scripts/verify.ts",
+    "verify:check": "tsx scripts/verify.ts --check-only",
     "benchmark": "tsx tests/benchmark.ts",
     "benchmark:tier1": "tsx tests/benchmark.ts --tier 1",
     "benchmark:tier2": "tsx tests/benchmark.ts --tier 2"

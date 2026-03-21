@@ -23,7 +23,7 @@
     "19": { "tier": 3, "score": 1.77, "tries": 6, "taskType": "salary", "description": "PDF employment contract. Salary regression reverted.", "hasFiles": true },
     "20": { "tier": 3, "score": 1.50, "tries": 6, "taskType": "supplier-invoice", "description": "PDF supplier invoice. No improvement in 6 tries.", "hasFiles": true },
     "21": { "tier": 3, "score": 2.36, "tries": 7, "taskType": "salary", "description": "PDF offer letter onboarding.", "hasFiles": true },
-    "22": { "tier": 3, "score": 0, "tries": 5, "taskType": "supplier-invoice", "description": "Receipt expense in dept. STILL 0 despite fixes. Possible: wrong expense account or amount.", "hasFiles": true },
+    "22": { "tier": 3, "score": 0, "tries": 8, "taskType": "supplier-invoice", "description": "Receipt+dept. Sandbox test shows: dept on posting WORKS, amount=0 on top-level SI (normal Tripletex behavior), VAT lock fallback to 7300 deployed. Latest scored 2/8. Key fixes: explicit acct, VAT fallback, 7350 meals, KVITTERING sanitize.", "hasFiles": true },
     "23": { "tier": 3, "score": 0.60, "tries": 7, "taskType": "voucher", "description": "Bank reconciliation CSV.", "hasFiles": true },
     "24": { "tier": 3, "score": 2.25, "tries": 4, "taskType": "voucher", "description": "Error correction in ledger.", "hasFiles": false },
     "25": { "tier": 3, "score": 3.86, "tries": 8, "taskType": "voucher", "description": "Reminder fee. Improved 0.60→3.86! Recipe working great.", "hasFiles": false },
