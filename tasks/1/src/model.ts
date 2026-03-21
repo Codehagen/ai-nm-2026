@@ -35,15 +35,25 @@ function getOsloDate(): string {
 }
 
 /** Truncate large GET list responses to prevent context overflow */
-export function truncateForLLM(result: TxResult, method: string): TxResult {
+export function truncateForLLM(result: TxResult, method: string, path?: string): TxResult {
   if (!result.ok || method !== "GET") return result;
   const data = result.data as Record<string, unknown>;
-  if (data?.values && Array.isArray(data.values) && data.values.length > 5) {
+  if (!data?.values || !Array.isArray(data.values)) return result;
+
+  // Analytical paths need more data (ledger postings for cost analysis, voucher inspection)
+  const isAnalytical = path && (
+    path.includes("/ledger/posting") ||
+    path.includes("/ledger/voucher") ||
+    path.includes("/salary/type")
+  );
+  const limit = isAnalytical ? 200 : 5;
+
+  if (data.values.length > limit) {
     return {
       ok: true,
       data: {
         ...data,
-        values: data.values.slice(0, 5),
+        values: data.values.slice(0, limit),
         _truncated: true,
         _totalCount: data.values.length,
       },
@@ -571,7 +581,7 @@ export async function solve(
           }
 
           // Truncate large GET list responses to prevent context overflow
-          return truncateForLLM(callResult, method);
+          return truncateForLLM(callResult, method, path);
         },
       }),
     },

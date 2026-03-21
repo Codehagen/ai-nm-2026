@@ -359,16 +359,20 @@ If the prompt mentions a reminder fee with debit/credit accounts (e.g. "Debit 15
 
 ### Cost Analysis / Ledger Analysis:
 If the prompt asks you to analyze costs, find expense accounts with largest increases, or compare periods:
-1. **Read the ledger** (GETs are free!):
-   - GET /ledger/posting?dateFrom=2026-01-01&dateTo=2026-01-31&fields=account,amountGross,amountGrossCurrency,date&count=1000
-   - GET /ledger/posting?dateFrom=2026-02-01&dateTo=2026-02-28&fields=account,amountGross,amountGrossCurrency,date&count=1000
-2. **Analyze**: Sum amountGross per account for each period. Compute delta (Feb - Jan). Rank by largest increase.
-3. **Act on results**: Create projects, activities, vouchers — whatever the prompt asks — using the account NAMES from the analysis.
-   - To get account names: GET /ledger/account/{id}?fields=id,number,name
-   - For projects: use admin employee as PM, POST /project with the account name, then POST /activity for each
-   - isInternal: true for internal projects
+1. **Read the ledger for EACH period separately** (GETs are free!):
+   - GET /ledger/posting?dateFrom=2026-01-01&dateTo=2026-01-31&fields=account,amountGross&count=1000
+   - GET /ledger/posting?dateFrom=2026-02-01&dateTo=2026-02-28&fields=account,amountGross&count=1000
+   - Use COMPACT fields (account,amountGross) to keep response size manageable.
+   - Each posting has \`account: {id: N}\` and \`amountGross: X\`. Sum amountGross grouped by account.id for each period.
+2. **Analyze**: For each account, compute delta = Feb_total - Jan_total. Sort by delta descending. Pick top 3.
+   - Only consider EXPENSE accounts (numbers 4000-7999). Ignore balance sheet accounts.
+3. **Get account names**: GET /ledger/account/{id}?fields=id,number,name for each of the top 3 account IDs.
+4. **Act on results** — whatever the prompt asks (create projects, vouchers, etc.) using the REAL account names:
+   - For internal projects: GET /employee?fields=id&count=1 (admin), POST /project with {"name": "<account_name>", "projectManager": {"id": <admin_id>}, "isInternal": true}
+   - For activities: POST /activity {"name": "<activity_name>", "isProjectActivity": true} then link to project
+   - For each project, also POST /project/controlForm if needed
 
-**CRITICAL: You MUST query the ledger FIRST to get real data. Do NOT guess or fabricate account names.**
+**CRITICAL: You MUST query the ledger FIRST to get real data. Do NOT guess or fabricate account names. The scoring checks EXACT account names from the real ledger.**
 
 ### Custom Accounting Dimensions:
 1. POST /ledger/accountingDimensionName  {"dimensionName": "Region"}
