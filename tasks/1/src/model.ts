@@ -128,6 +128,11 @@ function getErrorHint(
     return 'Standard time requires: GET /employee/standardTime?employeeId=<id>&fields=* first to see existing entries. Then PUT /employee/standardTime/{id} to update (not POST). Set workHoursPerDay to the desired hours. Do NOT keep retrying POST — use PUT on the existing entry.';
   }
 
+  // Voucher postings invalid field (type, isDebit, etc.)
+  if (method === "POST" && path.includes("ledger/voucher") && vm?.some((v) => v.field?.includes("type") || v.field?.includes("isDebit"))) {
+    return 'STOP adding invalid fields to voucher postings. Valid fields ONLY: row, date, description, account (object with id), amountGross, amountGrossCurrency, vatType (optional). Do NOT include "type", "isDebit", "debit", "credit", or any other fields.';
+  }
+
   // Voucher postings don't balance
   if (method === "POST" && path.includes("ledger/voucher") && vm?.some((v) => v.message.includes("balanse") || v.message.includes("balance"))) {
     return 'Voucher postings MUST balance (sum of all amountGross = 0). Check that debit (positive) and credit (negative) amounts are equal.';

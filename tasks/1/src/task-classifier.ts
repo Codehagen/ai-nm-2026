@@ -74,7 +74,8 @@ export function classifyTask(prompt: string): TaskType {
       "clôture annuelle", "year-end closing", "årsavslutning", "årsoppgjør",
       "amortissement", "depreciation", "avskrivning", "abschreibung",
       "monatsabschluss", "monthly closing", "månedsavslutning",
-      "rechnungsabgrenzung", "prepaid expense", "periodisering",
+      "encerramento mensal", "encerramento anual", "cierre mensual", "cierre anual",
+      "rechnungsabgrenzung", "prepaid expense", "periodisering", "acréscimos", "acrescimos",
       // Error correction
       "fehler im hauptbuch", "errores en el libro", "erros no livro",
       "feil i hovedbok", "erreurs dans le grand livre",

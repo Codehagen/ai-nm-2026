@@ -83,12 +83,8 @@ export async function executeSalary(ctx: OrchestratorContext, data: SalaryData):
     startDate,
     division: { id: divId },
   };
-  if (data.occupationCode) {
-    employmentBody.occupationCode = data.occupationCode;
-  }
-  if (data.percentageOfFullTimeEquivalent != null) {
-    employmentBody.percentageOfFullTimeEquivalent = data.percentageOfFullTimeEquivalent;
-  }
+  // Note: occupationCode and percentageOfFullTimeEquivalent are NOT accepted on
+  // POST /employee/employment. They go on employment details (separate endpoint).
 
   let empRes = await ctx.post("/employee/employment", employmentBody);
 
