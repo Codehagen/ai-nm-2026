@@ -61,13 +61,13 @@ L7_ADJ_MAX = 1.25
 
 # Per-terrain XGBoost hyperparameters
 XGB_HPARAMS = {
-    "plains": dict(n_estimators=300, max_depth=5, learning_rate=0.08,
+    "plains": dict(n_estimators=400, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
                    colsample_bytree=0.9, min_child_weight=3),
-    "forest": dict(n_estimators=300, max_depth=5, learning_rate=0.08,
+    "forest": dict(n_estimators=400, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
                    colsample_bytree=0.9, min_child_weight=3),
-    "settl":  dict(n_estimators=300, max_depth=5, learning_rate=0.08,
+    "settl":  dict(n_estimators=400, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
                    colsample_bytree=0.9, min_child_weight=3),
 }
@@ -124,7 +124,9 @@ def enhanced_obs_stats(observations):
     avg_food = float(np.mean(foods)) if foods else 0.0
     avg_pop = float(np.mean(pops)) if pops else 0.0
     food_deficit = avg_food - avg_pop  # positive = surplus, negative = deficit
-    return np.concatenate([base, [min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate, food_deficit]])
+    pop_std = float(np.std(pops)) if pops else 0.0
+    max_food = float(np.max(foods)) if foods else 0.0
+    return np.concatenate([base, [min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate, food_deficit, pop_std, max_food]])
 
 
 def compute_cell_obs_features(observations, h, w):
@@ -167,7 +169,7 @@ def compute_cell_obs_features(observations, h, w):
     total_obs = max(len(observations or []), 1)
     settl_rate = np.zeros((h, w), dtype=np.float32)
     ruin_rate = np.zeros((h, w), dtype=np.float32)
-    result = np.zeros((h, w, 21), dtype=np.float32)
+    result = np.zeros((h, w, 19), dtype=np.float32)
     for y in range(h):
         for x in range(w):
             n = cell_counts[y, x]
@@ -268,25 +270,6 @@ def compute_cell_obs_features(observations, h, w):
                         sum_log_ruin_r2 += log_ruin[ny, nx]
             result[y, x, 17] = sum_log_settl_r2
             result[y, x, 18] = sum_log_ruin_r2
-    # Max log-settl in r2 and sum log-settl in r4
-    for y in range(h):
-        for x in range(w):
-            max_log_settl = 0.0
-            sum_log_settl_r4 = 0.0
-            for dy in range(-4, 5):
-                for dx in range(-4, 5):
-                    if dy == 0 and dx == 0:
-                        continue
-                    md = abs(dy) + abs(dx)
-                    if md > 4:
-                        continue
-                    ny, nx = y + dy, x + dx
-                    if 0 <= ny < h and 0 <= nx < w:
-                        if md <= 2 and log_settl[ny, nx] > max_log_settl:
-                            max_log_settl = log_settl[ny, nx]
-                        sum_log_settl_r4 += log_settl[ny, nx]
-            result[y, x, 19] = max_log_settl
-            result[y, x, 20] = sum_log_settl_r4
     return result
 
 
@@ -304,7 +287,7 @@ ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6
 
 
 def train_gbt_models(train_rounds):
-    """Train terrain-specific XGBoost on given rounds (67 features: 30 cell + 16 obs stats + 21 cell obs)."""
+    """Train terrain-specific XGBoost on given rounds (67 features: 30 cell + 18 obs stats + 19 cell obs)."""
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
     W_data = {"plains": [], "forest": [], "settl": []}
