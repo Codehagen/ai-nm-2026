@@ -167,6 +167,17 @@ function getErrorHint(
     return 'STOP: orderDate and deliveryDate do NOT go on order lines — they belong on the ORDER. OrderLine fields: order.id, product.id or description, count, unitPriceExcludingVatCurrency, vatType.id. Remove orderDate and deliveryDate.';
   }
 
+  // Wrong payment type endpoint — /ledger/paymentType doesn't exist
+  if (method === "GET" && path.includes("/ledger/paymentType") && result.status === 404) {
+    return 'WRONG ENDPOINT: /ledger/paymentType does not exist. Use GET /invoice/paymentType?fields=id,description instead.';
+  }
+
+  // supplierInvoice invalid field names
+  if (method === "GET" && path.includes("/supplierInvoice") &&
+      result.status === 400 && result.message?.includes("does not match a field")) {
+    return 'SupplierInvoiceDTO does NOT have amountOutstanding or balance fields. Use fields=* to see all available fields, or use: id, invoiceNumber, invoiceDate, supplier, amount.';
+  }
+
   return null;
 }
 

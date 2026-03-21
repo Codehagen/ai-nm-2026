@@ -24,6 +24,7 @@ import json
 import math
 import os
 import random
+import re
 import shutil
 import subprocess
 import time
@@ -198,6 +199,18 @@ def get_fleet_results_summary():
     return summary
 
 
+def _clean_json(text):
+    """Strip markdown fences and whitespace from Gemini response."""
+    text = text.strip()
+    if text.startswith("```json"):
+        text = text[7:]
+    elif text.startswith("```"):
+        text = text[3:]
+    if text.endswith("```"):
+        text = text[:-3]
+    return text.strip()
+
+
 def sample_config_random(rng):
     config = {}
     for key, values in SEARCH_SPACE.items():
@@ -252,15 +265,25 @@ Respond with ONLY a JSON object:
             body = json.loads(resp.read().decode())
 
         text = body["candidates"][0]["content"]["parts"][0]["text"].strip()
-        # Strip markdown code fences
-        if text.startswith("```"):
-            lines = text.split("\n")
-            text = "\n".join(lines[1:])
-        if text.endswith("```"):
-            text = text[:-3]
-        text = text.strip()
 
-        raw = json.loads(text)
+        # Try parsing raw first, then clean if needed
+        raw = None
+        for attempt_text in [text, _clean_json(text)]:
+            try:
+                raw = json.loads(attempt_text)
+                break
+            except (json.JSONDecodeError, ValueError):
+                continue
+
+        # Last resort: extract JSON object with regex
+        if raw is None:
+            match = re.search(r'\{[^}]+\}', text, re.DOTALL)
+            if match:
+                raw = json.loads(match.group())
+
+        if raw is None:
+            log(f"Gemini returned unparseable: {text[:100]}")
+            return None
 
         # Log Gemini's reasoning
         reasoning = raw.pop("reasoning", "no reasoning given")

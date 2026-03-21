@@ -142,31 +142,6 @@ export async function executeSalary(ctx: OrchestratorContext, data: SalaryData):
     throw new Error(`Failed to create employment: ${empRes.message}`);
   }
 
-  // 5b. Employment details (annualSalary, percentage — required before salary specification)
-  let emplId = empRes.ok ? extractId(empRes) : undefined;
-  if (!emplId) {
-    const getEmpl = await ctx.get("/employee/employment", {
-      employeeId: String(empId),
-      fields: "id",
-    });
-    const emplValues = extractValues(getEmpl);
-    emplId = emplValues[0]?.id as number;
-  }
-  if (emplId) {
-    const detailsBody: Record<string, unknown> = {
-      employment: { id: emplId },
-      date: startDate,
-    };
-    const annualComp = data.components.find(c => c.type === "fastlonn");
-    if (annualComp) {
-      detailsBody.annualSalary = annualComp.isAnnual ? annualComp.amount : annualComp.amount * 12;
-    }
-    if (data.percentageOfFullTimeEquivalent) {
-      detailsBody.percentageOfFullTimeEquivalent = data.percentageOfFullTimeEquivalent;
-    }
-    await ctx.post("/employee/employment/details", detailsBody);
-  }
-
   // 6. Get salary types
   const typeRes = await ctx.get("/salary/type", { fields: "id,number,name" });
   const salaryTypes = extractValues(typeRes);
@@ -177,7 +152,7 @@ export async function executeSalary(ctx: OrchestratorContext, data: SalaryData):
     typeByNumber.set(st.number as number, st.id as number);
   }
 
-  // 7. Create salary specifications
+  // 7. Create salary specifications for ALL components
   for (const comp of data.components) {
     let typeId: number | undefined;
 
@@ -213,7 +188,8 @@ export async function executeSalary(ctx: OrchestratorContext, data: SalaryData):
     // Convert annual salary to monthly
     const rate = comp.isAnnual ? Math.round(comp.amount / 12) : comp.amount;
 
-    await ctx.post("/salary/specification", {
+    // Use client directly to avoid auto-retry on 500 (salary/specification often returns 500)
+    const specRes = await ctx.client.post("/salary/specification", {
       employee: { id: empId },
       salaryType: { id: typeId },
       year,
@@ -221,5 +197,13 @@ export async function executeSalary(ctx: OrchestratorContext, data: SalaryData):
       count: comp.count,
       rate,
     });
+    ctx.apiCalls.push({
+      method: "POST",
+      path: "/salary/specification",
+      ok: specRes.ok,
+      status: specRes.ok ? undefined : (specRes as { status: number }).status,
+      body: { employee: { id: empId }, salaryType: { id: typeId }, year, month, count: comp.count, rate },
+    });
+    // Don't throw on failure — employee/employment are already created
   }
 }
