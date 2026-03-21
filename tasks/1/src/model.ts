@@ -413,6 +413,13 @@ export async function solve(
             }
           }
 
+          // === Phase 1F: Auto-inject orderDate/deliveryDate on POST /order ===
+          if (method === "POST" && /\/order\b/.test(path) && !path.includes("/orderLine") && body) {
+            const b = body as Record<string, unknown>;
+            if (!b.orderDate) b.orderDate = today;
+            if (!b.deliveryDate) b.deliveryDate = today;
+          }
+
           // === Phase 1E: Auto-inject date ranges on GET ===
           if (method === "GET") {
             params = applyDateRangeDefaults(path, params);

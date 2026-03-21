@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { zValidator } from "@hono/zod-validator";
 import { SolveRequestSchema } from "./dtos.js";
-import { solve } from "./model.js";
+import { orchestrate } from "./orchestrator/index.js";
 import { logSolve, logRequest } from "./logger.js";
 
 if (!process.env.GOOGLE_API_KEY) {
@@ -36,7 +36,7 @@ app.post("/solve", zValidator("json", SolveRequestSchema), async (c) => {
 
   const startMs = Date.now();
   try {
-    const response = await solve(request, ac.signal);
+    const response = await orchestrate(request, ac.signal);
     return c.json(response);
   } catch (e: unknown) {
     const elapsedMs = Date.now() - startMs;

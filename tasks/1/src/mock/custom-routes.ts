@@ -69,6 +69,16 @@ export function registerCustomRoutes(app: Hono, store: EntityStore): void {
         return c.body(null, 204);
       }
 
+      case ":createCreditNote": {
+        const creditNote = store.create("invoice", {
+          ...invoice,
+          isCreditNote: true,
+          creditedInvoice: invoiceId,
+          invoiceNumber: -(invoice.invoiceNumber as number || 0),
+        });
+        return c.json(wrapValue(creditNote), 201);
+      }
+
       default:
         return c.json(errorResponse(404, `Unknown invoice action: ${action}`), 404);
     }
@@ -96,6 +106,42 @@ export function registerCustomRoutes(app: Hono, store: EntityStore): void {
     });
 
     return c.json(wrapValue(creditNote), 201);
+  });
+
+  /** POST /supplierInvoice — override to create voucher alongside */
+  app.post("/supplierInvoice", async (c) => {
+    let body: Record<string, unknown>;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json(errorResponse(400, "Invalid JSON body"), 400);
+    }
+    // Create a voucher if provided in body
+    let voucherData = body.voucher as Record<string, unknown> | undefined;
+    let voucherId: number | undefined;
+    if (voucherData) {
+      const voucher = store.create("voucher", voucherData);
+      voucherId = voucher.id as number;
+    }
+    const entity = store.create("supplierInvoice", {
+      ...body,
+      voucher: voucherId ? { id: voucherId } : undefined,
+    });
+    return c.json(wrapValue(entity), 201);
+  });
+
+  /** PUT /ledger/voucher/:voucherId/:sendToLedger */
+  app.put("/ledger/voucher/:voucherId/:action", (c) => {
+    const voucherId = parseInt(c.req.param("voucherId"));
+    const action = c.req.param("action");
+    if (action === ":sendToLedger") {
+      const voucher = store.getById("voucher", voucherId);
+      if (voucher) {
+        store.update("voucher", voucherId, { isBooked: true });
+      }
+      return c.body(null, 204);
+    }
+    return c.json(errorResponse(404, `Unknown voucher action: ${action}`), 404);
   });
 
   // ─── Static Lookups ────────────────────────────────────────────────

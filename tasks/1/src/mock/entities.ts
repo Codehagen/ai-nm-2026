@@ -138,6 +138,36 @@ export const ENTITY_CONFIGS: EntityConfig[] = [
     refValidation: { "employee.id": "employee" },
     deletable: true,
   },
+  {
+    type: "municipality",
+    basePath: "/municipality",
+    requiredFields: [],
+    searchFields: ["name", "number"],
+    deletable: false,
+  },
+  {
+    type: "division",
+    basePath: "/division",
+    requiredFields: ["name"],
+    searchFields: ["name"],
+    deletable: false,
+  },
+  {
+    type: "timesheetEntry",
+    basePath: "/timesheet/entry",
+    requiredFields: ["employee", "project", "activity", "date", "hours"],
+    searchFields: [],
+    refValidation: { "employee.id": "employee", "project.id": "project" },
+    deletable: true,
+  },
+  {
+    type: "supplierInvoice",
+    basePath: "/supplierInvoice",
+    requiredFields: ["supplier", "invoiceDate"],
+    searchFields: ["invoiceNumber"],
+    refValidation: { "supplier.id": "supplier" },
+    deletable: false,
+  },
 ];
 
 /** Lookup entity config by basePath */

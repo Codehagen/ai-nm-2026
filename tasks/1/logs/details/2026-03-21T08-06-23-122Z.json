@@ -1,0 +1,99 @@
+{
+  "timestamp": "2026-03-21T08:06:23.122Z",
+  "model": "orchestrator-failed",
+  "taskType": "orchestrator:supplier-invoice:failed",
+  "prompt": "Hemos recibido la factura INV-2026-9045 del proveedor Luna SL (org. nº 985211493) por 28100 NOK con IVA incluido. El importe corresponde a servicios de oficina (cuenta 7100). Registre la factura del proveedor con el IVA soportado correcto (25 %).",
+  "filesCount": 0,
+  "steps": 1,
+  "toolCalls": 4,
+  "apiCalls": 4,
+  "apiErrors": 1,
+  "elapsedMs": 17762,
+  "status": "error",
+  "error": "Failed to create supplier invoice: Validering feilet.",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true,
+      "body": {
+        "name": "Luna SL",
+        "isSupplier": true,
+        "organizationNumber": "985211493"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "7100",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "2400",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": false,
+      "body": {
+        "invoiceNumber": "INV-2026-9045",
+        "invoiceDate": "",
+        "invoiceDueDate": "",
+        "supplier": {
+          "id": 108333122
+        },
+        "voucher": {
+          "date": "",
+          "description": "Faktura INV-2026-9045 fra Luna SL",
+          "postings": [
+            {
+              "row": 1,
+              "date": "",
+              "description": "servicios de oficina",
+              "account": {
+                "id": 368556587
+              },
+              "amountGross": 28100,
+              "amountGrossCurrency": 28100,
+              "vatType": {
+                "id": 1
+              }
+            },
+            {
+              "row": 2,
+              "date": "",
+              "description": "Luna SL",
+              "account": {
+                "id": 368556345
+              },
+              "supplier": {
+                "id": 108333122
+              },
+              "amountGross": -28100,
+              "amountGrossCurrency": -28100
+            }
+          ]
+        }
+      },
+      "status": 422,
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "invoiceDate",
+          "message": "Kan ikke være null.",
+          "path": "null.invoiceDate",
+          "rootId": null
+        }
+      ]
+    }
+  ]
+}

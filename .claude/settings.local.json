@@ -166,7 +166,31 @@
       "Bash(find /Users/walgermo/Utvikling/ai-nm-2026 -name *.py -o -name *.ts -o -name *.js)",
       "Bash(sudo -u walgermo git log --oneline -5 2>&1)",
       "Bash(sudo -u walgermo git status --short 2>&1)",
-      "Bash(gtimeout 5 npx tsx src/api.ts)"
+      "Bash(gtimeout 5 npx tsx src/api.ts)",
+      "Bash(find /Users/walgermo/Utvikling/ai-nm-2026/tasks/1 -path */test* -o -path */spec* -o -name *.test.ts -o -name *.spec.ts)",
+      "Bash(find /Users/walgermo/Utvikling/ai-nm-2026/tasks/1 -name *.test.ts -o -name *.spec.ts)",
+      "WebSearch",
+      "Bash(pip3 show:*)",
+      "Bash(find /Users/walgermo/Utvikling/ai-nm-2026 -type d -name *task*1*)",
+      "Bash(cp run.py run_wbf_skip01.py)",
+      "Bash(cp run.py run_wbf_iou65.py)",
+      "Bash(cp run.py run_wbf_absent.py)",
+      "Bash(bash test_variants.sh models/best_full_300ep_a2.pt)",
+      "Bash(bash scripts/gcp/status.sh)",
+      "Bash(bash scripts/gcp/create-vm.sh norgesgruppen heavy --spot --name=cls10 2>&1)",
+      "Bash(bash scripts/gcp/create-vm.sh norgesgruppen heavy --spot --name=cls15 2>&1)",
+      "Bash(bash scripts/gcp/create-vm.sh norgesgruppen heavy --spot --name=cls20 2>&1)",
+      "Bash(bash scripts/gcp/create-vm.sh norgesgruppen heavy --spot --name=cls25 2>&1)",
+      "Bash(bash scripts/gcp/create-vm.sh norgesgruppen heavy --spot --name=cls30 2>&1)",
+      "Bash(for vm_zone in \"ainm-norgesgruppen-a100:us-central1-f\" \"ainm-norgesgruppen-a100-2:us-central1-f\" \"ainm-norgesgruppen-a100-3:us-central1-f\" \"ainm-norgesgruppen-a100-6:us-central1-f\" \"ainm-norgesgruppen-a100-9:us-central1-b\")",
+      "Bash(python swa.py models/fleet/best_a100_9_s35.pt models/fleet/best_a100_3_s25.pt models/fleet/best_a100_6_s30.pt models/fleet/best_a100_2_s20.pt models/fleet/best_exp10.pt -o models/swa_fleet_top5.pt)",
+      "Bash(python:*)",
+      "Bash(grep -r \"cloudflared\\\\|tunnel\" /Users/walgermo/Utvikling/ai-nm-2026 --include=*.ts --include=*.md --include=*.sh)",
+      "Bash(grep -r \"npm\\\\|yarn\\\\|bun\\\\|start\\\\|serve\\\\|deploy\" /Users/walgermo/Utvikling/ai-nm-2026/tasks/1 --include=*.json)",
+      "Bash(chown:*)",
+      "Bash(lsof -ti:9053)",
+      "Bash(for vm_zone in \"ainm-norgesgruppen-a100:us-central1-f:cls10\" \"ainm-norgesgruppen-a100-2:us-central1-f:cls15\" \"ainm-norgesgruppen-a100-3:us-central1-f:cls20\" \"ainm-norgesgruppen-a100-6:us-central1-f:cls25\" \"ainm-norgesgruppen-a100-9:us-central1-b:cls30\")",
+      "Bash(grep -n \"invoiceDate\\\\|orderDate\\\\|deliveryDate\\\\|startDate\\\\|\\\\.date\\\\b\" /Users/walgermo/Utvikling/ai-nm-2026/tasks/1/src/orchestrator/execute/*.ts)"
     ]
   }
 }

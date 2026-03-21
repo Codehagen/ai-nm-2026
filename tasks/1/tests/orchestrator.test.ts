@@ -1,0 +1,478 @@
+/**
+ * Full test suite for the deterministic orchestrator.
+ * Tests executor functions directly against the mock Tripletex server.
+ * Bypasses LLM extraction — feeds pre-built data objects.
+ */
+
+import { describe, it, expect, beforeEach, afterAll } from "vitest";
+import { serve } from "@hono/node-server";
+import { createMockApp } from "../src/mock/server.js";
+import { TripletexClient } from "../src/tripletex.js";
+import { OrchestratorContext, extractValues, extractId, extractValue } from "../src/orchestrator/helpers.js";
+import { executeInvoice } from "../src/orchestrator/execute/invoice.js";
+import { executeSalary } from "../src/orchestrator/execute/salary.js";
+import { executeProject } from "../src/orchestrator/execute/project.js";
+import { executeSupplierInvoice } from "../src/orchestrator/execute/supplier-invoice.js";
+import { executeTimesheet } from "../src/orchestrator/execute/timesheet.js";
+import { executeCreditNote } from "../src/orchestrator/execute/credit-note.js";
+import type { InvoiceData } from "../src/orchestrator/schemas/invoice.js";
+import type { SalaryData } from "../src/orchestrator/schemas/salary.js";
+import type { ProjectData } from "../src/orchestrator/schemas/project.js";
+import type { SupplierInvoiceData } from "../src/orchestrator/schemas/supplier-invoice.js";
+import type { TimesheetData } from "../src/orchestrator/schemas/timesheet.js";
+import type { CreditNoteData } from "../src/orchestrator/schemas/credit-note.js";
+
+const TEST_PORT = 19099;
+const BASE_URL = `http://localhost:${TEST_PORT}`;
+
+let mockServer: ReturnType<typeof serve>;
+let mockStore: ReturnType<typeof createMockApp>["store"];
+let mockApp: ReturnType<typeof createMockApp>["app"];
+
+function makeCtx(): OrchestratorContext {
+  const client = new TripletexClient({ base_url: BASE_URL, session_token: "test-token" });
+  return new OrchestratorContext(client);
+}
+
+// Start mock server once for all tests
+const mock = createMockApp();
+mockApp = mock.app;
+mockStore = mock.store;
+mockServer = serve({ fetch: mockApp.fetch, port: TEST_PORT });
+
+afterAll(() => {
+  mockServer.close();
+});
+
+describe("Orchestrator Executors", () => {
+  beforeEach(async () => {
+    // Reset mock store to seed state before each test
+    await fetch(`${BASE_URL}/_reset`, { method: "POST" });
+  });
+
+  // ─── Invoice ──────────────────────────────────────────────────────
+
+  describe("executeInvoice", () => {
+    it("creates a new invoice with customer and product", async () => {
+      const ctx = makeCtx();
+      const data: InvoiceData = {
+        customer: { name: "Test Kunde AS" },
+        products: [{ name: "Konsulenttime", price: 1200, vatPercent: "25", quantity: 10 }],
+        sendInvoice: false,
+        registerPayment: false,
+        isExistingInvoice: false,
+      };
+
+      await executeInvoice(ctx, data);
+
+      // Verify: customer created
+      const custRes = await ctx.get("/customer", { fields: "id,name" });
+      const customers = extractValues(custRes);
+      expect(customers.some((c) => c.name === "Test Kunde AS")).toBe(true);
+
+      // Verify: product created
+      const prodRes = await ctx.get("/product", { fields: "id,name" });
+      const products = extractValues(prodRes);
+      expect(products.some((p) => p.name === "Konsulenttime")).toBe(true);
+
+      // Verify: invoice exists
+      const invRes = await ctx.get("/invoice", { invoiceDateFrom: "2020-01-01", invoiceDateTo: "2030-01-01", fields: "id" });
+      expect(extractValues(invRes).length).toBeGreaterThanOrEqual(1);
+
+      // Verify: no API errors
+      const errors = ctx.apiCalls.filter((c) => !c.ok);
+      expect(errors.length).toBe(0);
+    });
+
+    it("creates invoice and sends it", async () => {
+      const ctx = makeCtx();
+      const data: InvoiceData = {
+        customer: { name: "Send Kunde" },
+        products: [{ name: "Produkt A", price: 500, vatPercent: "25", quantity: 1 }],
+        sendInvoice: true,
+        registerPayment: false,
+        isExistingInvoice: false,
+      };
+
+      await executeInvoice(ctx, data);
+
+      // Verify: send action was called
+      const sendCalls = ctx.apiCalls.filter((c) => c.path.includes("/:send"));
+      expect(sendCalls.length).toBe(1);
+      expect(sendCalls[0].ok).toBe(true);
+    });
+
+    it("creates invoice and registers payment", async () => {
+      const ctx = makeCtx();
+      const data: InvoiceData = {
+        customer: { name: "Betal Kunde" },
+        products: [{ name: "Vare X", price: 1000, vatPercent: "25", quantity: 2 }],
+        sendInvoice: false,
+        registerPayment: true,
+        isExistingInvoice: false,
+      };
+
+      await executeInvoice(ctx, data);
+
+      // Verify: payment action was called
+      const paymentCalls = ctx.apiCalls.filter((c) => c.path.includes("/:payment"));
+      expect(paymentCalls.length).toBe(1);
+      expect(paymentCalls[0].ok).toBe(true);
+    });
+
+    it("handles multi-product invoice", async () => {
+      const ctx = makeCtx();
+      const data: InvoiceData = {
+        customer: { name: "Multi AS" },
+        products: [
+          { name: "Produkt 1", price: 100, vatPercent: "25", quantity: 1 },
+          { name: "Produkt 2", price: 200, vatPercent: "15", quantity: 3 },
+          { name: "Produkt 3", price: 50, vatPercent: "0", quantity: 5 },
+        ],
+        sendInvoice: false,
+        registerPayment: false,
+        isExistingInvoice: false,
+      };
+
+      await executeInvoice(ctx, data);
+
+      const errors = ctx.apiCalls.filter((c) => !c.ok);
+      expect(errors.length).toBe(0);
+
+      // Verify all 3 products created
+      const prodRes = await ctx.get("/product", { fields: "id,name" });
+      const products = extractValues(prodRes);
+      expect(products.length).toBeGreaterThanOrEqual(3);
+    });
+  });
+
+  // ─── Salary ───────────────────────────────────────────────────────
+
+  describe("executeSalary", () => {
+    it("creates salary specification for employee with fastlonn", async () => {
+      const ctx = makeCtx();
+      const data: SalaryData = {
+        employee: { firstName: "Ola", lastName: "Nordmann" },
+        components: [{ type: "fastlonn", amount: 45000, count: 1 }],
+      };
+
+      await executeSalary(ctx, data);
+
+      // Verify: employee created
+      const empRes = await ctx.get("/employee", { fields: "id,firstName,lastName" });
+      const employees = extractValues(empRes);
+      expect(employees.some((e) => e.firstName === "Ola" && e.lastName === "Nordmann")).toBe(true);
+
+      // Verify: salary specification created
+      const specRes = await ctx.get("/salary/specification", { fields: "id,rate" });
+      const specs = extractValues(specRes);
+      expect(specs.some((s) => s.rate === 45000)).toBe(true);
+
+      // Verify no errors (allow 422s that were handled)
+      const unhandledErrors = ctx.apiCalls.filter((c) => !c.ok && c.status !== 422);
+      expect(unhandledErrors.length).toBe(0);
+    });
+
+    it("handles multiple salary components", async () => {
+      const ctx = makeCtx();
+      const data: SalaryData = {
+        employee: { firstName: "Kari", lastName: "Hansen" },
+        components: [
+          { type: "fastlonn", amount: 40000, count: 1 },
+          { type: "bonus", amount: 10000, count: 1 },
+        ],
+      };
+
+      await executeSalary(ctx, data);
+
+      // Verify: 2 salary specifications created
+      const specRes = await ctx.get("/salary/specification", { fields: "id,rate" });
+      const specs = extractValues(specRes);
+      expect(specs.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it("completes within 15 seconds", async () => {
+      const ctx = makeCtx();
+      const data: SalaryData = {
+        employee: { firstName: "Speed", lastName: "Test" },
+        components: [{ type: "fastlonn", amount: 30000, count: 1 }],
+      };
+
+      const start = Date.now();
+      await executeSalary(ctx, data);
+      const elapsed = Date.now() - start;
+
+      // Must complete fast (without LLM, should be <2s against mock)
+      expect(elapsed).toBeLessThan(15000);
+    });
+  });
+
+  // ─── Project ──────────────────────────────────────────────────────
+
+  describe("executeProject", () => {
+    it("creates project with PM dance", async () => {
+      const ctx = makeCtx();
+      const data: ProjectData = {
+        project: { name: "Testprosjekt Alpha", isFixedPrice: false },
+        projectManager: { firstName: "Per", lastName: "Olsen" },
+        customer: { name: "Kunde AS" },
+      };
+
+      await executeProject(ctx, data);
+
+      // Verify: project created
+      const projRes = await ctx.get("/project", { fields: "id,name,projectManager" });
+      const projects = extractValues(projRes);
+      const proj = projects.find((p) => p.name === "Testprosjekt Alpha");
+      expect(proj).toBeDefined();
+
+      // Verify: PM was updated (PUT call exists)
+      const putCalls = ctx.apiCalls.filter((c) => c.method === "PUT" && c.path.includes("/project/"));
+      expect(putCalls.length).toBeGreaterThanOrEqual(1);
+
+      const errors = ctx.apiCalls.filter((c) => !c.ok && c.status !== 422);
+      expect(errors.length).toBe(0);
+    });
+
+    it("handles fixed price project", async () => {
+      const ctx = makeCtx();
+      const data: ProjectData = {
+        project: { name: "Fastpris Prosjekt", isFixedPrice: true, fixedPrice: 250000 },
+        projectManager: { firstName: "Lisa", lastName: "Berg" },
+        customer: { name: "Fastpris Kunde" },
+      };
+
+      await executeProject(ctx, data);
+
+      // Verify: project created with PUT for fixedprice
+      const putCalls = ctx.apiCalls.filter((c) => c.method === "PUT" && c.path.includes("/project/"));
+      expect(putCalls.length).toBeGreaterThanOrEqual(1);
+      // Check that fixedprice (lowercase) was in the body
+      const putBody = putCalls[0].body as Record<string, unknown>;
+      expect(putBody.isFixedPrice).toBe(true);
+      expect(putBody.fixedprice).toBe(250000);
+    });
+
+    it("creates project with invoice", async () => {
+      const ctx = makeCtx();
+      const data: ProjectData = {
+        project: { name: "Fakturert Prosjekt", isFixedPrice: false },
+        projectManager: { firstName: "Erik", lastName: "Sunde" },
+        customer: { name: "Faktura Kunde" },
+        invoice: {
+          create: true,
+          products: [{ name: "Rådgivning", price: 1500, quantity: 40, vatPercent: "25" }],
+        },
+      };
+
+      await executeProject(ctx, data);
+
+      // Verify: invoice created
+      const invRes = await ctx.get("/invoice", { invoiceDateFrom: "2020-01-01", invoiceDateTo: "2030-01-01", fields: "id" });
+      expect(extractValues(invRes).length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  // ─── Supplier Invoice ─────────────────────────────────────────────
+
+  describe("executeSupplierInvoice", () => {
+    it("creates supplier invoice with voucher booking", async () => {
+      const ctx = makeCtx();
+      const data: SupplierInvoiceData = {
+        supplier: { name: "Kontor AS", organizationNumber: "987654321" },
+        invoiceNumber: "INV-2026-001",
+        invoiceDate: "2026-03-20",
+        dueDate: "2026-04-20",
+        description: "Kontorrekvisita",
+        amountExclVat: 8000,
+        amountInclVat: 10000,
+        vatPercent: "25",
+        expenseAccount: "7300",
+      };
+
+      await executeSupplierInvoice(ctx, data);
+
+      // Verify: supplier created
+      const supRes = await ctx.get("/supplier", { fields: "id,name" });
+      const suppliers = extractValues(supRes);
+      expect(suppliers.some((s) => s.name === "Kontor AS")).toBe(true);
+
+      // Verify: supplier invoice created (POST call)
+      const postCalls = ctx.apiCalls.filter((c) => c.method === "POST" && c.path.includes("/supplierInvoice"));
+      expect(postCalls.length).toBe(1);
+      expect(postCalls[0].ok).toBe(true);
+
+      // Verify: voucher was booked (sendToLedger PUT)
+      const bookCalls = ctx.apiCalls.filter((c) => c.path.includes("/:sendToLedger"));
+      expect(bookCalls.length).toBe(1);
+
+      const errors = ctx.apiCalls.filter((c) => !c.ok);
+      expect(errors.length).toBe(0);
+    });
+  });
+
+  // ─── Timesheet ────────────────────────────────────────────────────
+
+  describe("executeTimesheet", () => {
+    it("creates timesheet entries with project", async () => {
+      const ctx = makeCtx();
+      const data: TimesheetData = {
+        employee: { firstName: "Marte", lastName: "Strand" },
+        project: { name: "Utviklingsprosjekt" },
+        customer: { name: "Dev Kunde AS" },
+        entries: [
+          { activityName: "Utvikling", date: "2026-03-20", hours: 7.5, comment: "Frontend" },
+          { activityName: "Utvikling", date: "2026-03-21", hours: 8, comment: "Backend" },
+        ],
+      };
+
+      await executeTimesheet(ctx, data);
+
+      // Verify: timesheet entries created
+      const tsRes = await ctx.get("/timesheet/entry", { fields: "id,hours" });
+      const entries = extractValues(tsRes);
+      expect(entries.length).toBeGreaterThanOrEqual(2);
+
+      // Verify: project created with PM dance
+      const projRes = await ctx.get("/project", { fields: "id,name" });
+      const projects = extractValues(projRes);
+      expect(projects.some((p) => p.name === "Utviklingsprosjekt")).toBe(true);
+
+      // Verify: activity created
+      const actRes = await ctx.get("/activity", { fields: "id,name" });
+      const activities = extractValues(actRes);
+      expect(activities.some((a) => a.name === "Utvikling")).toBe(true);
+
+      const errors = ctx.apiCalls.filter((c) => !c.ok && c.status !== 422);
+      expect(errors.length).toBe(0);
+    });
+
+    it("creates timesheet with invoice", async () => {
+      const ctx = makeCtx();
+      const data: TimesheetData = {
+        employee: { firstName: "Jonas", lastName: "Lie" },
+        project: { name: "Konsulentprosjekt" },
+        customer: { name: "Konsulent Kunde" },
+        entries: [
+          { activityName: "Konsultering", date: "2026-03-20", hours: 8 },
+        ],
+        invoice: {
+          create: true,
+          products: [{ name: "Konsulenttime", price: 1500, quantity: 8, vatPercent: "25" }],
+        },
+      };
+
+      await executeTimesheet(ctx, data);
+
+      // Verify: invoice created
+      const invRes = await ctx.get("/invoice", { invoiceDateFrom: "2020-01-01", invoiceDateTo: "2030-01-01", fields: "id" });
+      expect(extractValues(invRes).length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  // ─── Credit Note ──────────────────────────────────────────────────
+
+  describe("executeCreditNote", () => {
+    it("creates new invoice and credits it", async () => {
+      const ctx = makeCtx();
+      const data: CreditNoteData = {
+        customer: { name: "Kredit Kunde" },
+        products: [{ name: "Feilkjøp", price: 500, vatPercent: "25", quantity: 1 }],
+        isExistingInvoice: false,
+        createNewInvoice: true,
+      };
+
+      await executeCreditNote(ctx, data);
+
+      // Verify: send was called before credit note
+      const sendCalls = ctx.apiCalls.filter((c) => c.path.includes("/:send"));
+      expect(sendCalls.length).toBe(1);
+      expect(sendCalls[0].ok).toBe(true);
+
+      // Verify: credit note was created
+      const creditCalls = ctx.apiCalls.filter((c) => c.path.includes("/:createCreditNote"));
+      expect(creditCalls.length).toBe(1);
+      expect(creditCalls[0].ok).toBe(true);
+
+      // Verify: send happened BEFORE credit note (order matters)
+      const sendIdx = ctx.apiCalls.findIndex((c) => c.path.includes("/:send"));
+      const creditIdx = ctx.apiCalls.findIndex((c) => c.path.includes("/:createCreditNote"));
+      expect(sendIdx).toBeLessThan(creditIdx);
+
+      const errors = ctx.apiCalls.filter((c) => !c.ok);
+      expect(errors.length).toBe(0);
+    });
+  });
+
+  // ─── API call logging ─────────────────────────────────────────────
+
+  describe("OrchestratorContext logging", () => {
+    it("tracks all API calls with correct structure", async () => {
+      const ctx = makeCtx();
+      const data: InvoiceData = {
+        customer: { name: "Log Test" },
+        products: [{ name: "Log Produkt", price: 100, vatPercent: "25", quantity: 1 }],
+        sendInvoice: false,
+        registerPayment: false,
+        isExistingInvoice: false,
+      };
+
+      await executeInvoice(ctx, data);
+
+      // Every API call should be logged
+      expect(ctx.apiCalls.length).toBeGreaterThan(0);
+
+      // Each entry should have the required fields
+      for (const call of ctx.apiCalls) {
+        expect(call).toHaveProperty("method");
+        expect(call).toHaveProperty("path");
+        expect(call).toHaveProperty("ok");
+        expect(["GET", "POST", "PUT", "DELETE"]).toContain(call.method);
+        expect(call.path.startsWith("/")).toBe(true);
+      }
+    });
+
+    it("reports zero errors on happy path", async () => {
+      const ctx = makeCtx();
+      const data: InvoiceData = {
+        customer: { name: "Zero Error" },
+        products: [{ name: "Clean", price: 100, vatPercent: "25", quantity: 1 }],
+        sendInvoice: false,
+        registerPayment: false,
+        isExistingInvoice: false,
+      };
+
+      await executeInvoice(ctx, data);
+
+      const errors = ctx.apiCalls.filter((c) => !c.ok);
+      expect(errors.length).toBe(0);
+    });
+  });
+
+  // ─── Efficiency ───────────────────────────────────────────────────
+
+  describe("Efficiency (API call counts)", () => {
+    it("invoice uses ≤8 API calls", async () => {
+      const ctx = makeCtx();
+      await executeInvoice(ctx, {
+        customer: { name: "Eff Kunde" },
+        products: [{ name: "Eff Prod", price: 100, vatPercent: "25", quantity: 1 }],
+        sendInvoice: false,
+        registerPayment: false,
+        isExistingInvoice: false,
+      });
+      // bank account GET + PUT (if needed) + customer POST + product POST + order POST + invoice POST
+      expect(ctx.apiCalls.length).toBeLessThanOrEqual(8);
+    });
+
+    it("salary uses ≤12 API calls", async () => {
+      const ctx = makeCtx();
+      await executeSalary(ctx, {
+        employee: { firstName: "Eff", lastName: "Sal" },
+        components: [{ type: "fastlonn", amount: 30000, count: 1 }],
+      });
+      // dept POST + emp POST + div GET + [mun GET + div POST] + employment POST + salary types GET + spec POST
+      expect(ctx.apiCalls.length).toBeLessThanOrEqual(12);
+    });
+  });
+});

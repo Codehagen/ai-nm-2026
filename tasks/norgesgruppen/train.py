@@ -72,6 +72,8 @@ def train():
                         help="Disable mosaic for last N epochs")
     parser.add_argument("--freeze", type=int, default=None,
                         help="Freeze first N layers")
+    parser.add_argument("--cls-weight", type=float, default=0.5,
+                        help="Classification loss weight (default: 0.5)")
     args = parser.parse_args()
 
     # Auto-detect data.yaml
@@ -93,6 +95,7 @@ def train():
     print(f"  Seed: {args.seed}")
     print(f"  LR: {args.lr0} → {args.lrf}, cos={args.cos_lr}, warmup={args.warmup_epochs}")
     print(f"  Optimizer: {args.optimizer}, freeze={args.freeze}")
+    print(f"  Loss weights: box=7.5, cls={args.cls_weight}, dfl=1.5")
 
     model = YOLO(args.model)
 
@@ -127,7 +130,7 @@ def train():
         hsv_v=0.3,
         # Detection-specific
         box=7.5,
-        cls=0.5,
+        cls=args.cls_weight,
         dfl=1.5,
         # Save
         save=True,

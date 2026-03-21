@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-21T08:06:05.359Z",
+  "prompt": "Hemos recibido la factura INV-2026-9045 del proveedor Luna SL (org. nº 985211493) por 28100 NOK con IVA incluido. El importe corresponde a servicios de oficina (cuenta 7100). Registre la factura del proveedor con el IVA soportado correcto (25 %).",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

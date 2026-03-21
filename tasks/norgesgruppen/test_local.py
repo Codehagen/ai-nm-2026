@@ -194,6 +194,8 @@ def main():
     parser.add_argument("--data", default=None,
                         help="YOLO data dir with test/ split (e.g. data/yolo-3way). "
                              "Uses held-out test images for honest scoring.")
+    parser.add_argument("--run-py", default=None,
+                        help="Path to run.py variant (default: run.py)")
     args = parser.parse_args()
 
     output_json = Path("/tmp/_sandbox_sim_output/predictions.json")
@@ -231,7 +233,7 @@ def main():
         pred_path, elapsed = test_from_zip(args.zip, input_dir, output_json)
     else:
         model_pt = Path(args.model) if args.model else MODELS_DIR / "best.pt"
-        run_py = TASK_DIR / "run.py"
+        run_py = Path(args.run_py) if args.run_py else TASK_DIR / "run.py"
         print(f"Model: {model_pt} ({model_pt.stat().st_size/1e6:.1f}MB)")
         pred_path, elapsed = run_inference(run_py, model_pt, input_dir, output_json)
 

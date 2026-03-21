@@ -182,6 +182,29 @@ export function seedStore(store: EntityStore): void {
     rate: 400.0,
   });
 
+  // Additional ledger accounts for supplier invoices
+  store.seed("account", 30000004, {
+    number: 7300,
+    name: "Kontorkostnader",
+    bankAccountNumber: "",
+    vatType: null,
+    description: "",
+  });
+
+  store.seed("account", 30000005, {
+    number: 2400,
+    name: "Leverandørgjeld",
+    bankAccountNumber: "",
+    vatType: null,
+    description: "",
+  });
+
+  // Municipality (required for division creation)
+  store.seed("municipality", 30000001, {
+    name: "Oslo",
+    number: "0301",
+  });
+
   // Payment types (matches real sandbox: "Kontant" and "Betalt til bank")
   store.seed("paymentType", 30000001, {
     description: "Kontant",
