@@ -98,7 +98,7 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
     : `${data.description} - ${data.supplier.name}`;
 
   const res = await ctx.post("/supplierInvoice", {
-    invoiceNumber: (data.invoiceNumber && !["N/A","n/a","KVITTERING","kvittering","RECEIPT","receipt","QUITTUNG","REÇU","RECIBO"].includes(data.invoiceNumber)) ? data.invoiceNumber : undefined,
+    invoiceNumber: data.invoiceNumber || undefined,
     invoiceDate: data.invoiceDate,
     invoiceDueDate: data.dueDate,
     supplier: { id: supplierId },

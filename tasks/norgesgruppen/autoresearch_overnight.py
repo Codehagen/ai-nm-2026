@@ -65,7 +65,7 @@ SEED = int(hashlib.md5(VM_ID.encode()).hexdigest()[:8], 16) % (2**31)
 TSV_HEADER = (
     "timestamp\tvm_id\tval_metric\tseed\tcls\tbox\tdfl\tmosaic\tmixup\t"
     "copy_paste\tdegrees\tscale\tepochs\tclose_mosaic\twarmup_epochs\t"
-    "freeze\tlabel_smoothing\tduration_min\tstatus\tnotes\n"
+    "freeze\tlabel_smoothing\tlr0\tlrf\tcos_lr\tduration_min\tstatus\tnotes\n"
 )
 
 # ─── Search space: NARROWED based on 506 experiments ─────────────────
@@ -119,6 +119,7 @@ def make_result_row(config, val_metric, duration_min, status, notes=""):
         f"{config['degrees']}\t{config['scale']}\t{config['epochs']}\t"
         f"{config['close_mosaic']}\t{config['warmup_epochs']}\t"
         f"{freeze_str}\t{config['label_smoothing']}\t"
+        f"{config['lr0']}\t{config['lrf']}\t{config['cos_lr']}\t"
         f"{duration_min:.1f}\t{status}\t{notes}\n"
     )
 
@@ -138,7 +139,9 @@ def get_best_metric():
     best = 0.0
     for line in RESULTS_TSV.read_text().strip().split("\n")[1:]:
         parts = line.split("\t")
-        if len(parts) >= 19 and parts[18] in ("kept", "new_best"):
+        # Status column: index 21 (new format) or 18 (old format)
+        status_idx = 21 if len(parts) >= 22 else 18
+        if len(parts) > status_idx and "kept" in parts[status_idx]:
             try:
                 best = max(best, float(parts[2]))
             except ValueError:
@@ -187,20 +190,25 @@ def get_fleet_results_summary():
     summary += f"Median metric: {parsed[len(parsed)//2][0]:.4f}\n\n"
     summary += f"HEADER: {header}\n\n"
 
-    # Top 10 + bottom 5 (keep it compact for Gemini token budget)
+    # Top 10 + bottom 5 (compact for Gemini token budget)
     summary += "TOP 10 (best configs):\n"
     for metric, line in parsed[:10]:
-        # Only include key columns: val_metric, cls, box, dfl, mosaic, mixup, epochs, lr0, close_mosaic, freeze, label_smoothing
         parts = line.split("\t")
-        if len(parts) >= 17:
-            summary += f"  metric={parts[2]} cls={parts[4]} box={parts[5]} dfl={parts[6]} mosaic={parts[7]} mixup={parts[8]} ep={parts[12]} lr0=? cm={parts[13]} freeze={parts[15]} ls={parts[16]}\n"
+        if len(parts) >= 22:
+            # New format with lr0/lrf/cos_lr
+            summary += f"  metric={parts[2]} cls={parts[4]} box={parts[5]} dfl={parts[6]} mos={parts[7]} mix={parts[8]} ep={parts[12]} cm={parts[13]} frz={parts[15]} ls={parts[16]} lr0={parts[17]} lrf={parts[18]} cos={parts[19]}\n"
+        elif len(parts) >= 17:
+            # Old format without lr0/lrf/cos_lr
+            summary += f"  metric={parts[2]} cls={parts[4]} box={parts[5]} dfl={parts[6]} mos={parts[7]} mix={parts[8]} ep={parts[12]} cm={parts[13]} frz={parts[15]} ls={parts[16]}\n"
 
     if len(parsed) > 10:
         summary += "\nBOTTOM 5 (avoid):\n"
         for metric, line in parsed[-5:]:
             parts = line.split("\t")
-            if len(parts) >= 17:
-                summary += f"  metric={parts[2]} cls={parts[4]} box={parts[5]} dfl={parts[6]} mosaic={parts[7]} mixup={parts[8]} ep={parts[12]} cm={parts[13]} freeze={parts[15]} ls={parts[16]}\n"
+            if len(parts) >= 22:
+                summary += f"  metric={parts[2]} cls={parts[4]} box={parts[5]} dfl={parts[6]} mos={parts[7]} mix={parts[8]} ep={parts[12]} cm={parts[13]} frz={parts[15]} ls={parts[16]} lr0={parts[17]} lrf={parts[18]} cos={parts[19]}\n"
+            elif len(parts) >= 17:
+                summary += f"  metric={parts[2]} cls={parts[4]} box={parts[5]} dfl={parts[6]} mos={parts[7]} mix={parts[8]} ep={parts[12]} cm={parts[13]} frz={parts[15]} ls={parts[16]}\n"
 
     return summary
 
@@ -295,7 +303,7 @@ Exploit what works in top results. Avoid patterns from bottom results."""
             if key == "freeze":
                 config[key] = None if val is None or str(val).lower() in ("null", "none") else int(val)
             elif key == "cos_lr":
-                config[key] = bool(val)
+                config[key] = val if isinstance(val, bool) else str(val).lower() not in ("false", "0", "no")
             elif key in ("epochs", "close_mosaic"):
                 config[key] = int(val)
             else:
@@ -602,26 +610,29 @@ def _merge_local_results():
 def _worker_pull_fleet():
     """Worker: pull merged fleet file from hub."""
     try:
-        subprocess.run(
+        result = subprocess.run(
             ["scp", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5",
              f"root@{HUB_IP}:/root/task/overnight_results_fleet.tsv",
              str(SHARED_RESULTS)],
             capture_output=True, timeout=15
         )
-    except Exception:
-        # Can't reach hub — fall back to local-only results
-        pass
+        if result.returncode != 0:
+            log(f"Sync pull failed (rc={result.returncode}), using local results only")
+    except Exception as e:
+        log(f"Sync pull error: {e}, using local results only")
 
 
 def _push_results_to_hub():
     """Worker: push this VM's results to the hub after each experiment."""
     try:
-        subprocess.run(
+        result = subprocess.run(
             ["scp", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5",
              str(RESULTS_TSV),
              f"root@{HUB_IP}:/root/task/overnight_results_{VM_ID}.tsv"],
             capture_output=True, timeout=15
         )
+        if result.returncode != 0:
+            log(f"Sync push failed (rc={result.returncode})")
     except Exception:
         pass
 

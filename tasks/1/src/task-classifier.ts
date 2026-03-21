@@ -63,7 +63,7 @@ export function classifyTask(prompt: string): TaskType {
       "analice el libro mayor", "analyze the ledger", "analyser hovedboken",
       "analysieren sie das hauptbuch", "analysez le grand livre",
       "costos totales", "total costs increased",
-      "kostnadene økte", "kosten gestiegen",
+      "kostnadene økte", "kostnadene okte", "kosten gestiegen",
       "kostnadskonto", "hovudboka", "totalkostnadene auka",
       "analyser hovudboka", "analyser hovedboka",
       "analise o livro razão", "analyse the general ledger",
@@ -74,9 +74,9 @@ export function classifyTask(prompt: string): TaskType {
       "cargo por demora", "tasa de recordatorio",
       "taxa de lembrete", "taxa de mora",
       // Year-end closing / depreciation
-      "clôture annuelle", "year-end closing", "årsavslutning", "årsoppgjør",
+      "clôture annuelle", "year-end closing", "årsavslutning", "arsavslutning", "årsoppgjør", "arsoppgjor",
       "amortissement", "depreciation", "avskrivning", "abschreibung",
-      "monatsabschluss", "monthly closing", "månedsavslutning",
+      "monatsabschluss", "monthly closing", "månedsavslutning", "manedsavslutning",
       "encerramento mensal", "encerramento anual", "cierre mensual", "cierre anual",
       "rechnungsabgrenzung", "prepaid expense", "periodisering", "acréscimos", "acrescimos",
       // Error correction
@@ -96,13 +96,10 @@ export function classifyTask(prompt: string): TaskType {
   if (
     has(
       t,
-      "lønnskjøring",
-      "lønn",
-      "lonn",
-      "fastlønn",
-      "fastlonn",
-      "arslonn",
-      "årslønn",
+      "lønnskjøring", "lonnskjoring",
+      "lønn", "lonn",
+      "fastlønn", "fastlonn",
+      "arslonn", "årslønn", "arslonn",
       "salary",
       "payroll",
       "gehaltsabrechnung",
@@ -139,13 +136,14 @@ export function classifyTask(prompt: string): TaskType {
     has(
       t,
       "leverandørfaktura",
+      "leverandorfaktura",
       "supplier invoice",
       "factura del proveedor",
       "fatura do fornecedor",
       "lieferantenrechnung",
       "facture du fournisseur",
     ) ||
-    (has(t, "leverandør", "supplier", "proveedor", "fornecedor", "fournisseur", "lieferant") &&
+    (has(t, "leverandør", "leverandor", "supplier", "proveedor", "fornecedor", "fournisseur", "lieferant") &&
       has(t, "faktura", "invoice", "factura", "fatura", "rechnung", "facture"))
   ) {
     return "supplier-invoice";
@@ -161,7 +159,7 @@ export function classifyTask(prompt: string): TaskType {
 
   // --- Supplier registration (no invoice)
   if (
-    has(t, "leverandør", "supplier", "proveedor", "fornecedor", "fournisseur", "lieferant") &&
+    has(t, "leverandør", "leverandor", "supplier", "proveedor", "fornecedor", "fournisseur", "lieferant") &&
     !has(t, "faktura", "invoice", "factura", "fatura", "rechnung", "facture")
   ) {
     return "supplier";
