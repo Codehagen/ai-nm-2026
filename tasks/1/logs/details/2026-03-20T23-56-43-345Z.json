@@ -1,0 +1,103 @@
+{
+  "timestamp": "2026-03-20T23:56:43.345Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice",
+  "prompt": "Create and send an invoice to the customer Ridgepoint Ltd (org no. 985190631) for 32650 NOK excluding VAT. The invoice is for Analysis Report.",
+  "filesCount": 0,
+  "steps": 5,
+  "toolCalls": 7,
+  "apiCalls": 7,
+  "apiErrors": 0,
+  "elapsedMs": 26942,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1920",
+        "fields": "id,version,bankAccountNumber,name"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Ridgepoint Ltd",
+        "isCustomer": true,
+        "organizationNumber": "985190631"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "name": "Analysis Report",
+        "priceExcludingVatCurrency": 32650,
+        "vatType": {
+          "id": 3
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/461425952",
+      "ok": true,
+      "body": {
+        "id": 461425952,
+        "name": "Bankinnskudd",
+        "bankAccountNumber": "86011117947",
+        "version": 0
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "orderDate": "2026-03-21",
+        "customer": {
+          "id": 108300170
+        },
+        "deliveryDate": "2026-03-21",
+        "orderLines": [
+          {
+            "unitPriceExcludingVatCurrency": 32650,
+            "product": {
+              "id": 84399266
+            },
+            "vatType": {
+              "id": 3
+            },
+            "count": 1
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "orders": [
+          {
+            "id": 401979200
+          }
+        ],
+        "invoiceDate": "2026-03-21",
+        "invoiceDueDate": "2026-04-04"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147556760/:send",
+      "ok": true,
+      "params": {
+        "sendType": "EMAIL"
+      }
+    }
+  ]
+}

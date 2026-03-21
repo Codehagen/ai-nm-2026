@@ -1,0 +1,104 @@
+{
+  "timestamp": "2026-03-21T00:11:01.678Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "supplier-invoice",
+  "prompt": "We have received invoice INV-2026-6381 from the supplier Ridgepoint Ltd (org no. 946578193) for 69950 NOK including VAT. The amount relates to office services (account 6540). Register the supplier invoice with the correct input VAT (25%).",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 5,
+  "apiCalls": 5,
+  "apiErrors": 1,
+  "elapsedMs": 60829,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/supplier",
+      "ok": true,
+      "body": {
+        "name": "Ridgepoint Ltd",
+        "isSupplier": true,
+        "organizationNumber": "946578193"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "number": "6540"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "2400",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-03-21",
+        "invoiceNumber": "INV-2026-6381",
+        "supplier": {
+          "id": 108303124
+        },
+        "invoiceDate": "2026-03-21",
+        "voucher": {
+          "postings": [
+            {
+              "date": "2026-03-21",
+              "amountGrossCurrency": 69950,
+              "amountGross": 69950,
+              "account": {
+                "id": 364691682
+              },
+              "vatType": {
+                "id": 1
+              },
+              "row": 1,
+              "description": "Office services"
+            },
+            {
+              "date": "2026-03-21",
+              "row": 2,
+              "account": {
+                "id": 364691471
+              },
+              "amountGross": -69950,
+              "amountGrossCurrency": -69950,
+              "supplier": {
+                "id": 108303124
+              },
+              "description": "Supplier credit"
+            }
+          ],
+          "description": "Faktura INV-2026-6381 fra Ridgepoint Ltd",
+          "date": "2026-03-21"
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/voucher/608879787/:sendToLedger",
+      "ok": false,
+      "status": 422,
+      "body": {},
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "Internt felt (selected)",
+          "message": "Bokførte bilag kan ikke sendes til hovedbok.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-21T00:00:40.652Z",
+  "prompt": "Run payroll for Emily Lewis (emily.lewis@example.org) for this month. The base salary is 53400 NOK. Add a one-time bonus of 16900 NOK on top of the base salary.",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

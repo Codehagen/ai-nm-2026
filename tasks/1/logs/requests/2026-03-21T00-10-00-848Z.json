@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-21T00:10:00.848Z",
+  "prompt": "We have received invoice INV-2026-6381 from the supplier Ridgepoint Ltd (org no. 946578193) for 69950 NOK including VAT. The amount relates to office services (account 6540). Register the supplier invoice with the correct input VAT (25%).",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

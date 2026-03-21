@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-21T00:03:52.531Z",
+  "prompt": "Opprett og send ein faktura til kunden Fjelltopp AS (org.nr 978484042) på 14250 kr eksklusiv MVA. Fakturaen gjeld Programvarelisens.",
+  "files": [],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": []
+}

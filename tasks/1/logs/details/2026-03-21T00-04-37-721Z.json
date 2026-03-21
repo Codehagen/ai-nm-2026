@@ -1,0 +1,103 @@
+{
+  "timestamp": "2026-03-21T00:04:37.721Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice",
+  "prompt": "Opprett og send ein faktura til kunden Fjelltopp AS (org.nr 978484042) på 14250 kr eksklusiv MVA. Fakturaen gjeld Programvarelisens.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 7,
+  "apiCalls": 7,
+  "apiErrors": 0,
+  "elapsedMs": 45189,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/364641686",
+      "ok": true,
+      "body": {
+        "name": "Bankinnskudd",
+        "version": 0,
+        "id": 364641686,
+        "bankAccountNumber": "86011117947"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Fjelltopp AS",
+        "organizationNumber": "978484042",
+        "isCustomer": true
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "vatType": {
+          "id": 3
+        },
+        "name": "Programvarelisens",
+        "priceExcludingVatCurrency": 14250
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "orderDate": "2026-03-21",
+        "customer": {
+          "id": 108302121
+        },
+        "orderLines": [
+          {
+            "unitPriceExcludingVatCurrency": 14250,
+            "product": {
+              "id": 84399490
+            },
+            "vatType": {
+              "id": 3
+            },
+            "count": 1
+          }
+        ],
+        "deliveryDate": "2026-03-21"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-04-04",
+        "orders": [
+          {
+            "id": 401979544
+          }
+        ],
+        "invoiceDate": "2026-03-21"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147557205/:send",
+      "ok": true,
+      "params": {
+        "sendType": "EMAIL"
+      }
+    }
+  ]
+}

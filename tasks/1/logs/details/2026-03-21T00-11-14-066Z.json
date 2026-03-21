@@ -1,0 +1,75 @@
+{
+  "timestamp": "2026-03-21T00:11:14.066Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice-payment",
+  "prompt": "Betalinga frå Vestfjord AS (org.nr 990290474) for fakturaen \"Programvarelisens\" (23850 kr ekskl. MVA) vart returnert av banken. Reverser betalinga slik at fakturaen igjen viser uteståande beløp.",
+  "filesCount": 0,
+  "steps": 6,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 0,
+  "elapsedMs": 71753,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "organizationNumber": "990290474",
+        "name": "Vestfjord AS",
+        "isCustomer": true
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "vatType": {
+          "id": 3
+        },
+        "name": "Programvarelisens",
+        "priceExcludingVatCurrency": 23850
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice",
+      "ok": true,
+      "params": {
+        "fields": "id,invoiceNumber,amount,amountOutstanding,isClosed,customer",
+        "invoiceDateTo": "2030-01-01",
+        "invoiceDateFrom": "2020-01-01"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147557298/:payment",
+      "ok": true,
+      "params": {
+        "paymentTypeId": "27302228",
+        "paidAmount": "-29812.5",
+        "paymentDate": "2026-03-21"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/2147557298",
+      "ok": true,
+      "params": {
+        "fields": "id,amountOutstanding",
+        "invoiceDateFrom": "2020-01-01",
+        "invoiceDateTo": "2030-01-01"
+      }
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "timestamp": "2026-03-21T00:04:31.016Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "invoice",
+  "prompt": "Opprett en faktura til kunden Bergvik AS (org.nr 807508474) med tre produktlinjer: Konsulenttimer (5947) til 29950 kr med 25 % MVA, Webdesign (8528) til 2900 kr med 15 % MVA (næringsmiddel), og Systemutvikling (9002) til 17350 kr med 0 % MVA (avgiftsfri).",
+  "filesCount": 0,
+  "steps": 4,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 0,
+  "elapsedMs": 37371,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Bergvik AS",
+        "isCustomer": true,
+        "organizationNumber": "807508474"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "5947"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "8528"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,priceExcludingVatCurrency,vatType,version",
+        "number": "9002"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/product/84399478",
+      "ok": true,
+      "body": {
+        "version": 0,
+        "name": "Systemutvikling",
+        "id": 84399478,
+        "vatType": {
+          "id": 5
+        },
+        "priceExcludingVatCurrency": 17350
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "orderLines": [
+          {
+            "unitPriceExcludingVatCurrency": 29950,
+            "product": {
+              "id": 84399473
+            },
+            "count": 1,
+            "vatType": {
+              "id": 3
+            }
+          },
+          {
+            "unitPriceExcludingVatCurrency": 2900,
+            "vatType": {
+              "id": 31
+            },
+            "count": 1,
+            "product": {
+              "id": 84399475
+            }
+          },
+          {
+            "product": {
+              "id": 84399478
+            },
+            "count": 1,
+            "vatType": {
+              "id": 5
+            },
+            "unitPriceExcludingVatCurrency": 17350
+          }
+        ],
+        "deliveryDate": "2026-03-21",
+        "customer": {
+          "id": 108302115
+        },
+        "orderDate": "2026-03-21"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDueDate": "2026-04-04",
+        "invoiceDate": "2026-03-21",
+        "orders": [
+          {
+            "id": 401979542
+          }
+        ]
+      }
+    }
+  ]
+}

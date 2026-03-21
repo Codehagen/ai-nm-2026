@@ -1,0 +1,237 @@
+{
+  "timestamp": "2026-03-21T00:04:48.254Z",
+  "model": "gemini-3.1-pro-preview",
+  "taskType": "timesheet",
+  "prompt": "Registre 26 horas para Lucía Martínez (lucia.martinez@example.org) en la actividad \"Utvikling\" del proyecto \"Desarrollo e-commerce\" para Montaña SL (org. nº 869049328). Tarifa por hora: 1100 NOK/h. Genere una factura de proyecto al cliente basada en las horas registradas.",
+  "filesCount": 0,
+  "steps": 8,
+  "toolCalls": 16,
+  "apiCalls": 16,
+  "apiErrors": 2,
+  "elapsedMs": 51897,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "count": "1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": true,
+      "body": {
+        "departmentNumber": "1",
+        "name": "Avdeling"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "organizationNumber": "869049328",
+        "isCustomer": true,
+        "name": "Montaña SL"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/activity",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "name": "Utvikling"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "fields": "id,version,bankAccountNumber,name",
+        "number": "1920"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": true,
+      "body": {
+        "name": "Utvikling",
+        "vatType": {
+          "id": 3
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true,
+      "body": {
+        "dateOfBirth": "1990-01-15",
+        "firstName": "Lucía",
+        "userType": "STANDARD",
+        "department": {
+          "id": 923784
+        },
+        "email": "lucia.martinez@example.org",
+        "lastName": "Martínez"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true,
+      "body": {
+        "isInternal": false,
+        "customer": {
+          "id": 108302124
+        },
+        "startDate": "2026-03-21",
+        "projectManager": {
+          "id": 18603095
+        },
+        "name": "Desarrollo e-commerce"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/account/461822702",
+      "ok": true,
+      "body": {
+        "id": 461822702,
+        "name": "Bankinnskudd",
+        "bankAccountNumber": "86011117947",
+        "version": 0
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/project/401979541",
+      "ok": true,
+      "body": {
+        "version": 0,
+        "projectManager": {
+          "id": 18603102
+        },
+        "id": 401979541
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/timesheet/entry",
+      "ok": true,
+      "body": {
+        "employee": {
+          "id": 18603102
+        },
+        "comment": "",
+        "hours": 26,
+        "project": {
+          "id": 401979541
+        },
+        "date": "2026-03-21",
+        "activity": {
+          "id": 5874414
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "deliveryDate": "2026-03-21",
+        "orderLines": [
+          {
+            "product": {
+              "id": 84399492
+            },
+            "unitPriceExcludingVatCurrency": 1100,
+            "count": 26
+          }
+        ],
+        "customer": {
+          "id": 108302124
+        },
+        "project": {
+          "id": 401979541
+        }
+      },
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "orderDate",
+          "message": "Kan ikke være null.",
+          "path": "null.orderDate",
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "customer": {
+          "id": 108302124
+        },
+        "project": {
+          "id": 401979541
+        },
+        "deliveryDate": "2026-03-21",
+        "orderDate": "2026-03-21",
+        "orderLines": [
+          {
+            "product": {
+              "id": 84399492
+            },
+            "count": 26,
+            "unitPriceExcludingVatCurrency": 1100
+          }
+        ]
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/order/401979563/:invoice",
+      "ok": false,
+      "status": 422,
+      "body": {
+        "invoiceDate": "2026-03-21"
+      },
+      "errorMessage": "Validation failed",
+      "validationMessages": [
+        {
+          "field": "invoiceDate",
+          "message": "Kan ikke være null.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/order/401979563/:invoice",
+      "ok": true,
+      "params": {
+        "invoiceDate": "2026-03-21"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "count": "1",
+        "fields": "id"
+      }
+    }
+  ]
+}

@@ -363,7 +363,7 @@ const RECIPE_UPDATE = `## Updating Entities (PUT)
 const RECIPE_TIMESHEET = `## Timesheet / Time Registration (TESTED RECIPE)
 \`\`\`
 1. POST /department + POST /employee (or GET existing)
-2. POST /customer + POST /project (use admin as projectManager)
+2. POST /customer + POST /project (use admin as projectManager, then PUT to update PM to the named employee — see Project recipe)
 3. GET /activity?name=<name>&fields=id  → if not found: POST /activity
 4. POST /timesheet/entry:
    {"employee": {"id": <emp_id>}, "project": {"id": <proj_id>}, "activity": {"id": <act_id>}, "date": "<today>", "hours": 13, "comment": ""}
@@ -375,8 +375,11 @@ const RECIPE_TIMESHEET = `## Timesheet / Time Registration (TESTED RECIPE)
 5. **BEFORE creating any invoice:** Set up bank account:
    GET /ledger/account?number=1920&fields=id,version,bankAccountNumber,name
    If \`bankAccountNumber\` is empty: PUT /ledger/account/{id} with {"id":..,"version":..,"name":..,"bankAccountNumber":"86011117947"}
-6. POST /product + POST /order (with project, include \`deliveryDate\`) + POST /invoice
-   Use hours as \`count\` and hourly rate as \`unitPriceExcludingVatCurrency\`.`;
+6. POST /product  {"name": "<product_name>", "priceExcludingVatCurrency": <hourly_rate>, "vatType": {"id": 3}}
+7. POST /order — MUST include \`orderDate\`:
+   {"customer": {"id": <cust_id>}, "deliveryDate": "<today>", "orderDate": "<today>", "orderLines": [{"product": {"id": <prod_id>}, "count": <hours>, "unitPriceExcludingVatCurrency": <hourly_rate>, "vatType": {"id": 3}}]}
+8. POST /invoice  {"invoiceDate": "<today>", "invoiceDueDate": "<14 days>", "orders": [{"id": <order_id>}]}
+   Do NOT use PUT /order/:invoice — always use POST /invoice.`;
 
 // ─── FOOTER: Golden rule, fresh account, error handling ──────────────────
 

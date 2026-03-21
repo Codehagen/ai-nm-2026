@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-03-21T00:02:20.658Z",
+  "prompt": "Run payroll for Emily Lewis (emily.lewis@example.org) for this month. The base salary is 53400 NOK. Add a one-time bonus of 16900 NOK on top of the base salary.",
+  "filesCount": 0,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 100005,
+  "status": "error",
+  "error": "The operation was aborted due to timeout"
+}

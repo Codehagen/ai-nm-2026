@@ -165,7 +165,8 @@
       "Bash(grep -rn \"check2\\\\|Check 2\" /Users/walgermo/Utvikling/ai-nm-2026 --include=*.ts --include=*.py --include=*.md)",
       "Bash(find /Users/walgermo/Utvikling/ai-nm-2026 -name *.py -o -name *.ts -o -name *.js)",
       "Bash(sudo -u walgermo git log --oneline -5 2>&1)",
-      "Bash(sudo -u walgermo git status --short 2>&1)"
+      "Bash(sudo -u walgermo git status --short 2>&1)",
+      "Bash(gtimeout 5 npx tsx src/api.ts)"
     ]
   }
 }
