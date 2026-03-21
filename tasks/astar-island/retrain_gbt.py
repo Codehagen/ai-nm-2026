@@ -33,10 +33,13 @@ ROUNDS = {
     8: "c5cdf100-a876-4fb7-b5d8-757162c97989",
     9: "2a341ace-0f57-4309-9b89-e59fe0f09179",
     10: "75e625c3-60cb-4392-af3e-c86a98bde8c2",
+    11: "324fde07-1670-4202-b199-7aa92ecb40ee",
+    12: "795bfb1f-54bd-4f39-a526-9868b36f7ebd",
+    13: "7b4bda99-6165-4221-97cc-27880f5e6d95",
 }
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
-ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9}
+ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 12: 1.05**11, 13: 1.05**12}
 
 # Per-terrain XGBoost hyperparameters — must match train.py LORO-validated config
 XGB_HPARAMS = {
@@ -69,7 +72,7 @@ def main():
 
         # Enhanced obs stats (22 features)
         all_obs = load_observations(round_id)
-        obs_stats = compute_obs_stats(all_obs) if all_obs else np.zeros(22)
+        obs_stats = compute_obs_stats(all_obs) if all_obs else np.zeros(23)
         rw = ROUND_WEIGHTS.get(rnum, 1.0)
 
         # Per-cell obs features (23 features per cell)

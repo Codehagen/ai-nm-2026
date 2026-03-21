@@ -63,13 +63,13 @@ L7_ADJ_MAX = 1.25
 XGB_HPARAMS = {
     "plains": dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.55, min_child_weight=3),
+                   colsample_bytree=0.50, min_child_weight=3),
     "forest": dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.55, min_child_weight=3),
+                   colsample_bytree=0.50, min_child_weight=3),
     "settl":  dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.55, min_child_weight=3),
+                   colsample_bytree=0.50, min_child_weight=3),
 }
 
 # ──────────────────────────────────────────────────────────────
@@ -142,21 +142,22 @@ def enhanced_obs_stats(observations):
 
 
 def compute_cell_obs_features(observations, h, w):
-    """Compute per-cell observation features (21 features per cell):
+    """Compute per-cell observation features (23 features per cell):
     [obs_settl_rate, obs_empty_rate, obs_ruin_rate, obs_freq,
      neighbor_settl_rate_r2, neighbor_settl_count_r2, max_neighbor_settl_rate_r1,
      nearest_obs_settl_pop, nearest_obs_settl_food, nearest_obs_settl_dist,
      sum_settl_r2, sum_ruin_r2, dynamic_rate,
      log_settl_count, log_total_count, log_ruin_count, log_dynamic_count,
      sum_log_settl_r2, sum_log_ruin_r2,
-     nearest_obs_settl_wealth, nearest_obs_settl_defense]
+     nearest_obs_settl_wealth, nearest_obs_settl_defense,
+     faction_diversity_r3, contested_area]
     """
     cell_counts = np.zeros((h, w), dtype=np.int32)
     cell_settl = np.zeros((h, w), dtype=np.int32)
     cell_empty = np.zeros((h, w), dtype=np.int32)
     cell_ruin = np.zeros((h, w), dtype=np.int32)
-    # Collect per-settlement observations: (y, x, population, food, wealth, defense) for alive settlements
-    obs_settl_list = []  # list of (y, x, pop, food, wealth, defense)
+    # Collect per-settlement observations: (y, x, population, food, wealth, defense, owner_id) for alive settlements
+    obs_settl_list = []  # list of (y, x, pop, food, wealth, defense, owner_id)
     for obs in (observations or []):
         vp = obs.get("viewport", {})
         vy, vx = vp.get("y", 0), vp.get("x", 0)
@@ -179,11 +180,12 @@ def compute_cell_obs_features(observations, h, w):
             if s.get("alive", True):
                 sx, sy = s.get("x", 0), s.get("y", 0)
                 obs_settl_list.append((sy, sx, s.get("population", 0), s.get("food", 0),
-                                       s.get("wealth", 0), s.get("defense", 0)))
+                                       s.get("wealth", 0), s.get("defense", 0),
+                                       s.get("owner_id", -1)))
     total_obs = max(len(observations or []), 1)
     settl_rate = np.zeros((h, w), dtype=np.float32)
     ruin_rate = np.zeros((h, w), dtype=np.float32)
-    result = np.zeros((h, w, 21), dtype=np.float32)
+    result = np.zeros((h, w, 23), dtype=np.float32)
     for y in range(h):
         for x in range(w):
             n = cell_counts[y, x]
@@ -290,6 +292,20 @@ def compute_cell_obs_features(observations, h, w):
                         sum_log_ruin_r2 += log_ruin[ny, nx]
             result[y, x, 17] = sum_log_settl_r2
             result[y, x, 18] = sum_log_ruin_r2
+    # Compute faction diversity per cell (radius 3): count unique owner_ids among nearby settlements
+    if obs_settl_list:
+        settl_ys_arr = np.array([s[0] for s in obs_settl_list], dtype=np.float32)
+        settl_xs_arr = np.array([s[1] for s in obs_settl_list], dtype=np.float32)
+        settl_owners = np.array([s[6] for s in obs_settl_list], dtype=np.int32)
+        max_factions = max(len(set(settl_owners)), 1)
+        for y in range(h):
+            for x in range(w):
+                dists_r3 = np.abs(settl_ys_arr - y) + np.abs(settl_xs_arr - x)
+                nearby_mask = dists_r3 <= 3
+                if np.any(nearby_mask):
+                    unique_owners = len(set(settl_owners[nearby_mask].tolist()))
+                    result[y, x, 21] = unique_owners / max_factions  # normalized faction diversity
+                    result[y, x, 22] = float(unique_owners >= 2)  # contested area indicator
     return result
 
 
@@ -379,13 +395,15 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=No
     features, coords = _extract_cell_features(initial_grid, settlements)
     if len(features) == 0:
         return None
-    # Append obs stats to match training (46 features)
-    if obs_stats is not None:
-        features = np.hstack([features, np.tile(obs_stats, (len(features), 1))])
-    # Append per-cell obs features (50 features total)
-    if cell_obs is not None:
-        cell_feats = np.array([cell_obs[y, x] for y, x in coords])
-        features = np.hstack([features, cell_feats])
+    # Append obs stats (always 39 features)
+    if obs_stats is None:
+        obs_stats = np.zeros(39)
+    features = np.hstack([features, np.tile(obs_stats, (len(features), 1))])
+    # Append per-cell obs features (always 23 features)
+    if cell_obs is None:
+        cell_obs = np.zeros((h, w, 23))
+    cell_feats = np.array([cell_obs[y, x] for y, x in coords])
+    features = np.hstack([features, cell_feats])
     tensor = np.zeros((h, w, NUM_CLASSES))
     for y in range(h):
         for x in range(w):
