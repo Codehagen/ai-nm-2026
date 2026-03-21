@@ -45,7 +45,7 @@ from dtos import TERRAIN_TO_CLASS, NUM_CLASSES, PROB_FLOOR
 # GBT blend weight: how much to trust XGBoost vs heuristic (0-1)
 BLEND_WEIGHT = 0.35
 # Per-terrain blend overrides (None = use BLEND_WEIGHT)
-BLEND_TERRAIN = {"plains": 0.90, "forest": 0.75, "settl": 0.80}
+BLEND_TERRAIN = {"plains": 1.00, "forest": 1.00, "settl": 1.00}
 
 # Smoothing: blend final prediction with uniform prior to reduce overconfidence
 # This helps on rounds where hidden params deviate most from training data
@@ -90,6 +90,7 @@ ROUNDS = {
     12: "795bfb1f-54bd-4f39-a526-9868b36f7ebd",
     13: "7b4bda99-6165-4221-97cc-27880f5e6d95",
     14: "d0a2c894-2162-4d49-86cf-435b9013f3b8",
+    15: "cc5442dd-bc5d-418b-911b-7eb960cb0390",
 }
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -310,7 +311,7 @@ def load_round_data(round_num):
     return initial_states, gts
 
 
-ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 12: 1.05**11, 13: 1.05**12, 14: 1.05**13}
+ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 12: 1.05**11, 13: 1.05**12, 14: 1.05**13, 15: 1.05**14}
 
 
 def train_gbt_models(train_rounds):
@@ -418,7 +419,7 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=No
 
 def evaluate_loro():
     """Run full LORO and return (avg, per_round_dict)."""
-    test_rounds = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+    test_rounds = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
     results = {}
 
     for held_out in test_rounds:
@@ -578,7 +579,7 @@ if __name__ == "__main__":
         print(f"round_{r}_score: {s:.4f}")
 
     # Weighted average (competition metric: 1.05^(round-1))
-    weights = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 12: 1.05**11, 13: 1.05**12, 14: 1.05**13}
+    weights = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 12: 1.05**11, 13: 1.05**12, 14: 1.05**13, 15: 1.05**14}
     w_avg = sum(per_round[r] * weights[r] for r in per_round) / sum(weights[r] for r in per_round)
     print(f"weighted_avg: {w_avg:.4f}")
 
