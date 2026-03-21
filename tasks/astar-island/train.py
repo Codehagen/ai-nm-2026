@@ -167,7 +167,7 @@ def compute_cell_obs_features(observations, h, w):
     total_obs = max(len(observations or []), 1)
     settl_rate = np.zeros((h, w), dtype=np.float32)
     ruin_rate = np.zeros((h, w), dtype=np.float32)
-    result = np.zeros((h, w, 13), dtype=np.float32)
+    result = np.zeros((h, w, 15), dtype=np.float32)
     for y in range(h):
         for x in range(w):
             n = cell_counts[y, x]
@@ -237,6 +237,12 @@ def compute_cell_obs_features(observations, h, w):
                         sum_ruin += ruin_rate[ny, nx]
             result[y, x, 11] = sum_ruin
             result[y, x, 12] = result[y, x, 0] + result[y, x, 2]  # self settl + ruin = dynamic rate
+    # Add absolute settlement counts (log-normalized)
+    for y in range(h):
+        for x in range(w):
+            n = cell_counts[y, x]
+            result[y, x, 13] = float(np.log1p(cell_settl[y, x]))  # log1p count of settl observations
+            result[y, x, 14] = float(np.log1p(n))                  # log1p total observation count
     return result
 
 
