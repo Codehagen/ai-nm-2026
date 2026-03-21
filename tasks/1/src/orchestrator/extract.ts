@@ -67,11 +67,12 @@ IF A PDF/IMAGE IS ATTACHED (employment contract / arbeidskontrakt):
 
 IF the attached document is a RECEIPT (kvittering/recibo/receipt/Quittung/reçu):
 - The STORE/VENDOR on the receipt is the supplier name
-- Extract the receipt total INCLUDING VAT as amountInclVat
+- IMPORTANT: If the prompt names a SPECIFIC item from the receipt (e.g. "despesa de Kundemøte lunsj"), use THAT item's price as amountInclVat — NOT the receipt total. Only use the total if the prompt asks for the full receipt.
 - Calculate amountExclVat = amountInclVat / (1 + vatRate). For 25% VAT: amountExclVat = amountInclVat / 1.25
 - Set invoiceDate from the receipt date
 - If the prompt mentions a department name, extract it as departmentName
-- The receipt description should summarize what was purchased`,
+- Match the expense account to the SPECIFIC item: kundemøte/lunsj/middag → 7350 (representation), kontorrekvisita/utstyr → 6540, flybillett/reise → 7100, overnatting/hotell → 7100
+- The description should match the specific item name from the prompt`,
   "timesheet": "Extract employee, project, customer, and time entries (activity name, date, hours). If the prompt also asks to invoice, set invoice.create=true and extract invoice products.",
   "credit-note": "Extract customer and determine if this is for an existing invoice (isExistingInvoice=true) or needs a new invoice created first (createNewInvoice=true). Extract products if creating a new invoice.",
 };
