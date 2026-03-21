@@ -125,7 +125,7 @@ export function classifyTask(prompt: string): TaskType {
 
   // --- Project lifecycle (BEFORE supplier-invoice — lifecycle prompts mention "facture"/"fournisseur" as sub-steps)
   if (
-    has(t, "cycle de vie", "lifecycle", "livssyklus", "prosjektsyklus", "ciclo de vida", "lebenszyklus") &&
+    has(t, "cycle de vie", "lifecycle", "livssyklus", "prosjektsyklus", "projektzyklus", "ciclo de vida", "lebenszyklus") &&
     has(t, "projet", "project", "prosjekt", "proyecto", "projeto", "projekt")
   ) {
     return "project";
