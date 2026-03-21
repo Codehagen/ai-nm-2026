@@ -26,7 +26,7 @@ const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const EXTRACT_MODEL_ID = process.env.EXTRACT_MODEL_ID || process.env.MODEL_ID || "gemini-3.1-pro-preview";
+const EXTRACT_MODEL_ID = process.env.EXTRACT_MODEL_ID || "gemini-2.5-pro";
 
 function getModel(modelId: string) {
   if (modelId.startsWith("claude-") || modelId.startsWith("anthropic/")) {

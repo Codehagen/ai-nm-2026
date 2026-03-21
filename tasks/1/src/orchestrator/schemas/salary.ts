@@ -2,27 +2,27 @@ import { z } from "zod";
 
 export const SalarySchema = z.object({
   employee: z.object({
-    firstName: z.string().describe("Employee first name exactly as in prompt/document"),
-    lastName: z.string().describe("Employee last name exactly as in prompt/document"),
-    email: z.string().optional().describe("Employee email if mentioned"),
-    dateOfBirth: z.string().optional().describe("Date of birth in YYYY-MM-DD format. Convert from DD.MM.YYYY if needed. Extract from PDF if present."),
-    nationalIdentityNumber: z.string().optional().describe("Norwegian national identity number (personnummer, 11 digits). Extract from PDF if present."),
-    bankAccountNumber: z.string().optional().describe("Employee bank account number. Extract from PDF if present."),
+    firstName: z.string().describe("Employee first name EXACTLY as in prompt/document. Look for 'Arbeidstaker', 'Nom', 'Name', 'Nombre'."),
+    lastName: z.string().describe("Employee last name EXACTLY as in prompt/document."),
+    email: z.string().optional().describe("Employee email. Look for 'E-post', 'Email', 'Correo'."),
+    dateOfBirth: z.string().optional().describe("Date of birth YYYY-MM-DD. Look for 'Fødselsdato', 'Date de naissance', 'Geburtsdatum', 'Fecha de nacimiento'. Convert DD.MM.YYYY → YYYY-MM-DD."),
+    nationalIdentityNumber: z.string().optional().describe("Norwegian personnummer (11 digits). Look for 'Personnummer', 'Fødselsnummer', 'Numéro d'identité'. Format: DDMMYYXXXXX."),
+    bankAccountNumber: z.string().optional().describe("Bank account number. Look for 'Bankkonto', 'Compte bancaire', 'Bankverbindung'."),
   }),
   components: z.array(z.object({
     type: z.enum(["fastlonn", "bonus", "timelonn", "faste_tillegg", "overtid", "other"])
-      .describe("Salary type: fastlonn=base salary, bonus=bonus, timelonn=hourly, faste_tillegg=fixed supplement, overtid=overtime"),
-    amount: z.number().describe("Amount in NOK. If annual salary (årslønn), divide by 12 to get monthly amount."),
-    isAnnual: z.boolean().default(false).describe("Set to true if the amount is annual (årslønn). The executor will divide by 12."),
-    count: z.number().default(1).describe("Count: 1 for monthly salary, number of hours for hourly pay"),
-    description: z.string().optional().describe("Description if the type is 'other'"),
+      .describe("Map: Fastlønn/Fastlonn/base salary/salaire de base → fastlonn, Bonus/Prime → bonus, Timelønn/hourly → timelonn, Faste tillegg/supplement → faste_tillegg, Overtid/overtime → overtid"),
+    amount: z.number().describe("Amount in NOK. For årslønn (annual salary), use the FULL annual amount and set isAnnual=true."),
+    isAnnual: z.boolean().default(false).describe("TRUE if the amount is annual (årslønn/salaire annuel/Jahresgehalt). The system divides by 12 automatically."),
+    count: z.number().default(1).describe("1 for monthly salary, number of hours for hourly pay (timelønn)"),
+    description: z.string().optional().describe("Description for 'other' type"),
   })),
-  year: z.number().optional().describe("Salary year if specified (defaults to current year)"),
-  month: z.number().optional().describe("Salary month if specified (defaults to current month)"),
-  departmentName: z.string().optional().describe("Department name from prompt or PDF (e.g. 'Lager', 'IT'). Use exact name from document."),
-  occupationCode: z.string().optional().describe("STYRK occupation code (4 digits) if mentioned in PDF/prompt"),
-  percentageOfFullTimeEquivalent: z.number().optional().describe("Employment percentage (e.g. 80.0 for 80%). Extract from PDF if present (stillingsprosent)."),
-  startDate: z.string().optional().describe("Employment start date in YYYY-MM-DD. Convert from DD.MM.YYYY if needed (tiltredelse)."),
+  year: z.number().optional().describe("Salary year (defaults to current year)"),
+  month: z.number().optional().describe("Salary month (defaults to current month)"),
+  departmentName: z.string().optional().describe("Department name EXACTLY from document. Look for 'Avdeling', 'Département', 'Abteilung'. Use the specific name (e.g. 'Lager', 'IT', 'Kvalitetskontroll'), NOT a generic name."),
+  occupationCode: z.string().optional().describe("STYRK occupation code (4 digits). Look for 'Stillingskode (STYRK)', 'Code profession'."),
+  percentageOfFullTimeEquivalent: z.number().optional().describe("Employment percentage. Look for 'Stillingsprosent', 'Pourcentage', 'Beschäftigungsgrad'. E.g. 80.0 for 80%."),
+  startDate: z.string().optional().describe("Start date YYYY-MM-DD. Look for 'Tiltredelse', 'Date d'entrée', 'Eintrittsdatum'. Convert DD.MM.YYYY → YYYY-MM-DD."),
 });
 
 export type SalaryData = z.infer<typeof SalarySchema>;
