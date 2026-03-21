@@ -88,9 +88,10 @@ export function classifyTask(prompt: string): TaskType {
       // Bank reconciliation
       "bankavstemming", "kontoutskrift", "kontoauszug",
       "bank reconciliation", "bank statement",
-      "conciliación bancaria", "extracto bancario",
-      "reconciliação bancária", "extrato bancário",
-      "rapprochement bancaire", "rapprochez", "relevé bancaire", "releve bancaire",
+      "conciliación bancaria", "conciliacion bancaria", "extracto bancario",
+      "reconciliação bancária", "reconciliacao bancaria", "extrato bancário", "extrato bancario",
+      "reconcilie", "rapprochement bancaire", "rapprochez", "relevé bancaire", "releve bancaire",
+      "avstem",
       // Ledger analysis / cost analysis
       "analice el libro mayor", "analyze the ledger", "analyser hovedboken",
       "analysieren sie das hauptbuch", "analysez le grand livre",
