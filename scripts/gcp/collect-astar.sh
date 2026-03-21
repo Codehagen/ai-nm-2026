@@ -20,6 +20,16 @@ VMS=(
   "ainm-astar-autoresearch:beast176"
   "ainm-astar-swarm-a:swarm-a"
   "ainm-astar-swarm-b:swarm-b"
+  "ainm-astar-s1:s1"
+  "ainm-astar-s2:s2"
+  "ainm-astar-s3:s3"
+  "ainm-astar-s4:s4"
+  "ainm-astar-s5:s5"
+  "ainm-astar-s6:s6"
+  "ainm-astar-s7:s7"
+  "ainm-astar-s8:s8"
+  "ainm-astar-s9:s9"
+  "ainm-astar-s10:s10"
 )
 
 TOP_N=${2:-10}
