@@ -23,19 +23,20 @@ PROJECT = "ai-nm26osl-1823"
 ZONE = "europe-west4-a"
 
 VMS = [
-    ("ainm-astar-autoresearch", "beast176", "c3-176", "general"),
-    ("ainm-astar-swarm-a", "swarm-a", "c3-44", "general"),
-    ("ainm-astar-swarm-b", "swarm-b", "c3-44", "general"),
-    ("ainm-astar-s1", "s1", "c2-30", "r7_adaptive"),
-    ("ainm-astar-s2", "s2", "c2-30", "distance_decay"),
-    ("ainm-astar-s3", "s3", "c2-30", "expansion_features"),
-    ("ainm-astar-s4", "s4", "c2-30", "faction_analysis"),
-    ("ainm-astar-s5", "s5", "c2-30", "port_trade"),
-    ("ainm-astar-s6", "s6", "c2-30", "winter_raiding"),
-    ("ainm-astar-s7", "s7", "c2-30", "terrain_interaction"),
-    ("ainm-astar-s8", "s8", "c2-30", "directional"),
-    ("ainm-astar-s9", "s9", "c2-30", "l7_tuning"),
-    ("ainm-astar-s10", "s10", "c2-30", "xgb_tuning"),
+    # (gcp_name, vm_id, machine_type, focus, display_name)
+    ("ainm-astar-autoresearch", "beast176", "c3-176", "general", "Beast (Creative)"),
+    ("ainm-astar-swarm-a", "swarm-a", "c3-44", "general", "Explorer A"),
+    ("ainm-astar-swarm-b", "swarm-b", "c3-44", "general", "Explorer B"),
+    ("ainm-astar-s1", "s1", "c2-30", "r7_adaptive", "R7 Fixer"),
+    ("ainm-astar-s2", "s2", "c2-30", "distance_decay", "Distance Decay"),
+    ("ainm-astar-s3", "s3", "c2-30", "expansion_features", "Expansion Features"),
+    ("ainm-astar-s4", "s4", "c2-30", "faction_analysis", "Faction Analyst"),
+    ("ainm-astar-s5", "s5", "c2-30", "port_trade", "Port & Trade"),
+    ("ainm-astar-s6", "s6", "c2-30", "winter_raiding", "Winter & Raids"),
+    ("ainm-astar-s7", "s7", "c2-30", "terrain_interaction", "Terrain Edges"),
+    ("ainm-astar-s8", "s8", "c2-30", "directional", "Direction Scout"),
+    ("ainm-astar-s9", "s9", "c2-30", "l7_tuning", "L7 Tuner"),
+    ("ainm-astar-s10", "s10", "c2-30", "xgb_tuning", "XGB Optimizer"),
 ]
 
 REFRESH_SEC = 60
@@ -83,13 +84,14 @@ def pull_vm_data(vm_name, vm_id):
 def pull_all():
     """Pull from all VMs (sequential to avoid SSH overload)."""
     vm_data = {}
-    for vm_name, vm_id, vm_type, focus in VMS:
+    for vm_name, vm_id, vm_type, focus, display_name in VMS:
         status, experiments, last_log = pull_vm_data(vm_name, vm_id)
         runs = len(experiments)
         kept = sum(1 for e in experiments if e["status"] == "keep")
         best = max((e["val_metric"] for e in experiments if e["status"] == "keep"), default=0)
         vm_data[vm_id] = {
             "name": vm_name, "id": vm_id, "type": vm_type, "focus": focus,
+            "display_name": display_name,
             "status": status, "runs": runs, "kept": kept, "best": best,
             "experiments": experiments, "last_log": last_log,
         }
@@ -140,7 +142,7 @@ def generate_html(vm_data):
         vm_cards += f"""
         <div class="vm-card">
             <div class="vm-header">
-                <span class="vm-name">{vm_id}</span>
+                <span class="vm-name">{v.get("display_name", vm_id)}</span>
                 <span class="vm-status" style="color:{sc}">{v["status"]}</span>
             </div>
             <div class="vm-focus">{focus_label}</div>
@@ -192,6 +194,7 @@ def generate_html(vm_data):
     html = f"""<!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Astar Autoresearch Swarm</title>
     <meta http-equiv="refresh" content="{REFRESH_SEC}">
     <style>
@@ -412,7 +415,7 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path in ("/", "/dashboard.html"):
             self.send_response(200)
-            self.send_header("Content-type", "text/html")
+            self.send_header("Content-type", "text/html; charset=utf-8")
             self.end_headers()
             if DASHBOARD_FILE.exists():
                 self.wfile.write(DASHBOARD_FILE.read_bytes())
