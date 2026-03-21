@@ -1,236 +1,147 @@
-# Astar Island — Full History & Architecture
+# Astar Island — Competition History & Learnings
 
-Complete record of our model evolution, autoresearch process, and round-by-round results.
+## Score Trajectory
 
-## Architecture Overview
+| Round | Live Score | Rank | Teams | Weight | Weighted | Key Changes |
+|-------|-----------|------|-------|--------|----------|-------------|
+| R1 | 8.17 | 89/117 | 117 | 1.00 | 8.17 | First attempt, many bugs |
+| R2 | 81.37 | 23/153 | 153 | 1.05 | 85.44 | Fixed submission pipeline |
+| R3 | — | — | — | — | — | Didn't participate |
+| R4 | 91.80 | **5**/86 | 86 | 1.16 | 106.41 | Coastal/inland split (+9 pts!) |
+| R5 | 80.36 | 18/144 | 144 | 1.22 | 97.72 | New map type, model struggled |
+| R6 | 84.91 | 8/186 | 186 | 1.28 | 108.52 | GBT ensemble added |
+| R7 | 63.19 | 57/199 | 199 | 1.34 | 84.68 | Extreme expansion — L7 destroyed rare classes |
+| R8 | 76.12 | 75/214 | 214 | 1.41 | 107.16 | Extinction round, model over-predicted settlements |
+| R9 | 91.77 | 17/221 | 221 | 1.48 | 135.66 | Cross-seed empirical tables deployed |
+| R10 | 75.72 | 87/238 | 238 | 1.55 | 117.49 | Total extinction — model retrained with obs features |
+| R11 | 85.09 | 35/171 | 171 | 1.63 | 138.60 | Good, but model hadn't been retrained with R8-R10 |
+| R12 | — | — | — | — | — | Didn't participate (0 observations) |
+| R13 | **93.94** | **1**/186 | 186 | 1.79 | **168.44** | Peak rank! Full 76-feature model + autoresearch tuning |
+| R14 | 85.85 | 8/244 | 244 | 1.88 | 161.69 | Solid |
+| R15 | 92.31 | 28/262 | 262 | 1.98 | 182.62 | Feature alignment bug still present |
+| R16 | 88.85 | **4**/272 | 272 | 2.08 | 184.69 | Feature alignment FIX deployed |
+| R17 | **92.99** | 21/283 | 283 | 2.18 | **202.92** | **Best weighted score!** Terrain diversity feature |
 
-We predict the final state of a Norse civilisation simulator as a 40x40x6 probability tensor.
-The model is a multi-layer pipeline where each layer refines the previous prediction:
+**Leaderboard score = MAX(weighted) = 202.92 (R17)**
+
+## What Worked (keep doing)
+
+### 1. Coastal/inland distance split (+9 pts, R4)
+The single biggest improvement. Cells with 2+ ocean neighbors behave differently (ports possible). Separate distance tables for coastal vs inland doubled the model's accuracy.
+
+### 2. XGBoost per-terrain specialists (+3 pts cumulative)
+Training separate models for plains, forest, and settlement cells. Each terrain type has different dynamics — a universal model blurs them.
+
+### 3. Per-cell observation features (+0.85 WAVG)
+Using the 50 viewport observations as direct Monte Carlo estimates. `obs_settl_rate` (r=0.41 with GT) was the single most predictive feature. 23 per-cell features total.
+
+### 4. Feature alignment fix (+3.6 WAVG in LORO)
+Train and inference were using different feature extractors (77 vs 76 features). Fixing this so both use identical functions from model.py was a critical bug fix.
+
+### 5. Safe L7 — zero correction for rare classes
+Port (cls=2) and ruin (cls=3) should NEVER be corrected by L7. Observation under-sampling + KL asymmetry (60x more punishing for under-prediction) means even small corrections on rare classes can destroy the score.
+
+### 6. Terrain diversity r3 (+0.06 WAVG)
+Count of distinct terrain types in radius 3. Cells at biome boundaries have different expansion dynamics. Small but reliable improvement.
+
+### 7. Cross-seed empirical distance tables (+1 pt)
+Pool ALL observations across ALL seeds, group by (terrain, distance, coastal). Adapts to each round's hidden parameters at the distance level.
+
+### 8. Excluding R12 from training (+3.6 WAVG)
+R12 had 0 observations. Training XGBoost on it with all-zero observation features polluted the model. Excluding it cleaned up the training data.
+
+### 9. Vectorization of feature extraction (500s → 360s LORO)
+Replaced nested Python loops with scipy.ndimage.convolve and distance_transform_cdt. Made autoresearch 28% faster.
+
+### 10. Batch XGBoost prediction (per-cell → per-terrain batch)
+Instead of 7200 individual predict calls, group cells by terrain type and batch predict. 125s → 3s per fold.
+
+## What Failed (don't try again)
+
+| Experiment | Delta | Why it failed |
+|-----------|-------|---------------|
+| KNN round matching | -9.80 | Catastrophic overfitting to nearest round |
+| Probability sharpening | -0.28 | Increased KL on uncertain cells |
+| LightGBM | -0.33 | Worse than XGBoost on this data size |
+| Spatial L7 BFS | -0.39 | Over-complicated, no signal |
+| Viability scoring | -0.66 | Wrong proxy for settlement survival |
+| Cross-seed transfer (L4) | -0.50 | Cross-seed observations are too noisy |
+| Layer 2 Bayesian obs | noise | With ~10 obs per cell, raw frequencies are noise |
+| Higher PROB_FLOOR | catastrophic | KL divergence extremely sensitive to floor |
+| Simulator blend | +0.00 | 30s overhead, zero improvement — too noisy |
+| n_ports feature | +0.00 | No signal |
+| Voronoi territory | +0.00 | Non-monotonic, no correlation |
+| Center of mass distance | +0.00 | Near-zero correlation with GT |
+| Residual learning | -0.40 | Worse than direct prediction |
+| Grid-level features | +0.00 | Constant across cells = useless for per-cell XGB |
+| Wider L7 clamp | -0.17 | Hurts R10/R11 more than helps R7 |
+| Plains in r3 | -0.39 | Too correlated with existing features |
+| Settlement viability | -0.06 | forests_r2/(1+settl_r3) — no marginal signal |
+| Feature caching in LORO | OOM crash | Holding all 14 rounds in memory killed Python |
+
+## Score Patterns
+
+### Strong on extinction rounds
+R4=91.8, R9=91.8, R13=93.9, R17=93.0. The model's distance tables + L7 correction handle these well.
+
+### Weak on expansion rounds
+R7=63.2 (live), R5=80.4. High expansion rounds have settlements spreading far beyond what distance tables predict. R7 LORO is 72.5 — still the weakest.
+
+### Best performance on later rounds
+R13 (rank 1), R16 (rank 4), R17 (rank 21) — model improves as we accumulate more training data and fix bugs. Round weights favor later rounds (1.05^n).
+
+## Current Model (as of R17)
 
 ```
-Initial Grid (known)
-    │
-    ▼
-Layer 1: Static Heuristic ─── distance-based probability tables
-    │                         4 variants: plains/forest × inland/coastal
-    │                         calibrated from R1-R13 ground truth
-    ▼
-Layer 3: Context Priors ───── settlement adjacency, coastal port priors
-    │                         applied to ALL cells (fills unobserved)
-    ▼
-Layer 6: XGBoost Blend ────── terrain-specific models (plains/forest/settl)
-    │                         76 features: 30 cell + 23 obs stats + 23 cell obs
-    │                         blend: plains=90%, forest=75%, settl=80%
-    ▼
-Layer 6.7: Empirical Tables ─ cross-seed (terrain, distance, coastal) → prob
-    │                         pools all 50 observations across seeds
-    │                         50% blend weight
-    ▼
-Layer 7: Safe L7 ──────────── observation ratio correction
-    │                         rare-class protection (port/ruin zeroed)
-    │                         safety clamp [0.75-1.35]
-    ▼
-Layer 8: Per-cell Empirical ─ direct cell observation counts
-    │                         requires 50+ samples (rarely triggered)
-    ▼
-Normalize + Submit
+77 features: 31 cell + 23 obs stats + 23 per-cell obs
+
+Prediction Pipeline:
+  L1: Static distance tables (coastal/inland × 4 terrain types)
+  L3: Context priors (adj_forests, coastal, settlement adjacency)
+  L6: XGBoost blend (per-terrain: plains=1.0, forest=1.0, settl=1.0)
+  L6.7: Cross-seed empirical distance tables (EMP_BLEND=0.50)
+  L7: Safe observation ratio correction (zero for port/ruin)
+  L8: Per-cell empirical (disabled, MIN_SAMPLES=50)
+
+XGBoost: 600 trees, depth 5, lr 0.08, colsample 0.55
+Trained on: 15 rounds (R1-R17 excl R3,R12), 102K samples
+LORO baseline: WAVG ~89.5 (15-fold)
 ```
 
-Disabled layers: Layer 2 (observation-based), Layer 4, Layer 5, Simulator.
+## What to Improve Next
 
-## Feature Engineering (76 features)
+### 1. R7 (LORO=72.5) — biggest single opportunity
+R7 is extreme expansion. Settlements spread much further than average. Ideas:
+- **Round-type detection**: classify expansion vs extinction from obs_stats
+- **Per-type parameters**: different blend/L7/EMP for expansion vs extinction
+- **Non-linear distance decay**: exponential instead of linear buckets
 
-### Cell Features (30) — from initial grid only
-- Terrain code, manhattan distance to nearest/2nd settlement
-- Adjacent terrain counts (ocean, forest, settlement, mountain)
-- One-hot terrain type (plains, forest, settlement, port)
-- Coastal flag (2+ adjacent ocean)
-- Nearby settlement counts (r1-2, r3, r4, r5-7)
-- Total settlement count, distance to nearest port
-- Connected component size and settlement count
-- Distance to edge, BFS distance over passable terrain
-- Passable cells in 5x5, land ratio in 7x7
-- Interaction: land_ratio / (1 + bfs_dist)
+### 2. CNN/U-Net for spatial patterns
+XGBoost treats cells independently. Can't learn: "settlements form corridors between ports" or "expansion follows coastline". A spatial model could add +1-3 WAVG.
 
-### Observation Stats (23) — round-level aggregates from 50 queries
-- Base 7: avg pop/food/wealth/defense, alive_rate, factions/query, port_rate
-- Extended 16: min/max/std of food/pop/defense, faction norm, grid settl/ruin rates,
-  food deficit, dead rate, wealth mean/std
+### 3. Better query allocation
+50 queries across 5 seeds = ~10 per seed. Concentrating on high-entropy areas or repeating viewports on the same area could enable Layer 8 (per-cell empirical, currently disabled).
 
-### Per-Cell Observation Features (23) — from viewport grids
-- Settlement/empty/ruin observation rates per cell
-- Observation frequency (how often cell was observed)
-- Neighbor settlement density (r1, r2, sum and count)
-- Nearest observed settlement stats (pop, food, wealth, defense, distance)
-- Spatial aggregates (sum_settl_r2, sum_ruin_r2, dynamic_rate)
-- Log-normalized counts (settl, ruin, total, dynamic)
-- Neighbor log aggregates (sum_log_settl_r2, sum_log_ruin_r2)
+### 4. Port corridor features
+Cells between two ports may have different dynamics (trade routes, coastal expansion). Feature: min(BFS to port A + BFS to port B).
 
-## Autoresearch Process
+### 5. Faction analysis
+Observations include `owner_id`. Tracking faction diversity, conquest events, and territory boundaries could signal conflict zones.
 
-### How It Works
-
-Two autonomous Claude Code agents edit `train.py` and run backtests in a loop:
-
-```
-1. ANALYZE    — run analyze_observations.py to find correlations with GT
-2. HYPOTHESIZE — pick a feature or hyperparameter to test
-3. IMPLEMENT  — edit train.py (the mutable file)
-4. BACKTEST   — python train.py → 9-12 fold LORO cross-validation (~6 min)
-               prints val_metric: XX.XXXX (weighted avg score)
-5. DECIDE     — if WAVG improved → git commit with delta, new baseline
-               if worse → git revert, try next hypothesis
-6. REPEAT     — go to step 2
-```
-
-### Feature Agent Results (overnight 2026-03-20/21)
-
-Started at WAVG=87.36, ended at WAVG=88.53 (+1.17).
-
-#### Phase 1: Round-Level Obs Stats (7 → 23 features, +0.52)
-
-| Experiment | Features Added | WAVG | Delta |
-|-----------|---------------|------|-------|
-| Baseline | 7 obs stats | 87.36 | — |
-| +min_food, max_pop, food_std | 10 | 87.67 | +0.31 |
-| +min_defense, defense_std, n_factions | 13 | 87.72 | +0.05 |
-| +obs_settl_rate, obs_ruin_rate | 15 | 87.73 | +0.01 |
-| +food_deficit | 16 | 87.75 | +0.02 |
-| +dead_rate, wealth_std, max_food | 19 | 87.78 | +0.03 |
-| +pop_std, min_pop, max_defense, wealth_mean | 23 | 87.88 | +0.10 |
-
-Key insight: `min_food` was the single most valuable stat — signals winter severity.
-
-#### Phase 2: Per-Cell Obs Features (0 → 21 features, +0.33)
-
-Each feature added one at a time, tested, kept only if LORO improved:
-
-| Feature | Why it works |
-|---------|-------------|
-| obs_settl_rate | Direct Monte Carlo estimate (r=0.41 with GT!) |
-| obs_empty_rate, obs_ruin_rate | Inverse/collapse signals |
-| obs_freq | Coverage signal |
-| neighbor_settl_rate_r2 | Spatial expansion pressure |
-| neighbor_settl_count_r2 | Expansion cluster detection |
-| max_neighbor_settl_rate_r1 | Immediate expansion source |
-| nearest_obs_settl_pop/food/dist | Strength of expansion source |
-| sum_settl_r2, sum_ruin_r2 | Aggregated expansion/collapse |
-| log counts + spatial log aggregates | Magnitude-aware versions |
-| nearest_obs_settl_wealth/defense | Trade and raid indicators |
-
-#### Phase 3: Hyperparameter Co-optimization (+0.32)
-
-With more features, optimal parameters shifted:
-
-| Parameter | Before | After | Why |
-|-----------|--------|-------|-----|
-| plains blend | 0.55 | 0.90 | More features = trust XGBoost more |
-| forest blend | 0.65 | 0.75 | Slight increase |
-| settl blend | 0.75 | 0.80 | Slight increase |
-| n_estimators | 300 | 600 | More features need more trees |
-| colsample_bytree | 0.90 | 0.55 | More subsampling for 76 features |
-
-### Parameter Agent Results
-
-Ran in parallel with feature agent, tuning:
-- EMP_BLEND: 0.20 → 0.50 (+0.15)
-- L7 strengths: tightened rare-class protection
-- XGB reg_alpha, reg_lambda, subsample: minor gains
-
-### Key Learnings
-
-1. **Feature engineering > parameter tuning.** Features gave +0.85, parameters gave +0.32.
-2. **Per-cell obs features are the biggest lever.** obs_settl_rate (r=0.41) is basically what the competition measures.
-3. **Correlation analysis guides feature selection.** `analyze_observations.py` identifies promising features before spending compute.
-4. **Blend weights must co-evolve with features.** Adding features made XGBoost stronger, so optimal blend jumped.
-5. **colsample_bytree scales inversely with feature count.** 76 features → 0.55 colsample beats 0.90.
-
-## Round History
-
-### Score Progression
-
-| Round | Date | Live Score | Rank | LORO Score | Weighted | Notes |
-|-------|------|-----------|------|-----------|----------|-------|
-| R1 | 2026-03-10 | 8.17 | 89 | 86.00 | 86.00 | First attempt, learning |
-| R2 | 2026-03-11 | 81.37 | 23 | 92.03 | 96.63 | Basic heuristic working |
-| R3 | — | — | — | — | — | Skipped (different dynamics) |
-| R4 | 2026-03-12 | 91.80 | 5 | 94.20 | 109.04 | Strong result |
-| R5 | 2026-03-13 | 80.36 | 18 | 86.65 | 105.32 | |
-| R6 | 2026-03-14 | 84.91 | 8 | 86.53 | 110.44 | |
-| R7 | 2026-03-15 | 63.19 | 57 | 71.80 | 96.21 | L7 crushed rare classes |
-| R8 | 2026-03-16 | 76.12 | 75 | 93.94 | 132.18 | Cross-seed tables deployed |
-| R9 | 2026-03-17 | 91.77 | 17 | 93.09 | 137.54 | |
-| R10 | 2026-03-18 | 75.72 | 87 | 91.69 | 142.24 | Extinction round |
-| R11 | 2026-03-19 | 85.09 | 35 | 86.12 | 140.28 | |
-| R12 | 2026-03-20 | — | — | 32.27* | — | Skipped (no observations) |
-| R13 | 2026-03-20 | **93.94** | **1** | 93.35 | **167.64** | Autoresearch model, top score |
-| R14 | 2026-03-21 | **85.85** | **8** | pending | **169.98** | High expansion, retrained on R1-R13 |
-
-*R12: no observations available, can't retroactively query simulator
-
-### Round Type Classification
-
-| Type | Rounds | Avg LORO | Characteristics |
-|------|--------|---------|-----------------|
-| Extinction | R4, R8, R10 | 93.3 | min_food>0.07, <12 ports, <44 factions |
-| Medium | R1, R2, R5, R9, R13 | 89.0 | Balanced expansion/collapse |
-| High expansion | R6, R7, R11, R14 | 79.0* | settl_rate>0.15, >100 ports, >50 factions |
-
-*R7 (71.8) is an outlier — sharp distance cutoff unlike other expansion rounds
-
-**Key insight: High expansion rounds are our weakness. Fixing these is the biggest lever.**
-
-### Key Milestones
-
-- **R1-R6**: Building the heuristic + XGBoost pipeline, learning from mistakes
-- **R7**: Post-mortem revealed L7 was destroying rare classes → implemented Safe L7
-- **R8**: Cross-seed empirical tables deployed (+16.5 points on R8 backtest)
-- **R10**: Fixed critical bug where cross-seed observations weren't being passed
-- **R13**: Autoresearch overnight session (76 features, +1.17 WAVG) → rank #1
-- **R14**: Score 85.85, rank 8. High expansion round. Retrained GBT on 13 rounds (88,459 samples). 3 autoresearch agents launched targeting expansion fixes, hidden params, and parameter tuning.
-
-### Leaderboard Position (as of R14 scoring)
-
-Best weighted: R14 = 85.85 × 1.9799 = **169.98** (top 10 range)
-R13 weighted: 93.94 × 1.8856 = 177.15 (still our leaderboard score — higher raw score)
-
-The leaderboard uses MAX(round_score × round_weight). Our leaderboard score is whichever
-of R13 or R14 gives a higher weighted value. R13 (177.15) > R14 (169.98), so R13 remains
-our leaderboard score.
-
-## Files
-
-| File | Role |
-|------|------|
-| `run.py` | Production runner — queries, predicts, submits |
-| `model.py` | Production model — all layers, feature extraction |
-| `train.py` | Backtest — LORO cross-validation (autoresearch edits this) |
-| `retrain_gbt.py` | Retrain XGBoost on all rounds |
-| `evaluate.py` | Score predictions against GT |
-| `client.py` | API client with rate limiting |
-| `utils.py` | Viewport planning, observation I/O, normalization |
-| `analyze_observations.py` | Deep observation analysis → feature candidates |
-| `AUTORESEARCH.md` | Detailed autoresearch session writeup |
-| `data/gbt_models.pkl` | Production XGBoost models (76 features, 12 rounds) |
-| `data/round{N}_initial.json` | Initial states per round |
-| `data/gt_r{N}_seed{S}.npy` | Ground truth tensors |
-| `data/obs_{uuid}.jsonl` | Observation checkpoints |
-
-## How to Run
-
+### 6. Autoresearch swarm findings
+3 GCP VMs running Gemini-guided experiments. Check results:
 ```bash
-# Backtest (LORO cross-validation)
-cd tasks/astar-island && python3 train.py
-
-# Retrain production GBT on all available data
-python3 retrain_gbt.py
-
-# Submit to active round
-ASTAR_TOKEN="..." python3 run.py
-
-# Dry run (no submission)
-ASTAR_TOKEN="..." python3 run.py --dry-run
-
-# Resume from checkpoint
-ASTAR_TOKEN="..." python3 run.py --resume
+bash scripts/gcp/collect-astar.sh
+bash scripts/gcp/collect-astar.sh --best  # download best train.py
 ```
+
+## Infrastructure
+
+| Resource | Purpose |
+|----------|---------|
+| Local Mac (M1 Pro) | Main development, feature autoresearch (~360s/LORO) |
+| ainm-astar-autoresearch (176 CPUs) | Swarm VM, parallel XGB (~189s/LORO) |
+| ainm-astar-swarm-a (44 CPUs) | Swarm worker |
+| ainm-astar-swarm-b (44 CPUs) | Swarm worker |
+| `collect-astar.sh` | Orchestrator: pull/merge/show swarm results |
+| `autoresearch_swarm.py` | Gemini-guided autonomous experiment loop |
