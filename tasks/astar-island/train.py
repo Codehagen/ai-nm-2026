@@ -120,6 +120,7 @@ ROUNDS = {
     14: "d0a2c894-2162-4d49-86cf-435b9013f3b8",
     15: "cc5442dd-bc5d-418b-911b-7eb960cb0390",
     16: "8f664aed-8839-4c85-bed0-77a2cac7c6f5",
+    17: "3eb0c25d-28fa-48ca-b8e1-fc249e3918e9",
 }
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -181,7 +182,7 @@ def load_round_data(round_num):
     return initial_states, gts
 
 
-ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 13: 1.05**12, 14: 1.05**13, 15: 1.05**14, 16: 1.05**15}
+ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 13: 1.05**12, 14: 1.05**13, 15: 1.05**14, 16: 1.05**15, 17: 1.05**16}
 
 
 def train_gbt_models(train_rounds):
@@ -369,7 +370,7 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=No
 
 def evaluate_loro():
     """Run full LORO and return (avg, per_round_dict)."""
-    test_rounds = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16]  # R12 excluded: 0 observations
+    test_rounds = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17]  # R12 excluded: 0 observations
     results = {}
 
     for held_out in test_rounds:
