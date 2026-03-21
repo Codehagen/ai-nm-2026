@@ -369,8 +369,9 @@ If the prompt asks you to analyze costs, find expense accounts with largest incr
 3. **Get account names**: GET /ledger/account/{id}?fields=id,number,name for each of the top 3 account IDs.
 4. **Act on results** — whatever the prompt asks (create projects, vouchers, etc.) using the REAL account names:
    - For internal projects: GET /employee?fields=id&count=1 (admin), POST /project with {"name": "<account_name>", "projectManager": {"id": <admin_id>}, "isInternal": true}
-   - For activities: POST /activity {"name": "<activity_name>", "isProjectActivity": true} then link to project
-   - For each project, also POST /project/controlForm if needed
+   - For activities: POST /activity {"name": "<activity_name>", "activityType": "PROJECT_GENERAL_ACTIVITY"}
+     IMPORTANT: The endpoint is POST /activity (NOT /projectActivity, NOT /project/activity — those do not exist!)
+   - Create EXACTLY 3 projects and 3 activities (one per top account). Do NOT create more.
 
 **CRITICAL: You MUST query the ledger FIRST to get real data. Do NOT guess or fabricate account names. The scoring checks EXACT account names from the real ledger.**
 

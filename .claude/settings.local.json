@@ -252,7 +252,11 @@
       "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B click @e21 2)",
       "Bash(/dev/null $B text)",
       "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B cookie-import-browser chrome 2)",
-      "Bash(ssh -i ~/.ssh/gcp_ainm -o StrictHostKeyChecking=no walgermo@34.158.87.44 'cd ~/task1 && tar xzf ~/task1.tar.gz 2>/dev/null; pkill -f \"\"\"\"node dist/api.js\"\"\"\" 2>/dev/null; sleep 1; nohup node dist/api.js > /tmp/api.log 2>&1 &')"
+      "Bash(ssh -i ~/.ssh/gcp_ainm -o StrictHostKeyChecking=no walgermo@34.158.87.44 'cd ~/task1 && tar xzf ~/task1.tar.gz 2>/dev/null; pkill -f \"\"\"\"node dist/api.js\"\"\"\" 2>/dev/null; sleep 1; nohup node dist/api.js > /tmp/api.log 2>&1 &')",
+      "Bash($B fill:*)",
+      "Bash(gcloud compute ssh ainm-norgesgruppen-a100 --zone=us-central1-f --command=\":*)",
+      "Bash(B=/Users/walgermo/Utvikling/ai-nm-2026/.claude/skills/gstack/browse/dist/browse $B snapshot -i -c)",
+      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" __NEW_LINE_41625abf1c88549c__ echo \"=== Latest supplier invoices ===\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/supplierInvoice?fields=id,supplier\\(name\\),invoiceNumber,invoiceDate,amount,voucher\\(postings\\(department\\(name\\),account\\(number,name\\),amountGross,vatType\\(name\\)\\)\\)&count=3&sorting=-id\")"
     ]
   }
 }
