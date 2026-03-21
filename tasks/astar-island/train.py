@@ -86,6 +86,9 @@ ROUNDS = {
     8: "c5cdf100-a876-4fb7-b5d8-757162c97989",
     9: "2a341ace-0f57-4309-9b89-e59fe0f09179",
     10: "75e625c3-60cb-4392-af3e-c86a98bde8c2",
+    11: "324fde07-1670-4202-b199-7aa92ecb40ee",
+    12: "795bfb1f-54bd-4f39-a526-9868b36f7ebd",
+    13: "7b4bda99-6165-4221-97cc-27880f5e6d95",
 }
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -93,7 +96,7 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 def enhanced_obs_stats(observations):
     """Compute enhanced round-level obs stats (22 features: base 7 + 15 new)."""
-    base = compute_obs_stats(observations) if observations else np.zeros(7)
+    base = compute_obs_stats(observations) if observations else np.zeros(23)
     pops, foods, defenses, wealths = [], [], [], []
     factions = set()
     alive_count, total_count = 0, 0
@@ -300,7 +303,7 @@ def load_round_data(round_num):
     return initial_states, gts
 
 
-ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9}
+ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 12: 1.05**11, 13: 1.05**12}
 
 
 def train_gbt_models(train_rounds):
@@ -405,8 +408,8 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=No
 
 
 def evaluate_loro():
-    """Run full 7-fold LORO and return (avg, per_round_dict)."""
-    test_rounds = [1, 2, 4, 5, 6, 7, 8, 9, 10]
+    """Run full LORO and return (avg, per_round_dict)."""
+    test_rounds = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
     results = {}
 
     for held_out in test_rounds:
@@ -564,7 +567,7 @@ if __name__ == "__main__":
         print(f"round_{r}_score: {s:.4f}")
 
     # Weighted average (competition metric: 1.05^(round-1))
-    weights = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9}
+    weights = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 12: 1.05**11, 13: 1.05**12}
     w_avg = sum(per_round[r] * weights[r] for r in per_round) / sum(weights[r] for r in per_round)
     print(f"weighted_avg: {w_avg:.4f}")
 
