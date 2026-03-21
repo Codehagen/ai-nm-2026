@@ -128,16 +128,10 @@ def enhanced_obs_stats(observations):
 
 
 def compute_cell_obs_features(observations, h, w):
-    """Compute per-cell observation features (6 features per cell):
+    """Compute per-cell observation features (9 features per cell):
     [obs_settl_rate, obs_empty_rate, obs_ruin_rate, obs_freq,
-     neighbor_settl_rate_r2, neighbor_settl_count_r2]
-
-    obs_settl_rate: fraction of times cell was observed as settlement/port
-    obs_empty_rate: fraction of times cell was observed as empty/plains
-    obs_ruin_rate: fraction of times cell was observed as ruin
-    obs_freq: n_times_seen / total_obs (observation density)
-    neighbor_settl_rate_r2: avg obs_settl_rate of cells within Manhattan radius 2
-    neighbor_settl_count_r2: count of neighbors with obs_settl_rate > 0.1
+     neighbor_settl_rate_r2, neighbor_settl_count_r2,
+     neighbor_settl_rate_r4, neighbor_ruin_rate_r2, max_neighbor_settl_rate_r2]
     """
     cell_counts = np.zeros((h, w), dtype=np.int32)
     cell_settl = np.zeros((h, w), dtype=np.int32)
@@ -162,35 +156,44 @@ def compute_cell_obs_features(observations, h, w):
                         cell_ruin[y2, x2] += 1
     total_obs = max(len(observations or []), 1)
     settl_rate = np.zeros((h, w), dtype=np.float32)
-    result = np.zeros((h, w, 6), dtype=np.float32)
+    ruin_rate = np.zeros((h, w), dtype=np.float32)
+    result = np.zeros((h, w, 9), dtype=np.float32)
     for y in range(h):
         for x in range(w):
             n = cell_counts[y, x]
             if n > 0:
                 sr = cell_settl[y, x] / n
+                rr = cell_ruin[y, x] / n
                 settl_rate[y, x] = sr
+                ruin_rate[y, x] = rr
                 result[y, x, 0] = sr
                 result[y, x, 1] = cell_empty[y, x] / n
-                result[y, x, 2] = cell_ruin[y, x] / n
+                result[y, x, 2] = rr
                 result[y, x, 3] = n / total_obs
-    # Compute neighbor settlement rates (radius 2)
+    # Compute neighbor features
     for y in range(h):
         for x in range(w):
-            nbr_rates = []
-            nbr_count = 0
-            for dy in range(-2, 3):
-                for dx in range(-2, 3):
+            nbr_r2_settl, nbr_r2_ruin, nbr_r4_settl = [], [], []
+            nbr_r2_count = 0
+            for dy in range(-4, 5):
+                for dx in range(-4, 5):
                     if dy == 0 and dx == 0:
                         continue
-                    if abs(dy) + abs(dx) > 2:
-                        continue
+                    md = abs(dy) + abs(dx)
                     ny, nx = y + dy, x + dx
                     if 0 <= ny < h and 0 <= nx < w:
-                        nbr_rates.append(settl_rate[ny, nx])
-                        if settl_rate[ny, nx] > 0.1:
-                            nbr_count += 1
-            result[y, x, 4] = float(np.mean(nbr_rates)) if nbr_rates else 0.0
-            result[y, x, 5] = float(nbr_count)
+                        if md <= 2:
+                            nbr_r2_settl.append(settl_rate[ny, nx])
+                            nbr_r2_ruin.append(ruin_rate[ny, nx])
+                            if settl_rate[ny, nx] > 0.1:
+                                nbr_r2_count += 1
+                        if md <= 4:
+                            nbr_r4_settl.append(settl_rate[ny, nx])
+            result[y, x, 4] = float(np.mean(nbr_r2_settl)) if nbr_r2_settl else 0.0
+            result[y, x, 5] = float(nbr_r2_count)
+            result[y, x, 6] = float(np.mean(nbr_r4_settl)) if nbr_r4_settl else 0.0
+            result[y, x, 7] = float(np.mean(nbr_r2_ruin)) if nbr_r2_ruin else 0.0
+            result[y, x, 8] = float(np.max(nbr_r2_settl)) if nbr_r2_settl else 0.0
     return result
 
 
@@ -208,7 +211,7 @@ ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6
 
 
 def train_gbt_models(train_rounds):
-    """Train terrain-specific XGBoost on given rounds (52 features: 30 cell + 16 obs stats + 6 cell obs)."""
+    """Train terrain-specific XGBoost on given rounds (55 features: 30 cell + 16 obs stats + 9 cell obs)."""
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
     W_data = {"plains": [], "forest": [], "settl": []}
