@@ -61,13 +61,13 @@ L7_ADJ_MAX = 1.25
 
 # Per-terrain XGBoost hyperparameters
 XGB_HPARAMS = {
-    "plains": dict(n_estimators=500, max_depth=5, learning_rate=0.08,
+    "plains": dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
                    colsample_bytree=0.9, min_child_weight=3),
-    "forest": dict(n_estimators=500, max_depth=5, learning_rate=0.08,
+    "forest": dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
                    colsample_bytree=0.9, min_child_weight=3),
-    "settl":  dict(n_estimators=500, max_depth=5, learning_rate=0.08,
+    "settl":  dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
                    colsample_bytree=0.9, min_child_weight=3),
 }
@@ -135,11 +135,7 @@ def enhanced_obs_stats(observations):
     wealth_mean = float(np.mean(wealths)) if wealths else 0.0
     wealth_std = float(np.std(wealths)) if wealths else 0.0
     dead_rate = (total_count - alive_count) / max(total_count, 1)
-    avg_defense = float(np.mean(defenses)) if defenses else 0.0
-    food_per_pop = avg_food / max(avg_pop, 1.0)  # food ratio (>1 = surplus)
-    defense_per_pop = avg_defense / max(avg_pop, 1.0)  # defense ratio
-    settl_to_ruin = obs_settl_rate / max(obs_ruin_rate, 0.001)  # ratio settl:ruin
-    return np.concatenate([base, [min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate, food_deficit, pop_std, max_food, min_pop, max_defense, wealth_mean, wealth_std, dead_rate, food_per_pop, defense_per_pop, settl_to_ruin]])
+    return np.concatenate([base, [min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate, food_deficit, pop_std, max_food, min_pop, max_defense, wealth_mean, wealth_std, dead_rate]])
 
 
 def compute_cell_obs_features(observations, h, w):
@@ -300,7 +296,7 @@ ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6
 
 
 def train_gbt_models(train_rounds):
-    """Train terrain-specific XGBoost on given rounds (74 features: 30 cell + 25 obs stats + 19 cell obs)."""
+    """Train terrain-specific XGBoost on given rounds (71 features: 30 cell + 22 obs stats + 19 cell obs)."""
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
     W_data = {"plains": [], "forest": [], "settl": []}
