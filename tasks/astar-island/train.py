@@ -91,6 +91,21 @@ ROUNDS = {
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 
+def enhanced_obs_stats(observations):
+    """Compute enhanced round-level obs stats (10 features: base 7 + min_food, max_pop, food_std)."""
+    base = compute_obs_stats(observations) if observations else np.zeros(7)
+    pops, foods = [], []
+    for obs in (observations or []):
+        for s in obs.get("settlements", []):
+            if s.get("alive", True):
+                pops.append(s.get("population", 0))
+                foods.append(s.get("food", 0))
+    min_food = float(np.min(foods)) if foods else 0.0
+    max_pop = float(np.max(pops)) if pops else 0.0
+    food_std = float(np.std(foods)) if foods else 0.0
+    return np.concatenate([base, [min_food, max_pop, food_std]])
+
+
 def load_round_data(round_num):
     with open(os.path.join(DATA_DIR, f"round{round_num}_initial.json")) as f:
         info = json.load(f)
@@ -105,7 +120,7 @@ ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6
 
 
 def train_gbt_models(train_rounds):
-    """Train terrain-specific XGBoost on given rounds (37 features: 30 cell + 7 obs stats)."""
+    """Train terrain-specific XGBoost on given rounds (40 features: 30 cell + 10 obs stats)."""
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
     W_data = {"plains": [], "forest": [], "settl": []}
@@ -113,14 +128,14 @@ def train_gbt_models(train_rounds):
     for rnum in train_rounds:
         initial_states, gts = load_round_data(rnum)
         all_obs = load_observations(ROUNDS[rnum])
-        obs_stats = compute_obs_stats(all_obs) if all_obs else np.zeros(7)
+        obs_stats = enhanced_obs_stats(all_obs)
         rw = ROUND_WEIGHTS.get(rnum, 1.0)
         for seed in range(5):
             grid = initial_states[seed]["grid"]
             settlements = initial_states[seed]["settlements"]
             gt = gts[seed]
             feats, coords = _extract_cell_features(grid, settlements)
-            # Append round-level obs stats (37 features total)
+            # Append round-level obs stats (40 features total)
             feats = np.hstack([feats, np.tile(obs_stats, (len(feats), 1))])
             targets = np.array([gt[y, x] for y, x in coords])
             for i, (y, x) in enumerate(coords):
@@ -169,8 +184,8 @@ def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=No
     features, coords = _extract_cell_features(initial_grid, settlements)
     if len(features) == 0:
         return None
-    # Append obs stats to match training (37 features)
-    if obs_stats is not None and len(obs_stats) == 7:
+    # Append obs stats to match training (40 features)
+    if obs_stats is not None:
         features = np.hstack([features, np.tile(obs_stats, (len(features), 1))])
     tensor = np.zeros((h, w, NUM_CLASSES))
     for y in range(h):
@@ -223,8 +238,8 @@ def evaluate_loro():
             tensor = build_static_prediction(grid)
             tensor = fill_unobserved_dynamic(tensor, grid, settlements, [], seed)
 
-            # Layer 6: GBT blend (with obs stats features)
-            obs_stats = compute_obs_stats(all_observations) if all_observations else None
+            # Layer 6: GBT blend (with enhanced obs stats features)
+            obs_stats = enhanced_obs_stats(all_observations) if all_observations else None
             gbt_pred = gbt_predict_with_models(gbt_models, grid, settlements, obs_stats=obs_stats)
             if gbt_pred is not None:
                 h, w, _ = tensor.shape
