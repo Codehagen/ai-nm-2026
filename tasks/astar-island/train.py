@@ -92,22 +92,18 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 
 def enhanced_obs_stats(observations):
-    """Compute enhanced round-level obs stats (19 features: base 7 + min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate, food_deficit, dead_rate, wealth_std, max_food)."""
+    """Compute enhanced round-level obs stats (16 features: base 7 + min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate, food_deficit)."""
     base = compute_obs_stats(observations) if observations else np.zeros(7)
-    pops, foods, defenses, wealths = [], [], [], []
+    pops, foods, defenses = [], [], []
     factions = set()
-    alive_count, total_count = 0, 0
     # Grid-level settlement/ruin rate
     grid_settl_count, grid_ruin_count, grid_total = 0, 0, 0
     for obs in (observations or []):
         for s in obs.get("settlements", []):
-            total_count += 1
             if s.get("alive", True):
-                alive_count += 1
                 pops.append(s.get("population", 0))
                 foods.append(s.get("food", 0))
                 defenses.append(s.get("defense", 0))
-                wealths.append(s.get("wealth", 0))
                 factions.add(s.get("owner_id", -1))
         for row in obs.get("grid", []):
             for code in row:
@@ -128,10 +124,49 @@ def enhanced_obs_stats(observations):
     avg_food = float(np.mean(foods)) if foods else 0.0
     avg_pop = float(np.mean(pops)) if pops else 0.0
     food_deficit = avg_food - avg_pop  # positive = surplus, negative = deficit
-    dead_rate = (total_count - alive_count) / max(total_count, 1)  # fraction of dead settlements
-    wealth_std = float(np.std(wealths)) if wealths else 0.0
-    max_food = float(np.max(foods)) if foods else 0.0
-    return np.concatenate([base, [min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate, food_deficit, dead_rate, wealth_std, max_food]])
+    return np.concatenate([base, [min_food, max_pop, food_std, min_defense, defense_std, n_factions_norm, obs_settl_rate, obs_ruin_rate, food_deficit]])
+
+
+def compute_cell_obs_features(observations, h, w):
+    """Compute per-cell observation features: [obs_settl_rate, obs_empty_rate, obs_ruin_rate, obs_freq].
+
+    obs_settl_rate: fraction of times cell was observed as settlement/port
+    obs_empty_rate: fraction of times cell was observed as empty/plains
+    obs_ruin_rate: fraction of times cell was observed as ruin
+    obs_freq: n_times_seen / total_obs (observation density)
+    """
+    cell_counts = np.zeros((h, w), dtype=np.int32)
+    cell_settl = np.zeros((h, w), dtype=np.int32)
+    cell_empty = np.zeros((h, w), dtype=np.int32)
+    cell_ruin = np.zeros((h, w), dtype=np.int32)
+    for obs in (observations or []):
+        vp = obs.get("viewport", {})
+        vy, vx = vp.get("y", 0), vp.get("x", 0)
+        obs_grid = obs.get("grid", [])
+        for dy in range(len(obs_grid)):
+            row = obs_grid[dy]
+            for dx in range(len(row)):
+                y2, x2 = vy + dy, vx + dx
+                if 0 <= y2 < h and 0 <= x2 < w:
+                    cell_counts[y2, x2] += 1
+                    code = row[dx]
+                    if code in {1, 2}:
+                        cell_settl[y2, x2] += 1
+                    elif code in {0, 11}:
+                        cell_empty[y2, x2] += 1
+                    elif code == 3:
+                        cell_ruin[y2, x2] += 1
+    total_obs = max(len(observations or []), 1)
+    result = np.zeros((h, w, 4), dtype=np.float32)
+    for y in range(h):
+        for x in range(w):
+            n = cell_counts[y, x]
+            if n > 0:
+                result[y, x, 0] = cell_settl[y, x] / n
+                result[y, x, 1] = cell_empty[y, x] / n
+                result[y, x, 2] = cell_ruin[y, x] / n
+                result[y, x, 3] = n / total_obs
+    return result
 
 
 def load_round_data(round_num):
@@ -148,7 +183,7 @@ ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6
 
 
 def train_gbt_models(train_rounds):
-    """Train terrain-specific XGBoost on given rounds (49 features: 30 cell + 19 obs stats)."""
+    """Train terrain-specific XGBoost on given rounds (50 features: 30 cell + 16 obs stats + 4 cell obs)."""
     X_data = {"plains": [], "forest": [], "settl": []}
     Y_data = {"plains": [], "forest": [], "settl": []}
     W_data = {"plains": [], "forest": [], "settl": []}
@@ -158,13 +193,21 @@ def train_gbt_models(train_rounds):
         all_obs = load_observations(ROUNDS[rnum])
         obs_stats = enhanced_obs_stats(all_obs)
         rw = ROUND_WEIGHTS.get(rnum, 1.0)
+        # Compute cell-level obs features (shared across seeds for this round)
+        # Use seed 0 grid dimensions (all seeds same map size)
+        g0 = initial_states[0]["grid"]
+        h0, w0 = len(g0), len(g0[0]) if g0 else 0
+        cell_obs = compute_cell_obs_features(all_obs, h0, w0)
         for seed in range(5):
             grid = initial_states[seed]["grid"]
             settlements = initial_states[seed]["settlements"]
             gt = gts[seed]
             feats, coords = _extract_cell_features(grid, settlements)
-            # Append round-level obs stats (45 features total)
+            # Append round-level obs stats (46 total so far)
             feats = np.hstack([feats, np.tile(obs_stats, (len(feats), 1))])
+            # Append per-cell obs features (50 total)
+            cell_feats = np.array([cell_obs[y, x] for y, x in coords])
+            feats = np.hstack([feats, cell_feats])
             targets = np.array([gt[y, x] for y, x in coords])
             for i, (y, x) in enumerate(coords):
                 code = grid[y][x]
@@ -206,15 +249,19 @@ def train_gbt_models(train_rounds):
     return models
 
 
-def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=None):
+def gbt_predict_with_models(models_dict, initial_grid, settlements, obs_stats=None, cell_obs=None):
     h = len(initial_grid)
     w = len(initial_grid[0]) if h > 0 else 0
     features, coords = _extract_cell_features(initial_grid, settlements)
     if len(features) == 0:
         return None
-    # Append obs stats to match training (45 features)
+    # Append obs stats to match training (46 features)
     if obs_stats is not None:
         features = np.hstack([features, np.tile(obs_stats, (len(features), 1))])
+    # Append per-cell obs features (50 features total)
+    if cell_obs is not None:
+        cell_feats = np.array([cell_obs[y, x] for y, x in coords])
+        features = np.hstack([features, cell_feats])
     tensor = np.zeros((h, w, NUM_CLASSES))
     for y in range(h):
         for x in range(w):
@@ -256,6 +303,11 @@ def evaluate_loro():
             all_observations, all_grids, all_settlements=all_settl
         ) if all_observations else {}
 
+        # Pre-compute cell-level obs features (shared across seeds)
+        g0 = initial_states[0]["grid"]
+        h0, w0 = len(g0), len(g0[0]) if g0 else 0
+        cell_obs = compute_cell_obs_features(all_observations, h0, w0) if all_observations else None
+
         scores = []
         for seed in range(5):
             grid = initial_states[seed]["grid"]
@@ -266,9 +318,9 @@ def evaluate_loro():
             tensor = build_static_prediction(grid)
             tensor = fill_unobserved_dynamic(tensor, grid, settlements, [], seed)
 
-            # Layer 6: GBT blend (with enhanced obs stats features)
+            # Layer 6: GBT blend (with enhanced obs stats + per-cell obs features)
             obs_stats = enhanced_obs_stats(all_observations) if all_observations else None
-            gbt_pred = gbt_predict_with_models(gbt_models, grid, settlements, obs_stats=obs_stats)
+            gbt_pred = gbt_predict_with_models(gbt_models, grid, settlements, obs_stats=obs_stats, cell_obs=cell_obs)
             if gbt_pred is not None:
                 h, w, _ = tensor.shape
                 for y in range(h):
@@ -282,7 +334,7 @@ def evaluate_loro():
             # Layer 6.7: Cross-seed empirical distance tables
             if all_observations and round_empirical:
                 h, w, _ = tensor.shape
-                EMP_BLEND = 0.50
+                EMP_BLEND = 0.48
                 settl_pos = [(s['x'] if isinstance(s, dict) else s.x,
                               s['y'] if isinstance(s, dict) else s.y) for s in settlements]
                 for y in range(h):
