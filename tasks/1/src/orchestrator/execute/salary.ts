@@ -91,6 +91,16 @@ export async function executeSalary(ctx: OrchestratorContext, data: SalaryData):
   }
 
   let empRes = await ctx.post("/employee/employment", employmentBody);
+
+  // If mapping failed (optional fields like occupationCode have wrong format), retry without them
+  if (!empRes.ok && (empRes.message?.includes("mapping") || empRes.message?.includes("Mapping"))) {
+    empRes = await ctx.post("/employee/employment", {
+      employee: { id: empId },
+      startDate,
+      division: { id: divId },
+    });
+  }
+
   if (!empRes.ok && empRes.status === 422) {
     // Check if it's a dateOfBirth error — fix employee and retry
     const isDobError = empRes.validationMessages?.some(
