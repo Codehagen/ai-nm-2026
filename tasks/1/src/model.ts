@@ -572,7 +572,7 @@ export async function solve(
         // Never let logging crash the agent
       }
     },
-    timeout: { totalMs: 100_000, stepMs: 30_000 }, // 100s total, 30s per step (cloudflared timeout ~120s)
+    timeout: { totalMs: 250_000, stepMs: 60_000 }, // 250s total, 60s per step (ngrok — no tunnel timeout)
     abortSignal: signal,
   });
 

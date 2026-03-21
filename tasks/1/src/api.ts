@@ -12,7 +12,7 @@ if (!process.env.GOOGLE_API_KEY) {
 
 const app = new Hono();
 const startupTime = Date.now();
-const SOLVE_TIMEOUT_MS = 110_000; // 110s — cloudflared quick tunnels timeout at ~120s
+const SOLVE_TIMEOUT_MS = 280_000; // 280s — ngrok has no timeout, competition allows 300s
 
 const PORT = 9053;
 

@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-03-21T10:51:13.511Z",
+  "prompt": "Du har motteke eit tilbodsbrev (sjaa vedlagt PDF) for ein ny tilsett. Utfor komplett onboarding: opprett den tilsette, tilknytt rett avdeling, set opp tilsetjingsforhold med stillingsprosent og arslonn, og konfigurer standard arbeidstid.",
+  "files": [
+    {
+      "filename": "files/tilbudsbrev_nn_03.pdf",
+      "mime_type": "application/pdf",
+      "size_bytes": 1644
+    }
+  ],
+  "base_url": "https://tx-proxy-jwanbnu3pq-lz.a.run.app/v2",
+  "raw_files": [
+    {
+      "filename": "files/tilbudsbrev_nn_03.pdf",
+      "mime_type": "application/pdf",
+      "content_base64": "JVBERi0xLjMKJenr8b8KMSAwIG9iago8PAovQ291bnQgMQovS2lkcyBbMyAwIFJdCi9NZWRpYUJveCBbMCAwIDU5NS4yOCA4NDEuODldCi9UeXBlIC9QYWdlcwo+PgplbmRvYmoKMiAwIG9iago8PAovT3BlbkFjdGlvbiBbMyAwIFIgL0ZpdEggbnVsbF0KL1BhZ2VMYXlvdXQgL09uZUNvbHVtbgovUGFnZXMgMSAwIFIKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL0NvbnRlbnRzIDQgMCBSCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA3IDAgUgovVHlwZSAvUGFnZQo+PgplbmRvYmoKNCAwIG9iago8PAovRmlsdGVyIC9GbGF0ZURlY29kZQovTGVuZ3RoIDYwNAo+PgpzdHJlYW0KeJyNVOtv0zAQ/76/4r4ggQSe8072jWkr7AWCFb4iV76mbh272F4n/nsuSbv0MVAiVU6d+z3ufOcYbs84ywp4PrucwvkkgqhknMN0DtfTdivmKYtSKKqoXaYS3k5v7i9/XMHXB3ik1/ubL5/ewXS5DT+fxBBFBwwJIUsokoJVeUdwtxToEG6tezIG7jaiafD9HscWwHNWlB3gp4KFcFBrlGhAbEBAUHr2ByTW4OlVK1PTF28beBS69n6Jc1AUKbH91GpoFTD4lTXBWa3ZgWVKOnnFcp5njPcOrjAIvUR3DHst0zxJWcY72MRKj9pLEezF/4sUFTGron1sxBknvqrKRonSbhn356N0cFQp7XGk6IDlFeMFi3mcjxHNymrXFB+NxxBaTT+3rhknvIefCB9ejnKUdp6ztO+nxy3Mr531aMJI8YGgpFK/GSWaJqyo+oSd19aYkVoDrkw4PbAa1UpZTEu01ZuhklQhOVJygOaM07w06GBNPynqYwI+EPyGF/G0KFnZmeYsjSnguZ1EvRLuAg6Pe2G1xAAO6ydNk+27Ee39NkovrbYbmk5bwwylU/OAxrdWvDVCL4SRM7tiQCMG9RKJyQFF01lukLKFtYBdM8K3A385tW03ngnLyrTz1wiDLUGDEqizKFeSaWmNV1LVYNdrr+ret1M+MLimNNyLGgnTv+Mo2k1gS81ggk4hZTOYGiylKSuLrujzNmqNdC85mFvdLe1WVwt2ctsldL/yfgYfyDvFGE1+F4pMmNPLMckiliRd+K9/P6cwWtK+Dz9//7C7HtHsAv8CcLahsgplbmRzdHJlYW0KZW5kb2JqCjUgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EtQm9sZAovRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZwovU3VidHlwZSAvVHlwZTEKL1R5cGUgL0ZvbnQKPj4KZW5kb2JqCjYgMCBvYmoKPDwKL0Jhc2VGb250IC9IZWx2ZXRpY2EKL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcKL1N1YnR5cGUgL1R5cGUxCi9UeXBlIC9Gb250Cj4+CmVuZG9iago3IDAgb2JqCjw8Ci9Gb250IDw8L0YxIDUgMCBSCi9GMiA2IDAgUj4+Ci9Qcm9jU2V0IFsvUERGIC9UZXh0IC9JbWFnZUIgL0ltYWdlQyAvSW1hZ2VJXQo+PgplbmRvYmoKOCAwIG9iago8PAovQ3JlYXRpb25EYXRlIChEOjIwMjYwMzA0MTkxODA2WikKPj4KZW5kb2JqCnhyZWYKMCA5CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAxNSAwMDAwMCBuIAowMDAwMDAwMTAyIDAwMDAwIG4gCjAwMDAwMDAyMDUgMDAwMDAgbiAKMDAwMDAwMDI4NSAwMDAwMCBuIAowMDAwMDAwOTYxIDAwMDAwIG4gCjAwMDAwMDEwNjMgMDAwMDAgbiAKMDAwMDAwMTE2MCAwMDAwMCBuIAowMDAwMDAxMjU3IDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgOQovUm9vdCAyIDAgUgovSW5mbyA4IDAgUgovSUQgWzxBMzJFOTlBNDQyQkI0MDQ0ODY0NjZCMTcwNzg3RTU0Rj48QTMyRTk5QTQ0MkJCNDA0NDg2NDY2QjE3MDc4N0U1NEY+XQo+PgpzdGFydHhyZWYKMTMxMgolJUVPRgo="
+    }
+  ]
+}

@@ -261,11 +261,15 @@ export function classifyTask(prompt: string): TaskType {
     return "timesheet";
   }
 
-  // --- Voucher / accounting dimensions (BEFORE project — dimension names like "Prosjekttype" contain "prosjekt")
+  // --- Voucher / accounting dimensions / ledger corrections (BEFORE project)
   if (
     has(t, "dimension", "dimensión", "kostsenter", "kostnadsbærer", "pièce comptable",
       "bilag", "voucher", "comprobante", "comprovante", "beleg",
-      "comptabilisez", "buchungsbeleg")
+      "comptabilisez", "buchungsbeleg",
+      "hauptbuch", "ledger error", "fehler im hauptbuch",
+      "feil i hovedbok", "korrigere bilag", "correct voucher",
+      "clôture annuelle", "year-end closing", "årsavslutning", "årsoppgjør",
+      "amortissement", "depreciation", "avskrivning")
   ) {
     return "voucher";
   }

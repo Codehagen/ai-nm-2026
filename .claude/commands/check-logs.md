@@ -4,10 +4,12 @@ Analyze the most recent agent runs, diagnose failures, and propose fixes.
 
 ## Context
 
-- Logs are at `tasks/1/logs/` — `solves.jsonl` (summary), `details/` (full API traces), `requests/` (raw incoming)
-- GCP VM at `34.158.87.44` — SSH: `ssh -i ~/.ssh/gcp_ainm walgermo@34.158.87.44`
-- VM logs: `ssh ... "tail -50 /tmp/api.log"` for server-side logs not captured locally
-- Scoring: only WRITE calls (POST/PUT/DELETE) count for efficiency. GETs are free.
+- **Logs on GCP VM** (not local!): `~/task1/logs/` — `solves.jsonl`, `details/`, `requests/`
+- **SSH**: `ssh -i ~/.ssh/gcp_ainm walgermo@$(gcloud compute instances describe ainm-tripletex --zone=europe-west4-a --format='get(networkInterfaces[0].accessConfigs[0].natIP)')`
+- **VM console logs**: `ssh ... "tail -50 /tmp/api.log"`
+- **ngrok URL** (persistent): `https://hypertragical-birdie-unjocose.ngrok-free.dev`
+- **Timeouts**: API=280s, model=250s/step=60s, competition=300s, tunnel=unlimited
+- **Scoring**: only WRITE calls (POST/PUT/DELETE) count for efficiency. GETs are free.
 - Tier multipliers: T1=×1, T2=×2, T3=×3. Max score per task: tier × 2 (with efficiency bonus).
 
 ## Steps
