@@ -63,13 +63,13 @@ L7_ADJ_MAX = 1.25
 XGB_HPARAMS = {
     "plains": dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.7, min_child_weight=3),
+                   colsample_bytree=0.65, min_child_weight=3),
     "forest": dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.7, min_child_weight=3),
+                   colsample_bytree=0.65, min_child_weight=3),
     "settl":  dict(n_estimators=600, max_depth=5, learning_rate=0.08,
                    reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.7, min_child_weight=3),
+                   colsample_bytree=0.65, min_child_weight=3),
 }
 
 # ──────────────────────────────────────────────────────────────
