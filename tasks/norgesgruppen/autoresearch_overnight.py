@@ -662,11 +662,12 @@ def main():
 
     wait_for_gpu()
 
-    # First 2 runs: random (seed data for Gemini), then AI-guided
+    # First run random (warmup), then Gemini-guided
+    # Fleet already has hundreds of results, no long warmup needed
     run_idx = completed
     while True:
         run_idx += 1
-        use_ai = run_idx > (completed + 2)
+        use_ai = run_idx > (completed + 1)
 
         # Swarm sync: pull fleet results before asking Gemini
         if use_ai:

@@ -61,10 +61,10 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
   const supplierId = await createSupplier(ctx, data.supplier);
 
   // 3. Get ledger accounts (check VAT lock on expense account)
-  const expenseAccountId = await getLedgerAccount(ctx, data.expenseAccount);
+  let expenseAccountId = await getLedgerAccount(ctx, data.expenseAccount);
   const supplierAccountId = await getLedgerAccount(ctx, "2400"); // Leverandørgjeld
 
-  // Check if expense account has a locked VAT type — use it instead of extracted VAT
+  // Check if expense account has a locked VAT type
   let vatTypeId = INPUT_VAT_MAP[data.vatPercent] ?? 1;
   const acctRes = await ctx.get(`/ledger/account/${expenseAccountId}`, {
     fields: "id,vatType,vatLocked",
@@ -73,8 +73,23 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
     const acctVal = (acctRes.data as Record<string, unknown>)?.value as Record<string, unknown> | undefined;
     const vatLocked = acctVal?.vatLocked as boolean | undefined;
     const acctVatType = acctVal?.vatType as Record<string, unknown> | undefined;
-    if (vatLocked) {
-      // Locked VAT — use the account's type, or 0% exempt if vatType is null
+    if (vatLocked && data.vatPercent !== "0") {
+      // Account locked to 0% but receipt has VAT → fall back to unlocked account 7300
+      const lockedPct = (acctVatType as Record<string, unknown> | undefined);
+      const lockedId = lockedPct?.id as number | undefined;
+      if (!lockedId || lockedId === 6 || lockedId === 5) {
+        // Locked to 0% exempt, but receipt has VAT — use 7300 (Salgskostnad, open, 25%)
+        try {
+          expenseAccountId = await getLedgerAccount(ctx, "7300");
+        } catch {
+          // If 7300 doesn't exist, keep original account and accept the VAT mismatch
+        }
+      } else {
+        // Account locked to non-zero VAT — use the locked VAT
+        vatTypeId = lockedId;
+      }
+    } else if (vatLocked) {
+      // VAT is 0% and account is locked — use the locked type
       vatTypeId = (acctVatType?.id as number) ?? INPUT_VAT_MAP["0"] ?? 6;
     }
   }
