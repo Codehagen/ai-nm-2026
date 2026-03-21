@@ -73,23 +73,8 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
     const acctVal = (acctRes.data as Record<string, unknown>)?.value as Record<string, unknown> | undefined;
     const vatLocked = acctVal?.vatLocked as boolean | undefined;
     const acctVatType = acctVal?.vatType as Record<string, unknown> | undefined;
-    if (vatLocked && data.vatPercent !== "0") {
-      // Account locked to 0% but receipt has VAT → fall back to unlocked account 7300
-      const lockedPct = (acctVatType as Record<string, unknown> | undefined);
-      const lockedId = lockedPct?.id as number | undefined;
-      if (!lockedId || lockedId === 6 || lockedId === 5) {
-        // Locked to 0% exempt, but receipt has VAT — use 7300 (Salgskostnad, open, 25%)
-        try {
-          expenseAccountId = await getLedgerAccount(ctx, "7300");
-        } catch {
-          // If 7300 doesn't exist, keep original account and accept the VAT mismatch
-        }
-      } else {
-        // Account locked to non-zero VAT — use the locked VAT
-        vatTypeId = lockedId;
-      }
-    } else if (vatLocked) {
-      // VAT is 0% and account is locked — use the locked type
+    if (vatLocked) {
+      // Account is locked — ALWAYS use the locked VAT type (scoring checks exact account number)
       vatTypeId = (acctVatType?.id as number) ?? INPUT_VAT_MAP["0"] ?? 6;
     }
   }

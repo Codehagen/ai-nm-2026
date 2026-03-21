@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-03-21T22:34:50.503Z",
+  "prompt": "Set a fixed price of 202150 NOK on the project Cloud Migration for Clearwater Ltd (org no. 872682023). The project manager is Oliver Brown (oliver.brown@example.org). Invoice the customer for 25% of the fixed price as a milestone payment.",
+  "filesCount": 0,
+  "steps": 0,
+  "toolCalls": 0,
+  "apiCalls": 0,
+  "apiErrors": 0,
+  "elapsedMs": 110003,
+  "status": "timeout"
+}

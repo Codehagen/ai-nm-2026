@@ -1,0 +1,132 @@
+{
+  "timestamp": "2026-03-21T22:33:14.058Z",
+  "model": "orchestrator-failed",
+  "taskType": "orchestrator:project:failed",
+  "prompt": "Set a fixed price of 202150 NOK on the project Cloud Migration for Clearwater Ltd (org no. 872682023). The project manager is Oliver Brown (oliver.brown@example.org). Invoice the customer for 25% of the fixed price as a milestone payment.",
+  "filesCount": 0,
+  "steps": 1,
+  "toolCalls": 8,
+  "apiCalls": 8,
+  "apiErrors": 3,
+  "elapsedMs": 13558,
+  "status": "error",
+  "error": "Failed to create product milestone payment: Product cannot be changed if Rackbeat integration is active.",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/employee",
+      "ok": true,
+      "params": {
+        "fields": "id",
+        "count": "1"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/department",
+      "ok": false,
+      "body": {
+        "name": "Avdeling",
+        "departmentNumber": "1"
+      },
+      "status": 422,
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "departmentNumber",
+          "message": "Nummeret er i bruk.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true,
+      "params": {
+        "departmentNumber": "1",
+        "fields": "id,name"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/employee",
+      "ok": true,
+      "body": {
+        "firstName": "Oliver",
+        "lastName": "Brown",
+        "email": "oliver.brown@example.org",
+        "dateOfBirth": "1990-01-15",
+        "userType": "STANDARD",
+        "department": {
+          "id": 844789
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "Clearwater Ltd",
+        "isCustomer": true,
+        "organizationNumber": "872682023"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/project",
+      "ok": true,
+      "body": {
+        "name": "Cloud Migration",
+        "projectManager": {
+          "id": 18443378
+        },
+        "customer": {
+          "id": 108443317
+        },
+        "isInternal": false,
+        "startDate": "2026-03-21"
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/project/402042399",
+      "ok": false,
+      "body": {
+        "id": 402042399,
+        "version": 0,
+        "projectManager": {
+          "id": 18681443
+        },
+        "isFixedPrice": true,
+        "fixedprice": 202150
+      },
+      "status": 422,
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": "Internt felt (employeeId)",
+          "message": "Oppgitt prosjektleder har ikke fått tilgang som prosjektleder i kontoen: Oliver Brown.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "body": {
+        "name": "milestone payment",
+        "priceExcludingVatCurrency": 50537.5,
+        "vatType": {
+          "id": 3
+        }
+      },
+      "status": 403,
+      "errorMessage": "Product cannot be changed if Rackbeat integration is active."
+    }
+  ]
+}
