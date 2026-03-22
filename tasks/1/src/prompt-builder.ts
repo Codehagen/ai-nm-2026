@@ -75,7 +75,10 @@ const RECIPE_EMPLOYEE = `## Creating an Employee (TESTED RECIPE)
 - \`department\` MUST reference a real department ID.
 - ALWAYS include \`dateOfBirth\` in YYYY-MM-DD format (use "1990-01-15" if not specified). Convert "born 21. October 1981" → "1981-10-21".
 - ALWAYS include \`email\`. If not specified, use firstname.lastname@example.org.
-- If the prompt gives a START DATE, you also need to create employment: POST /employee/employment with {employee.id, startDate, division.id}. Get division via GET /division?fields=id&count=1. If none exists, create one.
+- If the prompt gives a START DATE, you also need to create employment:
+  1. GET /division?fields=id&count=1 — check if division exists
+  2. If none: GET /municipality?fields=id&count=1 → POST /division {"name":"Hovedenhet","startDate":"2026-01-01","municipalityDate":"2026-01-01","organizationNumber":"000000000","municipality":{"id":<mun_id>}}
+  3. POST /employee/employment with {employee.id, startDate, division.id}
 - POST /employee/employment accepts ONLY: employee.id, startDate, division.id. Do NOT put employmentType, percentageOfFullTimeEquivalent, occupationCode on this endpoint — they go on /employee/employment/details.
 
 ### PUT /employee/{id} — special rules:
