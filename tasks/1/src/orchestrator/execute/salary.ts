@@ -27,8 +27,8 @@ const SALARY_TYPE_NUMBERS: Record<string, number> = {
 export async function executeSalary(ctx: OrchestratorContext, data: SalaryData): Promise<void> {
   const today = getOsloDate();
   const [yearStr, monthStr] = today.split("-");
-  let year = data.year ?? parseInt(yearStr);
-  let month = data.month ?? parseInt(monthStr);
+  let year = (data.year && data.year >= 1900 && data.year <= 2100) ? Math.round(data.year) : parseInt(yearStr);
+  let month = (data.month && data.month >= 1 && data.month <= 12) ? Math.round(data.month) : parseInt(monthStr);
 
   // 1. Department (use name from PDF/prompt if available)
   const deptId = await ensureDepartment(ctx, data.departmentName ?? "Avdeling", "1");
