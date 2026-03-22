@@ -122,6 +122,7 @@ ROUNDS = {
     16: "8f664aed-8839-4c85-bed0-77a2cac7c6f5",
     17: "3eb0c25d-28fa-48ca-b8e1-fc249e3918e9",
     18: "b0f9d1bf-4b71-4e6e-816c-19c718d29056",
+    19: "597e60cf-d1a1-4627-ac4d-2a61da68b6df",
 }
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -183,7 +184,7 @@ def load_round_data(round_num):
     return initial_states, gts
 
 
-ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 13: 1.05**12, 14: 1.05**13, 15: 1.05**14, 16: 1.05**15, 17: 1.05**16, 18: 1.05**17}
+ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 13: 1.05**12, 14: 1.05**13, 15: 1.05**14, 16: 1.05**15, 17: 1.05**16, 18: 1.05**17, 19: 1.05**18}
 
 
 def train_gbt_models(train_rounds):
@@ -375,7 +376,7 @@ def evaluate_loro():
     Supports LORO_FOLDS env var for quick screening:
         LORO_FOLDS=7,13,16 python train.py  → only evaluate those 3 folds
     """
-    all_rounds = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18]  # R12 excluded: 0 observations
+    all_rounds = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19]  # R12 excluded: 0 observations
 
     # Support quick screening: only evaluate specified folds
     loro_folds_env = os.environ.get("LORO_FOLDS", "")

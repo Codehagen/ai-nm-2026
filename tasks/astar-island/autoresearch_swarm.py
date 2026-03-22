@@ -458,6 +458,26 @@ def main():
             git_amend()  # include results.tsv in the commit
             log(f"KEEP! val_metric={val_metric:.6f} (+{delta:.6f})")
 
+            # Push best score to GCS leaderboard
+            try:
+                import socket
+                hostname = socket.gethostname()
+                zone_guess = subprocess.run(
+                    ["curl", "-s", "-H", "Metadata-Flavor: Google",
+                     "http://metadata.google.internal/computeMetadata/v1/instance/zone"],
+                    capture_output=True, text=True, timeout=3
+                ).stdout.strip().split("/")[-1] if True else "unknown"
+                leaderboard = f"{val_metric:.6f} {hostname} {zone_guess} {description[:50]}\n"
+                lb_file = Path(f"/tmp/best_{VM_ID}.txt")
+                lb_file.write_text(leaderboard)
+                subprocess.run(
+                    ["gsutil", "cp", str(lb_file), f"gs://ainm-astar-results/best_{VM_ID}.txt"],
+                    capture_output=True, timeout=10
+                )
+                log(f"  Pushed to GCS leaderboard")
+            except Exception as e:
+                log(f"  GCS push failed: {e}")
+
             # Log per-round scores
             for line in output.split("\n"):
                 if line.startswith("round_") and "_score:" in line:
