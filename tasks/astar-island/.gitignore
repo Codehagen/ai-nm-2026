@@ -1,0 +1,12 @@
+data/*.npy
+data/*.jsonl
+data/*.json
+data/*.pkl
+data/*.md
+data/*.js
+dashboard.html
+train.py.backup_*
+train.py.before_*
+train.py.orchestrator_backup
+train.py.swarm_best
+__pycache__/
