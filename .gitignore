@@ -22,15 +22,18 @@ env/
 *.joblib
 *.safetensors
 
-# Data and models (large files)
-data/
-models/
+# Data and models (large files) — root only so tasks/<task>/data/ can hold small fixtures/README
+/data/
+/models/
 *.tar.gz
 *.zip
 
 # Environment
 .env
 .env.local
+
+# Claude Code (machine-local; not for public repo)
+.claude/settings.local.json
 
 # IDE
 .idea/
@@ -53,7 +56,6 @@ runs/
 
 # Node.js
 node_modules/
-dist/
 logs/
 
 # Unignore task 1 logs and results (shared with team)
