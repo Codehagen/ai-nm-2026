@@ -71,7 +71,7 @@ export function classifyTask(prompt: string): TaskType {
       "frais de rappel", "purrerente", "purregebyr", "inkassogebyr",
       "reminder fee", "late fee", "reminder",
       "mahngebühr", "mahngebuhr",
-      "cargo por demora", "tasa de recordatorio",
+      "cargo por demora", "tasa de recordatorio", "cargo por recordatorio",
       "taxa de lembrete", "taxa de mora",
       // Year-end closing / depreciation
       "clôture annuelle", "year-end closing", "årsavslutning", "arsavslutning", "årsoppgjør", "arsoppgjor",

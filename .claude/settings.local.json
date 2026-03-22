@@ -314,7 +314,10 @@
       "Bash(__NEW_LINE_4b513216220a4bb4__ rm:*)",
       "Bash(zip -r /Users/walgermo/Utvikling/ai-nm-2026/tasks/norgesgruppen/submission_real_wbf052.zip . -x \".*\")",
       "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" BASE=\"https://kkpqfuj-amager.tripletex.dev/v2\" __NEW_LINE_1365b3d299fa89f2__ echo \"=== Test EXTENDED userType ===\" curl -s -u \"0:$TOKEN\" -X POST \"$BASE/employee\" -H \"Content-Type: application/json\" -d '{\"\"\"\"firstName\"\"\"\":\"\"\"\"ExtTest\"\"\"\",\"\"\"\"lastName\"\"\"\":\"\"\"\"User\"\"\"\",\"\"\"\"email\"\"\"\":\"\"\"\"ext.test@example.org\"\"\"\",\"\"\"\"dateOfBirth\"\"\"\":\"\"\"\"1990-01-15\"\"\"\",\"\"\"\"userType\"\"\"\":\"\"\"\"EXTENDED\"\"\"\",\"\"\"\"department\"\"\"\":{\"\"\"\"id\"\"\"\":844789}}')",
-      "Bash(/dev/null ssh:*)"
+      "Bash(/dev/null ssh:*)",
+      "Bash(./node_modules/.bin/tsc)",
+      "Bash(node -e \":*)",
+      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" __NEW_LINE_c0284e07fd699281__ echo \"=== Check perDiemCompensation rate types ===\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/travelExpense/perDiemCompensation/rateType?fields=id,name&count=10\")"
     ]
   }
 }
