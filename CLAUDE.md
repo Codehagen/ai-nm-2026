@@ -1,4 +1,6 @@
-# Claude Code Instructions
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 Read `AGENTS.md` for full project navigation and golden rules.
 
@@ -132,3 +134,39 @@ Run `scripts/validate.sh` before submitting. It checks:
 - `/predict` returns valid responses matching DTO schema
 - Response times within timeout limits
 - No prohibited cloud API imports in inference path
+
+## NorgesGruppen Task (Object Detection)
+
+Task docs: `docs/task-info-norgesgruppen.md`. Task code: `tasks/norgesgruppen/`.
+
+### Local Testing
+
+```bash
+cd tasks/norgesgruppen
+python test_local.py --zip submission.zip --quick     # smoke test (2 images)
+python test_local.py --zip submission.zip --data data/yolo-3way  # held-out eval (pycocotools)
+python test_local.py --data data/yolo-3way            # eval current models/best.pt
+```
+
+### Sandbox Pitfalls (Hard-won)
+
+- **torch.load patch required**: PyTorch 2.6 + ultralytics 8.1.0 — must monkey-patch `weights_only=False` before importing YOLO
+- **Never use `model.half()`** on ultralytics YOLO objects — crashes sandbox (exit code 1)
+- **WANDB_DISABLED=true** must be in subprocess env, not just in script
+- **GCP VMs**: install `numpy==1.26.4` BEFORE opencv (order matters). Use `systemd-run` not `nohup`
+- **Local scores unreliable** for full-dataset models (test set leaked). Only live score matters
+
+### Best Known Configuration
+
+- **Model**: YOLOv8l, cls=1.5 loss weight, full dataset, 300 epochs
+- **Inference**: 3-pass WBF (960 + 1280 + 1280+TTA), weights [1,2,3]
+- **WBF params**: iou_thr=0.65, skip_box_thr=0.01, conf_type=avg
+- **Precision**: bbox round(2), score round(6)
+- **Best live**: 0.9208 (3-model diverse ensemble)
+
+### What Doesn't Work (Don't Retry)
+
+- Two-stage YOLO + classifier (ConvNeXt): hurts classification on unseen data
+- SWA weight averaging: produces degenerate models
+- conf_type='max': consistently worst in all sweeps
+- Different seeds/optimizers: score ±0.005 randomly, not worth submissions
