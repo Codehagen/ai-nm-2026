@@ -143,7 +143,32 @@ export async function executeInvoice(ctx: OrchestratorContext, data: InvoiceData
     orders: [{ id: orderId }],
   }, Object.keys(invoiceParams).length > 0 ? invoiceParams : undefined);
 
-  if (!invoiceRes.ok) throw new Error(`Failed to create invoice: ${invoiceRes.message}`);
+  if (!invoiceRes.ok) {
+    // 500/422 on invoice POST with payment params — the invoice may have been created.
+    // Check if invoice exists for this order before failing.
+    const checkRes = await ctx.get("/invoice", {
+      invoiceDateFrom: today,
+      invoiceDateTo: today,
+      fields: "id,amount,invoiceNumber",
+    });
+    const existing = extractValues(checkRes);
+    if (existing.length > 0) {
+      // Invoice was created despite the error — if we need payment and it wasn't included, register it now
+      if (data.registerPayment && payType && !invoiceRes.ok) {
+        const invId = existing[existing.length - 1].id as number;
+        const amount = invoiceParams.paidAmount;
+        if (amount) {
+          await ctx.put(`/invoice/${invId}/:payment`, {}, {
+            paymentDate: today,
+            paymentTypeId: String(payType),
+            paidAmount: amount,
+          });
+        }
+      }
+      return; // Invoice exists, don't fail
+    }
+    throw new Error(`Failed to create invoice: ${invoiceRes.message}`);
+  }
 
   // 5. Forex: post agio/disagio voucher for exchange rate difference
   if (data.currencyCode && data.exchangeRate && data.paymentExchangeRate && data.paymentExchangeRate !== data.exchangeRate) {

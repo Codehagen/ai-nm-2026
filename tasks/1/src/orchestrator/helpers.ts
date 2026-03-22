@@ -92,8 +92,9 @@ export class OrchestratorContext {
   async post(path: string, body: unknown, params?: Record<string, string>): Promise<TxResult> {
     const result = await this.client.post(path, body, params);
     this.logCall("POST", path, result, params, body);
-    // Auto-retry transient 409/500
-    if (!result.ok && (result.status === 409 || result.status === 500)) {
+    // Auto-retry transient 409/500 — but NOT for /invoice (creates duplicates on 500)
+    const noRetryPaths = ["/invoice"];
+    if (!result.ok && (result.status === 409 || result.status === 500) && !noRetryPaths.some(p => path.startsWith(p))) {
       await sleep(800);
       const retry = await this.client.post(path, body, params);
       this.logCall("POST", path, retry, params, body);

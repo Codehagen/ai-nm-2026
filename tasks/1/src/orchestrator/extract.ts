@@ -30,7 +30,7 @@ const anthropic = createAnthropic({
 
 const EXTRACT_MODEL_ID = process.env.EXTRACT_MODEL_ID || "gemini-3.1-pro-preview";
 const FALLBACK_MODEL_ID = process.env.FALLBACK_MODEL_ID || "gemini-3.1-flash-lite-preview";
-const EXTRACT_TIMEOUT_MS = 45_000; // 45s before falling back to faster model
+const EXTRACT_TIMEOUT_MS = 60_000; // 60s before falling back to faster model
 
 function getModel(modelId: string) {
   if (modelId.startsWith("claude-") || modelId.startsWith("anthropic/")) {
