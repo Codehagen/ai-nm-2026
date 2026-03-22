@@ -356,6 +356,12 @@ const RECIPE_VOUCHER = `## Voucher Management
 POST /ledger/voucher to create vouchers. Postings MUST balance (debit + credit = 0).
 \`row\` numbering MUST start at 1. \`amountGrossCurrency\` MUST equal \`amountGross\`.
 
+**CRITICAL ACCOUNT RULES:**
+- Account 1500 (kundefordringer) REQUIRES \`customer: {id: N}\` on the posting row
+- Account 2400 (leverandørgjeld) REQUIRES \`supplier: {id: N}\` on the posting row
+- If you need to post to these accounts, GET /customer or /supplier first to get the ID
+- For correction vouchers: use PUT /ledger/voucher/{id}/:reverse?date=<today> instead of manual reversal postings when possible
+
 ### Reminder Fee / Late Fee / Purregebyr:
 If the prompt mentions a reminder fee with debit/credit accounts (e.g. "Debit 1500, credit 3400"):
 1. GET /invoice?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01&fields=id,customer,amount,invoiceNumber — find the overdue invoice

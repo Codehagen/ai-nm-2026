@@ -79,10 +79,10 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
     const vatLocked = acctVal?.vatLocked as boolean | undefined;
     const acctVatType = acctVal?.vatType as Record<string, unknown> | undefined;
     if (vatLocked) {
-      // Account is locked — use the locked VAT type (scoring checks exact account number)
-      // VAT type id 0 is INVALID — use id 6 ("Ingen utgående avgift") as fallback
+      // Account is locked — use the locked VAT type exactly as returned
+      // id=0 IS valid ("Ingen avgiftsbehandling") — don't skip it!
       const lockedVatId = acctVatType?.id as number | undefined;
-      vatTypeId = (lockedVatId && lockedVatId > 0) ? lockedVatId : 6;
+      vatTypeId = (lockedVatId != null) ? lockedVatId : 0;
     }
   }
   const voucherDescription = data.invoiceNumber

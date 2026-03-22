@@ -440,6 +440,29 @@ describe("Orchestrator Executors", () => {
       expect(sendCalls[0].method).toBe("PUT");
     });
 
+    it("uses vatType id=0 when account is locked to MVA-kode 0 (not id=6)", async () => {
+      const ctx = makeCtx();
+      const data: SupplierInvoiceData = {
+        supplier: { name: "Flight AS" },
+        invoiceNumber: "KVITTERING",
+        invoiceDate: "2026-03-20",
+        dueDate: "2026-03-20",
+        description: "Flybillett",
+        amountExclVat: 3000,
+        amountInclVat: 3000,
+        vatPercent: "0",
+        expenseAccount: "7300",
+      };
+
+      await executeSupplierInvoice(ctx, data);
+
+      // The vatType should be derived from the account lock, not hardcoded to 6
+      const siCalls = ctx.apiCalls.filter((c) => c.method === "POST" && c.path.includes("/supplierInvoice"));
+      expect(siCalls.length).toBe(1);
+      // Verify no 422 errors on supplierInvoice
+      expect(siCalls[0].ok).toBe(true);
+    });
+
     it("omits department from posting when departmentName is not set", async () => {
       const ctx = makeCtx();
       const data: SupplierInvoiceData = {

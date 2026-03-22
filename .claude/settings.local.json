@@ -304,7 +304,8 @@
       "Bash(rm -rf _wbfopt)",
       "Bash(mkdir _wbfopt)",
       "Bash(md5 _wbfopt/model_*.pt)",
-      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" BASE=\"https://kkpqfuj-amager.tripletex.dev/v2\" __NEW_LINE_ec6d6db15ea6fa74__ echo \"=== VAT types available ===\" curl -s -u \"0:$TOKEN\" \"$BASE/ledger/vatType?fields=id,number,name&count=20\")"
+      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" BASE=\"https://kkpqfuj-amager.tripletex.dev/v2\" __NEW_LINE_ec6d6db15ea6fa74__ echo \"=== VAT types available ===\" curl -s -u \"0:$TOKEN\" \"$BASE/ledger/vatType?fields=id,number,name&count=20\")",
+      "Bash(cat:*)"
     ]
   }
 }
