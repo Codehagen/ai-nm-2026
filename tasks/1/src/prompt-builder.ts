@@ -80,6 +80,7 @@ const RECIPE_EMPLOYEE = `## Creating an Employee (TESTED RECIPE)
   2. If none: GET /municipality?fields=id&count=1 → POST /division {"name":"Hovedenhet","startDate":"2026-01-01","municipalityDate":"2026-01-01","organizationNumber":"000000000","municipality":{"id":<mun_id>}}
   3. POST /employee/employment with {employee.id, startDate, division.id}
 - POST /employee/employment accepts ONLY: employee.id, startDate, division.id. Do NOT put employmentType, percentageOfFullTimeEquivalent, occupationCode on this endpoint — they go on /employee/employment/details.
+- **Do NOT grant entitlements** (PUT /employee/entitlement) for simple employee tasks. Only do this if the prompt says "administrator"/"admin"/"kontoadministrator". Every unnecessary write hurts efficiency.
 
 ### PUT /employee/{id} — special rules:
 - ALWAYS include \`dateOfBirth\` in PUT body (even if not changing it). Missing it = 422.
