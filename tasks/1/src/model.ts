@@ -216,7 +216,7 @@ export function retryKey(path: string, body: Record<string, unknown>): string {
 }
 
 /** Known-invalid fields that the model hallucinates in GET requests */
-export const INVALID_GET_FIELDS = new Set(["isClosed", "amountIncVat", "company", "address"]);
+export const INVALID_GET_FIELDS = new Set(["isClosed", "amountIncVat", "company", "address", "dueDate", "balance", "amountOutstanding"]);
 
 /** Strip known-invalid fields from a GET fields parameter string */
 export function stripInvalidFields(fields: string): string {

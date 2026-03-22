@@ -44,6 +44,11 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
     }
   }
 
+  // Fix invoiceNumber for receipts — extraction often returns the date instead of "KVITTERING"
+  if (data.invoiceNumber && /^\d{2}\.\d{2}\.\d{4}$/.test(data.invoiceNumber)) {
+    data.invoiceNumber = "KVITTERING";
+  }
+
   // Fix expense account for meals/representation keywords (extraction often picks 7100 instead of 7350)
   const descLower = (data.description || "").toLowerCase();
   if (["kundemøte", "kundemote", "lunsj", "middag", "restaurant", "meeting lunch", "déjeuner", "dejeuner",
@@ -74,8 +79,10 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
     const vatLocked = acctVal?.vatLocked as boolean | undefined;
     const acctVatType = acctVal?.vatType as Record<string, unknown> | undefined;
     if (vatLocked) {
-      // Account is locked — ALWAYS use the locked VAT type (scoring checks exact account number)
-      vatTypeId = (acctVatType?.id as number) ?? INPUT_VAT_MAP["0"] ?? 6;
+      // Account is locked — use the locked VAT type (scoring checks exact account number)
+      // VAT type id 0 is INVALID — use id 6 ("Ingen utgående avgift") as fallback
+      const lockedVatId = acctVatType?.id as number | undefined;
+      vatTypeId = (lockedVatId && lockedVatId > 0) ? lockedVatId : 6;
     }
   }
   const voucherDescription = data.invoiceNumber
@@ -112,6 +119,14 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
         },
       ],
     },
-  }, { sendToLedger: "true" });
+  });
   if (!res.ok) throw new Error(`Failed to create supplier invoice: ${res.message}`);
+
+  // Send voucher to ledger (separate call — sendToLedger param on POST doesn't work per OpenAPI)
+  const val = extractValue(res);
+  const voucher = val.voucher as Record<string, unknown> | undefined;
+  const voucherId = voucher?.id;
+  if (voucherId) {
+    await ctx.put(`/ledger/voucher/${voucherId}/:sendToLedger`, {});
+  }
 }

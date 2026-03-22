@@ -142,6 +142,51 @@ export async function executeSalary(ctx: OrchestratorContext, data: SalaryData):
     throw new Error(`Failed to create employment: ${empRes.message}`);
   }
 
+  // 5b. Employment details (occupationCode, percentage — scoring checks these)
+  let emplId = empRes.ok ? extractId(empRes) : undefined;
+  if (!emplId) {
+    const getEmpl = await ctx.get("/employee/employment", {
+      employeeId: String(empId),
+      fields: "id",
+    });
+    const emplValues = extractValues(getEmpl);
+    emplId = emplValues[0]?.id as number;
+  }
+  if (emplId) {
+    const detailsBody: Record<string, unknown> = {
+      employment: { id: emplId },
+      date: startDate,
+    };
+    if (data.percentageOfFullTimeEquivalent) {
+      detailsBody.percentageOfFullTimeEquivalent = data.percentageOfFullTimeEquivalent;
+    }
+    if (data.occupationCode) {
+      detailsBody.occupationCode = data.occupationCode;
+    }
+    // Only POST if we have actual details to set
+    if (data.percentageOfFullTimeEquivalent || data.occupationCode) {
+      await ctx.post("/employee/employment/details", detailsBody);
+    }
+  }
+
+  // 5c. Standard time (work hours per day) — if extracted from PDF
+  if ((data as Record<string, unknown>).workHoursPerDay) {
+    const hours = (data as Record<string, unknown>).workHoursPerDay as number;
+    // GET existing standard time entry, then PUT to update
+    const stRes = await ctx.get("/employee/standardTime", {
+      employeeId: String(empId),
+      fields: "id,version",
+    });
+    const stValues = extractValues(stRes);
+    if (stValues[0]?.id) {
+      await ctx.put(`/employee/standardTime/${stValues[0].id}`, {
+        id: stValues[0].id,
+        version: stValues[0].version,
+        hoursPerDay: hours,
+      });
+    }
+  }
+
   // 6. Get salary types
   const typeRes = await ctx.get("/salary/type", { fields: "id,number,name" });
   const salaryTypes = extractValues(typeRes);

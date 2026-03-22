@@ -323,21 +323,31 @@ const RECIPE_TRAVEL_EXPENSE = `## Travel Expense (TESTED RECIPE)
 
 ### Adding Costs:
 3. GET /travelExpense/costCategory?count=100&fields=id,description — call EXACTLY ONCE, save ALL results.
-   Common categories: "Fly/Flight" for flights, "Taxi" for taxi, "Hotell/Hotel" for hotels. Match by partial description.
+   Match expense to category by description keyword:
+   - Flight/flybillett/bilhete de avião → look for "Fly" or "Flybillett" in description
+   - Taxi → look for "Taxi" in description
+   - Hotel/overnatting → look for "Hotell" or "Overnatting" in description
+   - Train/tog/togbillett → look for "Tog" or "Togbillett" in description
+   - Parking/parkering → look for "Parkering" in description
+   - Other transport → look for "Annen transport" in description
    **DO NOT call this endpoint again. You already have the full list. Pick IDs from memory.**
-4. GET /travelExpense/paymentType?count=10&fields=id,description — call EXACTLY ONCE, use first result (usually "Egenfinansiert").
+4. GET /travelExpense/paymentType?count=10&fields=id,description — call EXACTLY ONCE.
+   - Use the FIRST paymentType (usually "Egenfinansiert" / employee-paid).
    **DO NOT call this endpoint again.**
 5. POST /travelExpense/cost (one per expense):
-   {"travelExpense": {"id": <travel_id>}, "costCategory": {"id": <cat_id>}, "paymentType": {"id": <pay_id>}, "date": "2026-03-19", "amountCurrencyIncVat": 7200, "comments": "Flight ticket"}
+   {"travelExpense": {"id": <travel_id>}, "costCategory": {"id": <cat_id>}, "paymentType": {"id": <pay_id>}, "date": "<departure_date>", "amountCurrencyIncVat": 7200, "comments": "Flight ticket"}
    - Costs use \`amountCurrencyIncVat\` (NOT \`amount\` or \`rate\`).
-   - If you get 409 RevisionException, just retry the same POST once — it's a transient version conflict.
+   - Use the DEPARTURE DATE as the cost date.
 
-### Adding Per Diem:
+### Adding Per Diem (diett/ajudas de custo/indemnité journalière):
 6. GET /travelExpense/rateCategory?type=PER_DIEM&isValidDomestic=true&dateFrom=<dep>&dateTo=<ret>&count=50&fields=id,name
 7. GET /travelExpense/rate?rateCategoryId=<cat_id>&fields=id,rate
 8. POST /travelExpense/perDiemCompensation:
-   {"travelExpense": {"id": <travel_id>}, "rateType": {"id": <rate_id>}, "rateCategory": {"id": <rate_cat_id>}, "overnightAccommodation": "HOTEL", "location": "Trondheim", "count": 4, "rate": 800, "isDeductionForBreakfast": false, "isDeductionForLunch": false, "isDeductionForDinner": false}
-   - \`overnightAccommodation\`: "NONE", "HOTEL", "BOARDING_HOUSE_WITHOUT_COOKING", "BOARDING_HOUSE_WITH_COOKING"
+   {"travelExpense": {"id": <travel_id>}, "rateType": {"id": <rate_id>}, "rateCategory": {"id": <rate_cat_id>}, "overnightAccommodation": "HOTEL", "location": "<destination>", "count": <days>, "rate": <daily_rate>, "isDeductionForBreakfast": false, "isDeductionForLunch": false, "isDeductionForDinner": false}
+   - \`overnightAccommodation\`: Use "HOTEL" when prompt mentions hotel/overnatting/hotell. Use "NONE" if no accommodation mentioned.
+   - \`count\`: Number of days (NOT nights). If "5 dager/dias/jours/Tage", count=5.
+   - \`rate\`: The daily rate from the prompt (e.g. 800 NOK). Use this EXACT value, not the API rate.
+   - Per diem deductions: Set all to false UNLESS prompt explicitly mentions deductions. Do NOT guess.
    - Per diem rateCategory IDs are DATE-SENSITIVE — filter by travel dates.`;
 
 const RECIPE_VOUCHER = `## Voucher Management
@@ -345,17 +355,28 @@ POST /ledger/voucher to create vouchers. Postings MUST balance (debit + credit =
 \`row\` numbering MUST start at 1. \`amountGrossCurrency\` MUST equal \`amountGross\`.
 
 ### Reminder Fee / Late Fee / Purregebyr:
-If the prompt mentions a reminder fee with debit/credit accounts (e.g. "Debit 1500, credit 8020"):
-1. GET /ledger/account?number=<debit_acct>&fields=id (e.g. 1500 = accounts receivable)
-2. GET /ledger/account?number=<credit_acct>&fields=id (e.g. 8020 = financial products)
-3. POST /ledger/voucher?sendToLedger=true:
+If the prompt mentions a reminder fee with debit/credit accounts (e.g. "Debit 1500, credit 3400"):
+1. GET /invoice?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01&fields=id,customer,amount,invoiceNumber — find the overdue invoice
+2. GET /ledger/account?number=<debit_acct>&fields=id (e.g. 1500 = accounts receivable)
+3. GET /ledger/account?number=<credit_acct>&fields=id (e.g. 3400 = reminder income)
+4. POST /ledger/voucher?sendToLedger=true — **CRITICAL: posting to account 1500 REQUIRES \`customer: {id: N}\`**:
 \`\`\`json
 {"date": "<today>", "description": "Purregebyr / Reminder fee", "postings": [
-  {"row": 1, "date": "<today>", "account": {"id": <debit_id>}, "amountGross": <amount>, "amountGrossCurrency": <amount>, "description": "Reminder fee"},
+  {"row": 1, "date": "<today>", "account": {"id": <debit_id>}, "customer": {"id": <cust_id>}, "amountGross": <amount>, "amountGrossCurrency": <amount>, "description": "Reminder fee"},
   {"row": 2, "date": "<today>", "account": {"id": <credit_id>}, "amountGross": -<amount>, "amountGrossCurrency": -<amount>, "description": "Reminder fee"}
 ]}
 \`\`\`
-**Do NOT create an order or invoice for reminder fees — this is a journal voucher.**
+5. If the prompt also says to CREATE AN INVOICE for the reminder fee and SEND it:
+   - POST /product {"name": "Purregebyr", "priceExcludingVatCurrency": <amount>, "vatType": {"id": 5}}
+   - POST /order {"customer": {"id": <cust_id>}, "orderDate": "<today>", "deliveryDate": "<today>", "orderLines": [{"product": {"id": <prod_id>}, "count": 1, "unitPriceExcludingVatCurrency": <amount>, "vatType": {"id": 5}}]}
+   - POST /invoice {"invoiceDate": "<today>", "invoiceDueDate": "<today+14>", "orders": [{"id": <order_id>}]}
+   - PUT /invoice/{id}/:send?sendType=EMAIL
+6. If the prompt also says to REGISTER A PARTIAL PAYMENT on the overdue invoice:
+   - GET /invoice/paymentType?fields=id
+   - PUT /invoice/{overdue_id}/:payment?paymentDate=<today>&paymentTypeId=<type_id>&paidAmount=<partial_amount>
+
+**Do NOT use POST /order/orderline — always include orderLines in POST /order.**
+**Do NOT put orderDate or deliveryDate on order lines — they go on the order.**
 
 ### Cost Analysis / Ledger Analysis:
 If the prompt asks you to analyze costs, find expense accounts with largest increases, or compare periods:

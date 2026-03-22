@@ -53,7 +53,7 @@ describe("Orchestrator Executors", () => {
   // ─── Invoice ──────────────────────────────────────────────────────
 
   describe("executeInvoice", () => {
-    it("creates a new invoice with customer and product", async () => {
+    it("creates a new invoice with customer and products", async () => {
       const ctx = makeCtx();
       const data: InvoiceData = {
         customer: { name: "Test Kunde AS" },
@@ -70,10 +70,10 @@ describe("Orchestrator Executors", () => {
       const customers = extractValues(custRes);
       expect(customers.some((c) => c.name === "Test Kunde AS")).toBe(true);
 
-      // Verify: product created
+      // Verify: product created (scoring checks products exist)
       const prodRes = await ctx.get("/product", { fields: "id,name" });
-      const products = extractValues(prodRes);
-      expect(products.some((p) => p.name === "Konsulenttime")).toBe(true);
+      const prods = extractValues(prodRes);
+      expect(prods.some((p) => p.name === "Konsulenttime")).toBe(true);
 
       // Verify: invoice exists
       const invRes = await ctx.get("/invoice", { invoiceDateFrom: "2020-01-01", invoiceDateTo: "2030-01-01", fields: "id" });
@@ -84,43 +84,64 @@ describe("Orchestrator Executors", () => {
       expect(errors.length).toBe(0);
     });
 
-    it("creates invoice and sends it", async () => {
+    it("creates invoice with send+payment via params (combined call)", async () => {
       const ctx = makeCtx();
       const data: InvoiceData = {
-        customer: { name: "Send Kunde" },
+        customer: { name: "Combined Kunde" },
         products: [{ name: "Produkt A", price: 500, vatPercent: "25", quantity: 1 }],
         sendInvoice: true,
-        registerPayment: false,
-        isExistingInvoice: false,
-      };
-
-      await executeInvoice(ctx, data);
-
-      // Verify: send action was called
-      const sendCalls = ctx.apiCalls.filter((c) => c.path.includes("/:send"));
-      expect(sendCalls.length).toBe(1);
-      expect(sendCalls[0].ok).toBe(true);
-    });
-
-    it("creates invoice and registers payment", async () => {
-      const ctx = makeCtx();
-      const data: InvoiceData = {
-        customer: { name: "Betal Kunde" },
-        products: [{ name: "Vare X", price: 1000, vatPercent: "25", quantity: 2 }],
-        sendInvoice: false,
         registerPayment: true,
         isExistingInvoice: false,
       };
 
       await executeInvoice(ctx, data);
 
-      // Verify: payment action was called
-      const paymentCalls = ctx.apiCalls.filter((c) => c.path.includes("/:payment"));
-      expect(paymentCalls.length).toBe(1);
-      expect(paymentCalls[0].ok).toBe(true);
+      // Verify: invoice POST includes payment params (combined, no separate PUT)
+      const invPost = ctx.apiCalls.filter((c) => c.method === "POST" && c.path === "/invoice");
+      expect(invPost.length).toBe(1);
+
+      // Verify: NO separate PUT /:send or PUT /:payment (combined into POST params)
+      const separateSend = ctx.apiCalls.filter((c) => c.method === "PUT" && c.path.includes("/:send"));
+      const separatePayment = ctx.apiCalls.filter((c) => c.method === "PUT" && c.path.includes("/:payment"));
+      expect(separateSend.length).toBe(0);
+      expect(separatePayment.length).toBe(0);
+
+      const errors = ctx.apiCalls.filter((c) => !c.ok);
+      expect(errors.length).toBe(0);
     });
 
-    it("handles multi-product invoice", async () => {
+    it("skips customer+product for existing invoice payment", async () => {
+      // First create an invoice so we have one to find
+      const setupCtx = makeCtx();
+      await executeInvoice(setupCtx, {
+        customer: { name: "Existing Kunde" },
+        products: [{ name: "Setup", price: 100, vatPercent: "25", quantity: 1 }],
+        sendInvoice: false,
+        registerPayment: false,
+        isExistingInvoice: false,
+      });
+
+      const ctx = makeCtx();
+      const data: InvoiceData = {
+        customer: { name: "Existing Kunde" },
+        products: [{ name: "Ignored", price: 100, vatPercent: "25", quantity: 1 }],
+        sendInvoice: false,
+        registerPayment: true,
+        isExistingInvoice: true,
+      };
+
+      await executeInvoice(ctx, data);
+
+      // Verify: NO customer POST (skipped for existing invoices)
+      const custPosts = ctx.apiCalls.filter((c) => c.method === "POST" && c.path === "/customer");
+      expect(custPosts.length).toBe(0);
+
+      // Verify: NO product POST
+      const prodPosts = ctx.apiCalls.filter((c) => c.method === "POST" && c.path === "/product");
+      expect(prodPosts.length).toBe(0);
+    });
+
+    it("handles multi-product invoice with inline descriptions", async () => {
       const ctx = makeCtx();
       const data: InvoiceData = {
         customer: { name: "Multi AS" },
@@ -139,10 +160,10 @@ describe("Orchestrator Executors", () => {
       const errors = ctx.apiCalls.filter((c) => !c.ok);
       expect(errors.length).toBe(0);
 
-      // Verify all 3 products created
+      // Verify: products created
       const prodRes = await ctx.get("/product", { fields: "id,name" });
-      const products = extractValues(prodRes);
-      expect(products.length).toBeGreaterThanOrEqual(3);
+      const prods = extractValues(prodRes);
+      expect(prods.length).toBeGreaterThanOrEqual(3);
     });
   });
 
@@ -344,6 +365,81 @@ describe("Orchestrator Executors", () => {
       expect((expensePosting?.department as Record<string, unknown>)?.id).toBeTruthy();
     });
 
+    it("corrects date-format invoiceNumber to KVITTERING", async () => {
+      const ctx = makeCtx();
+      const data: SupplierInvoiceData = {
+        supplier: { name: "Receipt Store" },
+        invoiceNumber: "22.02.2026", // Date format — should be corrected
+        invoiceDate: "2026-02-22",
+        dueDate: "2026-02-22",
+        description: "Kontorstoler",
+        amountExclVat: 4000,
+        amountInclVat: 5000,
+        vatPercent: "25",
+        expenseAccount: "7300", // Use account that exists in mock
+      };
+
+      await executeSupplierInvoice(ctx, data);
+
+      const siCalls = ctx.apiCalls.filter((c) => c.method === "POST" && c.path.includes("/supplierInvoice"));
+      const body = siCalls[0].body as Record<string, unknown>;
+      expect(body.invoiceNumber).toBe("KVITTERING");
+    });
+
+    it("forces account 7350 for meal descriptions (keyword correction)", async () => {
+      const ctx = makeCtx();
+      // Test that the keyword correction triggers — we verify the data mutation
+      // rather than the API call, since 7350 might not exist in mock
+      const data: SupplierInvoiceData = {
+        supplier: { name: "Restaurant" },
+        invoiceNumber: "KVITTERING",
+        invoiceDate: "2026-03-20",
+        dueDate: "2026-03-20",
+        description: "Kundemøte lunsj",
+        amountExclVat: 800,
+        amountInclVat: 1000,
+        vatPercent: "25",
+        expenseAccount: "7100", // Wrong — should be corrected to 7350
+      };
+
+      // The executor mutates data.expenseAccount before API calls
+      // We can't easily test the mutation without the account existing,
+      // so verify the correction happens by checking the GET call targets 7350
+      try {
+        await executeSupplierInvoice(ctx, data);
+      } catch {
+        // May fail because 7350 doesn't exist in mock — that's fine
+      }
+
+      // Verify: the account lookup attempted 7350 (not 7100)
+      const acctGets = ctx.apiCalls.filter((c) => c.method === "GET" && c.path === "/ledger/account");
+      const acctNumbers = acctGets.map((c) => (c as { params?: Record<string, string> }).params?.number).filter(Boolean);
+      expect(acctNumbers).toContain("7350");
+      expect(acctNumbers).not.toContain("7100");
+    });
+
+    it("sends voucher to ledger via separate PUT (not param)", async () => {
+      const ctx = makeCtx();
+      const data: SupplierInvoiceData = {
+        supplier: { name: "Ledger Test AS" },
+        invoiceNumber: "INV-001",
+        invoiceDate: "2026-03-20",
+        dueDate: "2026-04-20",
+        description: "Services",
+        amountExclVat: 8000,
+        amountInclVat: 10000,
+        vatPercent: "25",
+        expenseAccount: "7300",
+      };
+
+      await executeSupplierInvoice(ctx, data);
+
+      // Verify: separate PUT /:sendToLedger (NOT as param on POST)
+      const sendCalls = ctx.apiCalls.filter((c) => c.path.includes("/:sendToLedger"));
+      expect(sendCalls.length).toBe(1);
+      expect(sendCalls[0].method).toBe("PUT");
+    });
+
     it("omits department from posting when departmentName is not set", async () => {
       const ctx = makeCtx();
       const data: SupplierInvoiceData = {
@@ -519,18 +615,40 @@ describe("Orchestrator Executors", () => {
         registerPayment: false,
         isExistingInvoice: false,
       });
-      // bank account GET + PUT (if needed) + customer POST + product POST + order POST + invoice POST
+      // customer GET + POST + product GET/POST + bank GET + PUT + order POST + invoice POST
       expect(ctx.apiCalls.length).toBeLessThanOrEqual(8);
+      // Verify: zero write errors
+      const writeErrors = ctx.apiCalls.filter((c) => !c.ok && ["POST","PUT","DELETE","PATCH"].includes(c.method));
+      expect(writeErrors.length).toBe(0);
     });
 
-    it("salary uses ≤12 API calls", async () => {
+    it("supplier-invoice uses ≤9 API calls", async () => {
+      const ctx = makeCtx();
+      await executeSupplierInvoice(ctx, {
+        supplier: { name: "Eff Supplier" },
+        invoiceNumber: "INV-EFF",
+        invoiceDate: "2026-03-20",
+        dueDate: "2026-04-20",
+        description: "Efficiency test",
+        amountExclVat: 1000,
+        amountInclVat: 1250,
+        vatPercent: "25",
+        expenseAccount: "7300",
+      });
+      // supplier GET + supplier POST + acct GET x2 + vatLock GET + supplierInvoice POST + sendToLedger PUT
+      expect(ctx.apiCalls.length).toBeLessThanOrEqual(9);
+      const writeErrors = ctx.apiCalls.filter((c) => !c.ok && ["POST","PUT","DELETE","PATCH"].includes(c.method));
+      expect(writeErrors.length).toBe(0);
+    });
+
+    it("salary uses ≤15 API calls", async () => {
       const ctx = makeCtx();
       await executeSalary(ctx, {
         employee: { firstName: "Eff", lastName: "Sal" },
         components: [{ type: "fastlonn", amount: 30000, count: 1 }],
       });
-      // dept POST + emp POST + div GET + [mun GET + div POST] + employment POST + salary types GET + spec POST
-      expect(ctx.apiCalls.length).toBeLessThanOrEqual(12);
+      // dept GET + dept POST + emp GET + emp POST + div GET + [mun GET + div POST] + employment POST + salary types GET + transaction POST
+      expect(ctx.apiCalls.length).toBeLessThanOrEqual(15);
     });
   });
 });

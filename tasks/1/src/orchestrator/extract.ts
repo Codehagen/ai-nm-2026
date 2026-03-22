@@ -58,10 +58,19 @@ const TASK_INSTRUCTIONS: Record<string, string> = {
   "invoice-send": "Extract customer, products. Set sendInvoice=true since the task asks to send the invoice.",
   "salary": `Extract employee name and salary components. Map: 'fastlønn/fast lønn/base salary/grunnlønn' → fastlonn, 'bonus' → bonus, 'timelønn/hourly' → timelonn, 'faste tillegg/fixed supplement/tillegg' → faste_tillegg, 'overtid/overtime' → overtid. If unclear, use 'fastlonn'. The 'amount' is the NOK value. 'count' is 1 for monthly salary or number of hours for hourly.
 
-IF A PDF/IMAGE IS ATTACHED (employment contract / arbeidskontrakt):
-- Extract ALL fields from the document: dateOfBirth (fødselsdato → convert DD.MM.YYYY to YYYY-MM-DD), nationalIdentityNumber (personnummer, 11 digits), bankAccountNumber (bankkonto), departmentName (avdeling), occupationCode (stillingskode/STYRK, 4 digits), percentageOfFullTimeEquivalent (stillingsprosent, e.g. 80.0), startDate (tiltredelse → convert DD.MM.YYYY to YYYY-MM-DD).
-- CRITICAL: If the salary is listed as 'årslønn' (annual salary), set isAnnual=true. The executor will divide by 12 to get monthly rate. Do NOT divide yourself.
-- Use the exact department name from the document (e.g. 'Lager', 'IT'), not a generic name.`,
+IF A PDF/IMAGE IS ATTACHED (employment contract / arbeidskontrakt / contrato de trabajo / contrato de trabalho / contrat de travail / Arbeitsvertrag):
+- Extract ALL fields from the document. Look for these labels in ANY language:
+  * dateOfBirth: Fødselsdato / Fecha de nacimiento / Data de nascimento / Date de naissance / Geburtsdatum → convert DD.MM.YYYY to YYYY-MM-DD
+  * nationalIdentityNumber: Personnummer / Fødselsnummer / Número de identidad / Número de identidade / Numéro d'identité / Sozialversicherungsnummer (11 digits, format: DDMMYYXXXXX)
+  * bankAccountNumber: Bankkonto / Kontonummer / Cuenta bancaria / Conta bancária / Compte bancaire / Bankverbindung
+  * departmentName: Avdeling / Departamento / Département / Abteilung — use the EXACT name from the document
+  * occupationCode: Stillingskode / STYRK / Código de ocupación / Código de profissão / Code profession (4 digits)
+  * percentageOfFullTimeEquivalent: Stillingsprosent / Porcentaje de jornada / Percentagem / Pourcentage / Beschäftigungsgrad (e.g. 80.0 for 80%)
+  * startDate: Tiltredelse / Fecha de inicio / Data de início / Date d'entrée / Eintrittsdatum → convert DD.MM.YYYY to YYYY-MM-DD
+  * workHoursPerDay: Arbeidstimer per dag / Horas por día / Horas por dia / Heures par jour / Arbeitsstunden pro Tag (e.g. 7.5)
+- CRITICAL: If the salary is listed as 'årslønn' / 'salario anual' / 'salário anual' / 'salaire annuel' / 'Jahresgehalt' (annual salary), set isAnnual=true. The executor will divide by 12 to get monthly rate. Do NOT divide yourself.
+- Use the exact department name from the document (e.g. 'Lager', 'IT', 'Drift'), not a generic name.
+- EXTRACT EVERY FIELD even if you're not 100% sure — partial data is better than missing data.`,
   "project": "Extract project details, project manager (employee), and customer. If the prompt mentions invoicing or a milestone payment, set invoice.create=true and extract products. CRITICAL: If the prompt says 'invoice X% of the fixed price' or 'facturez X% du prix fixe' or 'X% des Festpreises', calculate the ACTUAL amount (fixedPrice * X / 100) and use that as the product price. Do NOT use the full fixed price as the product price.",
   "supplier-invoice": `Extract supplier details, invoice number, dates, amounts, and description.
 
@@ -74,6 +83,7 @@ IF the attached document is a RECEIPT (kvittering/recibo/receipt/Quittung/reçu)
 - IMPORTANT: If the prompt names a SPECIFIC item from the receipt (e.g. "despesa de Kundemøte lunsj"), use THAT item's price as amountInclVat — NOT the receipt total. Only use the total if the prompt asks for the full receipt.
 - Calculate amountExclVat = amountInclVat / (1 + vatRate). For 25% VAT: amountExclVat = amountInclVat / 1.25
 - Set invoiceDate from the receipt date
+- For invoiceNumber, use the receipt keyword (e.g. "KVITTERING", "RECEIPT", "QUITTUNG", "REÇU", "RECIBO") — do NOT use the date as the invoice number
 - If the prompt mentions a department name, extract it as departmentName
 - Match the expense account to the SPECIFIC item: kundemøte/lunsj/middag → 7350 (representation), kontorrekvisita/utstyr → 6540, flybillett/reise → 7100, overnatting/hotell → 7100
 - The description should match the specific item name from the prompt`,

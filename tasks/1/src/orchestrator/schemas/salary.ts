@@ -5,9 +5,9 @@ export const SalarySchema = z.object({
     firstName: z.string().describe("Employee first name EXACTLY as in prompt/document. Look for 'Arbeidstaker', 'Nom', 'Name', 'Nombre'."),
     lastName: z.string().describe("Employee last name EXACTLY as in prompt/document."),
     email: z.string().optional().describe("Employee email. Look for 'E-post', 'Email', 'Correo'."),
-    dateOfBirth: z.string().optional().describe("Date of birth YYYY-MM-DD. Look for 'Fødselsdato', 'Date de naissance', 'Geburtsdatum', 'Fecha de nacimiento'. Convert DD.MM.YYYY → YYYY-MM-DD."),
-    nationalIdentityNumber: z.string().optional().describe("Norwegian personnummer (11 digits). Look for 'Personnummer', 'Fødselsnummer', 'Numéro d'identité'. Format: DDMMYYXXXXX."),
-    bankAccountNumber: z.string().optional().describe("Bank account number. Look for 'Bankkonto', 'Compte bancaire', 'Bankverbindung'."),
+    dateOfBirth: z.string().optional().describe("Date of birth YYYY-MM-DD. Look for 'Fødselsdato', 'Fecha de nacimiento', 'Data de nascimento', 'Date de naissance', 'Geburtsdatum'. Convert DD.MM.YYYY → YYYY-MM-DD."),
+    nationalIdentityNumber: z.string().optional().describe("Norwegian personnummer (11 digits). Look for 'Personnummer', 'Fødselsnummer', 'Número de identidad', 'Número de identidade', 'Numéro d'identité', 'Sozialversicherungsnummer'. Format: DDMMYYXXXXX."),
+    bankAccountNumber: z.string().optional().describe("Bank account number. Look for 'Bankkonto', 'Kontonummer', 'Cuenta bancaria', 'Conta bancária', 'Compte bancaire', 'Bankverbindung'."),
   }),
   components: z.array(z.object({
     type: z.enum(["fastlonn", "bonus", "timelonn", "faste_tillegg", "overtid", "other"])
@@ -19,10 +19,11 @@ export const SalarySchema = z.object({
   })),
   year: z.number().optional().describe("Salary year (defaults to current year)"),
   month: z.number().optional().describe("Salary month (defaults to current month)"),
-  departmentName: z.string().optional().describe("Department name EXACTLY from document. Look for 'Avdeling', 'Département', 'Abteilung'. Use the specific name (e.g. 'Lager', 'IT', 'Kvalitetskontroll'), NOT a generic name."),
-  occupationCode: z.string().optional().describe("STYRK occupation code (4 digits). Look for 'Stillingskode (STYRK)', 'Code profession'."),
-  percentageOfFullTimeEquivalent: z.number().optional().describe("Employment percentage. Look for 'Stillingsprosent', 'Pourcentage', 'Beschäftigungsgrad'. E.g. 80.0 for 80%."),
-  startDate: z.string().optional().describe("Start date YYYY-MM-DD. Look for 'Tiltredelse', 'Date d'entrée', 'Eintrittsdatum'. Convert DD.MM.YYYY → YYYY-MM-DD."),
+  departmentName: z.string().optional().describe("Department name EXACTLY from document. Look for 'Avdeling', 'Departamento', 'Département', 'Abteilung'. Use the specific name (e.g. 'Lager', 'IT', 'Drift'), NOT a generic name."),
+  occupationCode: z.string().optional().describe("STYRK occupation code (4 digits). Look for 'Stillingskode', 'STYRK', 'Código de ocupación', 'Código de profissão', 'Code profession', 'Berufsschlüssel'."),
+  percentageOfFullTimeEquivalent: z.number().optional().describe("Employment percentage (0-100). Look for 'Stillingsprosent', 'Porcentaje de jornada', 'Percentagem', 'Pourcentage', 'Beschäftigungsgrad', 'Arbeidstid'. E.g. 80.0 for 80%."),
+  startDate: z.string().optional().describe("Start date YYYY-MM-DD. Look for 'Tiltredelse', 'Fecha de inicio', 'Data de início', 'Date d'entrée', 'Eintrittsdatum'. Convert DD.MM.YYYY → YYYY-MM-DD."),
+  workHoursPerDay: z.number().optional().describe("Standard work hours per day. Look for 'Arbeidstimer per dag', 'Horas de trabajo', 'Horas de trabalho', 'Heures de travail', 'Arbeitsstunden'. E.g. 7.5 for 7.5h/day."),
 });
 
 export type SalaryData = z.infer<typeof SalarySchema>;

@@ -177,23 +177,33 @@ export async function ensureBankAccount(ctx: OrchestratorContext): Promise<void>
   }
 }
 
-/** Create or get a department. Returns department ID. */
+/** Create or get a department. GET-first to avoid unnecessary POST write. */
 export async function ensureDepartment(
   ctx: OrchestratorContext,
   name = "Avdeling",
   number = "1",
 ): Promise<number> {
+  // GET-first: check if department exists (saves 1 write when it does)
+  const getRes = await ctx.get("/department", {
+    departmentNumber: number,
+    fields: "id,name",
+  });
+  const existing = extractValues(getRes);
+  if (existing[0]?.id) return existing[0].id as number;
+
+  // Not found — create it
   const res = await ctx.post("/department", {
     name,
     departmentNumber: number,
   });
   if (res.ok) return extractId(res);
-  // 422 = already exists, GET it
-  const getRes = await ctx.get("/department", {
+
+  // 422 collision (race condition) — GET again
+  const getRes2 = await ctx.get("/department", {
     departmentNumber: number,
     fields: "id,name",
   });
-  const values = extractValues(getRes);
+  const values = extractValues(getRes2);
   if (values[0]?.id) return values[0].id as number;
   throw new Error("Failed to create or find department");
 }
@@ -209,6 +219,33 @@ export async function ensureEmployee(
   },
 ): Promise<number> {
   const email = data.email || `${stripDiacritics(data.firstName).toLowerCase()}.${stripDiacritics(data.lastName).toLowerCase()}@example.org`;
+
+  // GET-first by email — avoids 422 collision (which hurts error cleanliness scoring)
+  const checkRes = await ctx.get("/employee", {
+    email,
+    fields: "id,firstName,lastName,version,dateOfBirth",
+  });
+  const checkValues = extractValues(checkRes);
+  if (checkValues[0]?.id) {
+    // Employee exists — update name/DOB if needed
+    const existing = checkValues[0];
+    const needsUpdate =
+      (data.firstName && existing.firstName !== data.firstName) ||
+      (data.lastName && existing.lastName !== data.lastName) ||
+      !existing.dateOfBirth;
+    if (needsUpdate) {
+      await ctx.put(`/employee/${existing.id}`, {
+        id: existing.id,
+        version: existing.version,
+        firstName: data.firstName || existing.firstName,
+        lastName: data.lastName || existing.lastName,
+        dateOfBirth: existing.dateOfBirth || "1990-01-15",
+      });
+    }
+    return existing.id as number;
+  }
+
+  // Not found — create new
   const res = await ctx.post("/employee", {
     firstName: data.firstName,
     lastName: data.lastName,
@@ -219,7 +256,7 @@ export async function ensureEmployee(
   });
   if (res.ok) return extractId(res);
 
-  // 422 email collision — get existing, update name if needed
+  // 422 edge case (race condition) — get existing
   if (res.status === 422) {
     const getRes = await ctx.get("/employee", {
       email,
@@ -260,6 +297,13 @@ export async function createCustomer(
   ctx: OrchestratorContext,
   data: { name: string; organizationNumber?: string; email?: string },
 ): Promise<number> {
+  // GET-first: check if customer exists (saves 1 write on 422 collision)
+  if (data.organizationNumber) {
+    const getRes = await ctx.get("/customer", { organizationNumber: data.organizationNumber, fields: "id" });
+    const existing = extractValues(getRes);
+    if (existing[0]?.id) return existing[0].id as number;
+  }
+
   const body: Record<string, unknown> = {
     name: data.name,
     isCustomer: true,
@@ -268,9 +312,7 @@ export async function createCustomer(
   if (data.email) body.email = data.email;
   const res = await ctx.post("/customer", body);
   if (res.ok) return extractId(res);
-  // If 422, customer already exists — that's fine for scoring
   if (res.status === 422) {
-    // Try to find by name
     const getRes = await ctx.get("/customer", { name: data.name, fields: "id" });
     const values = extractValues(getRes);
     if (values[0]?.id) return values[0].id as number;
@@ -385,6 +427,13 @@ export async function createSupplier(
   ctx: OrchestratorContext,
   data: { name: string; organizationNumber?: string; email?: string; phoneNumber?: string },
 ): Promise<number> {
+  // GET-first by orgNumber — avoids 422 collision (hurts error cleanliness scoring)
+  if (data.organizationNumber) {
+    const checkRes = await ctx.get("/supplier", { organizationNumber: data.organizationNumber, fields: "id" });
+    const existing = extractValues(checkRes);
+    if (existing[0]?.id) return existing[0].id as number;
+  }
+
   const body: Record<string, unknown> = {
     name: data.name,
     isSupplier: true,
@@ -395,14 +444,8 @@ export async function createSupplier(
   const res = await ctx.post("/supplier", body);
   if (res.ok) return extractId(res);
   if (res.status === 422) {
-    // Try to find existing
     if (data.organizationNumber) {
       const getRes = await ctx.get("/supplier", { organizationNumber: data.organizationNumber, fields: "id" });
-      const values = extractValues(getRes);
-      if (values[0]?.id) return values[0].id as number;
-    }
-    if (data.email) {
-      const getRes = await ctx.get("/supplier", { email: data.email, fields: "id" });
       const values = extractValues(getRes);
       if (values[0]?.id) return values[0].id as number;
     }
@@ -414,7 +457,7 @@ export async function createSupplier(
 export async function createInvoiceFromProducts(
   ctx: OrchestratorContext,
   custId: number,
-  products: Array<{ id: number; price: number; quantity: number; vatPercent: string }>,
+  products: Array<{ id?: number; name?: string; price: number; quantity: number; vatPercent: string }>,
   dueDate?: string,
   projectId?: number,
 ): Promise<number> {
@@ -422,7 +465,8 @@ export async function createInvoiceFromProducts(
   await ensureBankAccount(ctx);
 
   const orderLines = products.map((p) => ({
-    product: { id: p.id },
+    ...(p.id ? { product: { id: p.id } } : {}),
+    ...(p.name && !p.id ? { description: p.name } : {}),
     count: p.quantity,
     unitPriceExcludingVatCurrency: p.price,
     vatType: { id: vatPercentToId(p.vatPercent) },
