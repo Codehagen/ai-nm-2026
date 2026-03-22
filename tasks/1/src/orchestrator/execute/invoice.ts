@@ -44,7 +44,11 @@ export async function executeInvoice(ctx: OrchestratorContext, data: InvoiceData
 
     if (data.registerPayment) {
       const payType = await getPaymentType(ctx);
-      const amount = data.paymentAmount ?? (invoice.amount as number);
+      let amount = data.paymentAmount ?? (invoice.amount as number);
+      // Reversal: use negative amount to reverse payment
+      if (data.isPaymentReversal) {
+        amount = -Math.abs(amount);
+      }
       await ctx.put(`/invoice/${invoiceId}/:payment`, {}, {
         paymentDate: today,
         paymentTypeId: String(payType),
