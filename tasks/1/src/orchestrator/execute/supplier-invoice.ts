@@ -49,11 +49,20 @@ export async function executeSupplierInvoice(ctx: OrchestratorContext, data: Sup
     data.invoiceNumber = "KVITTERING";
   }
 
-  // Fix expense account for meals/representation keywords (extraction often picks 7100 instead of 7350)
+  // Fix expense account based on description keywords
   const descLower = (data.description || "").toLowerCase();
+  // Meals/representation → 7350
   if (["kundemøte", "kundemote", "lunsj", "middag", "restaurant", "meeting lunch", "déjeuner", "dejeuner",
        "mittagessen", "almuerzo", "representasjon", "kaffemøte", "kaffemote", "lunch", "dinner"].some(k => descLower.includes(k))) {
     data.expenseAccount = "7350";
+  }
+  // Office supplies → 6540 (keyboard, mouse, monitor, desk accessories, storage box)
+  else if (["tastatur", "keyboard", "teclado", "clavier", "tastiera",
+            "mus", "mouse", "ratón", "souris",
+            "skjerm", "monitor", "pantalla", "écran", "bildschirm",
+            "skrivebordlampe", "kontorstoler", "kontorstol", "oppbevaringsboks",
+            "kontorrekvisita", "office supplies", "bürobedarf", "fournitures"].some(k => descLower.includes(k))) {
+    data.expenseAccount = "6540";
   }
 
   // 1. Create department if specified (receipts often belong to a department)
