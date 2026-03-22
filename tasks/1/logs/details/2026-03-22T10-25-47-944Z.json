@@ -1,0 +1,113 @@
+{
+  "timestamp": "2026-03-22T10:25:47.944Z",
+  "model": "anthropic/claude-opus-4.6",
+  "taskType": "orchestrator:supplier-invoice",
+  "prompt": "Precisamos da despesa de Kundemøte lunsj deste recibo registada no departamento Økonomi. Use a conta de despesas correta e garanta o tratamento correto do IVA.",
+  "filesCount": 1,
+  "steps": 1,
+  "toolCalls": 7,
+  "apiCalls": 7,
+  "apiErrors": 0,
+  "elapsedMs": 23648,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true,
+      "params": {
+        "departmentNumber": "1",
+        "fields": "id,name"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/supplier",
+      "ok": true,
+      "params": {
+        "organizationNumber": "816335809",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "7350",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "2400",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account/424554596",
+      "ok": true,
+      "params": {
+        "fields": "id,vatType,vatLocked"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": true,
+      "body": {
+        "invoiceNumber": "KVITTERING",
+        "invoiceDate": "2026-06-07",
+        "invoiceDueDate": "2026-06-07",
+        "supplier": {
+          "id": 108415533
+        },
+        "voucher": {
+          "date": "2026-06-07",
+          "description": "Faktura KVITTERING fra Peppes Pizza",
+          "postings": [
+            {
+              "row": 1,
+              "date": "2026-06-07",
+              "description": "Kundemøte lunsj",
+              "account": {
+                "id": 424554596
+              },
+              "amountGross": 4100,
+              "amountGrossCurrency": 4100,
+              "vatType": {
+                "id": 0
+              },
+              "department": {
+                "id": 844789
+              }
+            },
+            {
+              "row": 2,
+              "date": "2026-06-07",
+              "description": "Peppes Pizza",
+              "account": {
+                "id": 424554344
+              },
+              "supplier": {
+                "id": 108415533
+              },
+              "amountGross": -4100,
+              "amountGrossCurrency": -4100
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/ledger/voucher/609394350/:sendToLedger",
+      "ok": true,
+      "body": {}
+    }
+  ]
+}

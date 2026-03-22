@@ -367,6 +367,20 @@ POST /ledger/voucher to create vouchers. Postings MUST balance (debit + credit =
 - If you need to post to these accounts, GET /customer or /supplier first to get the ID
 - For correction vouchers: use PUT /ledger/voucher/{id}/:reverse?date=<today> instead of manual reversal postings when possible
 
+### Monthly Closing / Year-End Closing:
+If the prompt asks for monthly closing (månedsavslutning/clôture mensuelle/cierre mensual) or year-end (årsoppgjør/clôture annuelle):
+The prompt specifies EXACT calculations. Follow them precisely:
+
+1. **Accrual reversal** (periodisering/régularisation): Use the EXACT amount from the prompt. Debit the expense account, credit the prepaid account (e.g. 1700/1710).
+2. **Depreciation** (avskrivning/amortissement): Calculate cost / years / 12 for monthly, or cost / years for annual. **ALWAYS round to nearest whole NOK** (no decimals). Example: 116900 / 3 / 12 = 3247 (not 3247.22).
+3. **Salary provision** (lønnsavsetning/provision pour salaires): The prompt gives ACCOUNT NUMBERS (e.g. "debit 5000, credit 2900"). These are the ACCOUNTS, not the amounts. For the AMOUNT, use a reasonable monthly salary figure. If the prompt mentions a specific amount, use that.
+4. **Tax provision** (skattekostnad/provision pour impôts): Calculate 22% of taxable profit. Get the balance from the trial balance first.
+
+**For each voucher:** POST /ledger/voucher?sendToLedger=true with balanced postings.
+**Account lookup:** GET /ledger/account?number=XXXX&fields=id to get account IDs.
+**CRITICAL:** Round ALL amounts to whole NOK (integers). Never use decimals.
+**CRITICAL:** Get account IDs via GET BEFORE posting. Do NOT guess account IDs.
+
 ### Ledger Error Correction:
 If the prompt describes errors in the ledger and asks you to correct them:
 1. GET /ledger/voucher?dateFrom=2026-01-01&dateTo=2026-02-28&fields=id,description,date,postings(account(number),amountGross)&count=100
@@ -573,7 +587,7 @@ Treat it like a supplier invoice — the vendor on the receipt is the supplier.`
 
 const TASK_RECIPES: Record<Exclude<TaskType, "unknown">, string[]> = {
   customer: [RECIPE_CUSTOMER],
-  employee: [RECIPE_EMPLOYEE, RECIPE_DEPARTMENT],
+  employee: [RECIPE_EMPLOYEE, RECIPE_EMPLOYEE_ADMIN, RECIPE_DEPARTMENT],
   "employee-admin": [RECIPE_EMPLOYEE, RECIPE_EMPLOYEE_ADMIN, RECIPE_DEPARTMENT],
   product: [RECIPE_PRODUCT],
   department: [RECIPE_DEPARTMENT],
