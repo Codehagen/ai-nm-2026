@@ -13,17 +13,11 @@ IMAGE="astar-swarm-image"
 MACHINE="n2-highcpu-32"
 
 STARTUP_SCRIPT='#!/bin/bash
-mkdir -p /tmp/astar/data
-cp /opt/astar/*.py /tmp/astar/ 2>/dev/null || true
-cp /opt/astar/data/* /tmp/astar/data/ 2>/dev/null || true
+mkdir -p /tmp/astar
 cd /tmp/astar
-rm -rf .git results.tsv 2>/dev/null
-VM_ID=$(hostname | sed "s/ainm-astar-//")
-export VM_ID VM_FOCUS="general"
-export GOOGLE_API_KEY="AIzaSyDneTtqxEnKB3ZZeQ9MpPKeAxLyoWvbYQM"
-export MODEL_ID="gemini-3.1-flash-lite-preview"
-export PARALLEL_XGB="18"
-nohup python3 -u autoresearch_swarm.py > swarm.log 2>&1 &'
+gsutil -q cp gs://ainm-astar-data/deploy.tar.gz /tmp/astar-deploy.tar.gz
+gsutil -q cp gs://ainm-astar-data/swarm-start-remote.sh /tmp/swarm-start-remote.sh
+bash /tmp/swarm-start-remote.sh'
 
 if [ "${1:-}" = "--status" ]; then
   echo "ASTAR SWARM FLEET (all regions):"
