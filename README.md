@@ -1,71 +1,83 @@
 # NM i AI 2026
 
-**Norway's National AI Championship 2026** — Team Christer
+**Norway's National AI Championship 2026** — 69-hour AI competition, March 19–22.
 
-**Competition**: March 19 (18:00) → March 22 (15:00) CET
+**Prize pool**: 1,000,000 NOK | **Team**: Solo competitor
 
-## Tasks
+## Results
 
-| Task | Directory | Description |
-|------|-----------|-------------|
-| **Astar Island** | `tasks/astar-island/` | Probabilistic terrain prediction for Norse civilization simulator. Multi-layer heuristic + XGBoost model with 1000+ VM autoresearch swarm. |
-| **Norgesgruppen** | `tasks/norgesgruppen/` | Object detection (YOLOv8). 3-pass WBF ensemble. |
-| **Tripletex** | `tasks/1/` | Accounting agent — LLM-based task classification and execution. |
+| Task | Description | Tech | Best Score |
+|------|-------------|------|------------|
+| **NorgesGruppen** | Grocery product detection (object detection) | YOLOv8l + 3-model WBF ensemble | **0.9208** |
+| **Astar Island** | Terrain mapping & pathfinding | GBT models + A* search | — |
+| **Tripletex** | Accounting agent (PDF/invoice processing) | TypeScript + LLM orchestrator | — |
 
-## Astar Island (Main Focus)
-
-Our most developed task. Architecture:
+## Project Structure
 
 ```
-params.py       ← Single source of truth for all tunable parameters
-  ↓
-train.py        ← LORO evaluation (offline backtesting against 19 rounds of GT)
-model.py        ← Inference engine (build_prediction for submissions)
-retrain_gbt.py  ← XGBoost model training
-run.py          ← Query simulator + submit predictions
+├── tasks/
+│   ├── norgesgruppen/       # Object detection (YOLOv8, WBF ensemble)
+│   ├── astar-island/        # Terrain mapping & pathfinding
+│   ├── 1/                   # Tripletex accounting agent (TypeScript)
+│   ├── cv/                  # CV task template (port 9050)
+│   ├── ml/                  # ML task template (port 9051)
+│   ├── nlp/                 # NLP task template (port 9052)
+│   └── template/            # Reference template
+├── shared/                  # Cross-task utilities
+├── scripts/
+│   ├── setup.sh             # Environment setup
+│   ├── validate.sh          # Pre-submit validation
+│   └── gcp/                 # GPU VM fleet management
+└── docs/                    # Strategy, task analysis, exec plans
 ```
 
-Key results:
-- **WAVG 90.19** (Leave-One-Round-Out cross-validation)
-- 19 rounds of ground truth data (R1-R22, excl R3/R12/R20)
-- Terrain-specific XGBoost (76 features: cell + obs stats + spatial)
-- Round-type adaptive L7 observation correction (expansion/extinction/normal)
-- 1000+ VM autoresearch swarm using Gemini for parameter optimization
+## NorgesGruppen — Best Score: 0.9208
 
-See `tasks/astar-island/READTHIS.md` for the parameter sync guide.
+3-model diverse YOLOv8l ensemble with Weighted Box Fusion.
 
-## Infrastructure
+**Ensemble models** (backed up as [GitHub Release](https://github.com/Codehagen/ai-nm-2026/releases/tag/v0.9208-ensemble)):
+- `model_a` — seed=35, local mAP 0.9747
+- `model_b` — seed=25, local mAP 0.9656
+- `model_c` — seed=30, local mAP 0.9639
 
+**Inference**: 3-pass WBF (960 + 1280 + 1280+TTA), weights [1,2,3], iou_thr=0.65, skip_box_thr=0.01, conf_type=avg
+
+**What didn't work**: Two-stage YOLO+classifier, SWA weight averaging, conf_type='max', seed/optimizer variants.
+
+## Tech Stack
+
+| Component | Choice |
+|-----------|--------|
+| Language | Python 3.11+, TypeScript (Tripletex) |
+| API | FastAPI + Pydantic |
+| ML | PyTorch, Ultralytics YOLOv8, scikit-learn, XGBoost |
+| Compute | GCP (T4/L4/A100), Vertex AI |
+| Package mgr | uv (Python), pnpm (TypeScript) |
+| AI assistants | Claude Code, autoresearch loops |
+
+## GCP Compute
+
+```bash
+scripts/gcp/fleet-up.sh baseline --spot    # 3 VMs: cv=L4, ml=T4, nlp=L4
+scripts/gcp/deploy-task.sh cv              # deploy to VM
+scripts/gcp/status.sh                      # fleet status
+scripts/gcp/teardown.sh                    # tear down everything
 ```
-scripts/gcp/
-├── scale-astar.sh       # Create VM fleets (GCS-based startup)
-├── fast-redeploy.sh     # Deploy code to 1000+ VMs in ~5 min via GCS
-├── collect-fleet.sh     # Collect results from fleet
-├── swarm-start-remote.sh # VM startup script
-└── ...
-```
 
-## How to Run
+| Tier | GPU | VRAM | Cost/hr | Spot |
+|------|-----|------|---------|------|
+| Light | T4 | 16GB | ~$0.35 | ~$0.11 |
+| Medium | L4 | 24GB | ~$0.70 | ~$0.21 |
+| Heavy | A100 | 40GB | ~$2.95 | ~$0.89 |
+
+## Quick Start
 
 ```bash
 bash scripts/setup.sh
 source .venv/bin/activate
-
-# Astar Island
-cd tasks/astar-island
-python train.py          # Run LORO evaluation
-python retrain_gbt.py    # Retrain XGBoost models
-ASTAR_TOKEN=... python run.py  # Submit to active round
-
-# Norgesgruppen
-cd tasks/norgesgruppen
-python test_local.py --data data/yolo-3way
-
-# Tripletex
-cd tasks/1
-python api.py
+cd tasks/norgesgruppen && python run_ensemble.py  # run winning inference
 ```
 
-## Tech Stack
+## License
 
-Python 3.11+, FastAPI, XGBoost, PyTorch, Pydantic, GCP (n2-highcpu-32 VMs), Gemini 3.1 Flash Lite (autoresearch)
+MIT — code must be public per competition rules.
