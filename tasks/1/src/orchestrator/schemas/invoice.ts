@@ -18,6 +18,9 @@ export const InvoiceSchema = z.object({
   paymentAmount: z.number().optional().describe("Payment amount INCLUDING VAT if specified. If not specified, full invoice amount will be used."),
   dueDate: z.string().optional().describe("Invoice due date in YYYY-MM-DD format if specified"),
   isExistingInvoice: z.boolean().default(false).describe("True if the task is about an EXISTING invoice (e.g. 'register payment on invoice X') rather than creating a new one"),
+  currencyCode: z.string().optional().describe("Currency code if invoice is in foreign currency (e.g. 'EUR', 'USD', 'GBP'). Only set if explicitly mentioned."),
+  exchangeRate: z.number().optional().describe("Exchange rate at invoice time (e.g. 11.54 NOK/EUR). Look for 'kurs', 'exchange rate', 'taux de change', 'Wechselkurs', 'tipo de cambio', 'taxa de câmbio'."),
+  paymentExchangeRate: z.number().optional().describe("Exchange rate at payment time if different from invoice rate. Look for 'ny kurs', 'new rate', 'kursen har endret seg til', 'taux actuel'."),
 });
 
 export type InvoiceData = z.infer<typeof InvoiceSchema>;

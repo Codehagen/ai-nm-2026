@@ -54,7 +54,18 @@ const TASK_SCHEMAS: Record<string, ZodSchema> = {
 // Task-specific extraction instructions
 const TASK_INSTRUCTIONS: Record<string, string> = {
   "invoice": "Extract customer, products, and whether to send/register payment. If no VAT rate is specified, default to 25%.",
-  "invoice-payment": "This is about registering a PAYMENT on an invoice. Set registerPayment=true. If the invoice already exists (the task mentions finding/locating it or says 'has an outstanding invoice'), set isExistingInvoice=true. For FULL payment (prompt says 'full payment'/'full betaling'/'paiement intégral'/'vollständige Zahlung'/'pago completo'), do NOT set paymentAmount — the system will use the invoice's actual amount. Only set paymentAmount if a SPECIFIC different amount is mentioned.",
+  "invoice-payment": `This is about registering a PAYMENT on an invoice. Set registerPayment=true. If the invoice already exists (the task mentions finding/locating it or says 'has an outstanding invoice'), set isExistingInvoice=true. For FULL payment, do NOT set paymentAmount.
+
+FOR FOREIGN CURRENCY (EUR/USD/GBP) INVOICES:
+- Set currencyCode to the currency code (e.g. "EUR")
+- Set exchangeRate to the rate at INVOICE time (e.g. 11.54 for "kursen var 11.54 NOK/EUR")
+- Set paymentExchangeRate to the rate at PAYMENT time (e.g. 11.20 for "kursen har endret seg til 11.20")
+- The product price should be the FOREIGN CURRENCY amount (e.g. 5000 EUR), NOT the NOK amount
+- Set isExistingInvoice=false for forex (we create a new invoice in the foreign currency)
+
+FOR PAYMENT REVERSALS ("returnert av banken" / "devolvido pelo banco" / "devuelto por el banco"):
+- Set isExistingInvoice=true — the invoice already exists
+- Set registerPayment=true — we need to reverse by registering a negative payment`,
   "invoice-send": "Extract customer, products. Set sendInvoice=true since the task asks to send the invoice.",
   "salary": `Extract employee name and salary components. Map: 'fastlønn/fast lønn/base salary/grunnlønn' → fastlonn, 'bonus' → bonus, 'timelønn/hourly' → timelonn, 'faste tillegg/fixed supplement/tillegg' → faste_tillegg, 'overtid/overtime' → overtid. If unclear, use 'fastlonn'. The 'amount' is the NOK value. 'count' is 1 for monthly salary or number of hours for hourly.
 

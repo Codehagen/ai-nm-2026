@@ -362,6 +362,17 @@ POST /ledger/voucher to create vouchers. Postings MUST balance (debit + credit =
 - If you need to post to these accounts, GET /customer or /supplier first to get the ID
 - For correction vouchers: use PUT /ledger/voucher/{id}/:reverse?date=<today> instead of manual reversal postings when possible
 
+### Ledger Error Correction:
+If the prompt describes errors in the ledger and asks you to correct them:
+1. GET /ledger/voucher?dateFrom=2026-01-01&dateTo=2026-02-28&fields=id,description,date,postings(account(number),amountGross)&count=100
+2. For each error described in the prompt, find the matching voucher and create a corrective entry:
+   - **Wrong account**: POST /ledger/voucher with: reverse the original (debit old account negative, credit new account positive)
+   - **Duplicate voucher**: Use PUT /ledger/voucher/{id}/:reverse?date=<today> to reverse the duplicate
+   - **Missing VAT**: POST /ledger/voucher adding the missing VAT posting (e.g., debit 2710 for input VAT)
+   - **Wrong amount**: POST /ledger/voucher with the difference (correct - original)
+3. Use ?sendToLedger=true on ALL correction vouchers
+4. If a posting touches account 1500, include customer.id. If it touches 2400, include supplier.id.
+
 ### Reminder Fee / Late Fee / Purregebyr:
 If the prompt mentions a reminder fee with debit/credit accounts (e.g. "Debit 1500, credit 3400"):
 1. GET /invoice?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01&fields=id,customer,amount,invoiceNumber — find the overdue invoice
