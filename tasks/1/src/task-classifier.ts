@@ -269,7 +269,7 @@ export function classifyTask(prompt: string): TaskType {
     return "voucher";
   }
 
-  // --- Foreign currency / agio-disagio (BEFORE invoice-payment — these need specialized voucher handling)
+  // --- Foreign currency / agio-disagio → route to orchestrator:invoice-payment for proper currency handling
   if (
     has(t, "faktura", "invoice", "factura", "fatura", "rechnung", "facture") &&
     has(
@@ -280,7 +280,7 @@ export function classifyTask(prompt: string): TaskType {
     ) &&
     has(t, "betaling", "payment", "pago", "pagamento", "zahlung", "paiement", "betalt", "paid")
   ) {
-    return "voucher";
+    return "invoice-payment";
   }
 
   // --- Invoice + payment (but not when project is the primary entity)

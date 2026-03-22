@@ -16,6 +16,7 @@ import {
   addDays,
   ensureBankAccount,
   vatPercentToId,
+  getLedgerAccount,
 } from "../helpers.js";
 
 export async function executeInvoice(ctx: OrchestratorContext, data: InvoiceData): Promise<void> {
@@ -143,4 +144,30 @@ export async function executeInvoice(ctx: OrchestratorContext, data: InvoiceData
   }, Object.keys(invoiceParams).length > 0 ? invoiceParams : undefined);
 
   if (!invoiceRes.ok) throw new Error(`Failed to create invoice: ${invoiceRes.message}`);
+
+  // 5. Forex: post agio/disagio voucher for exchange rate difference
+  if (data.currencyCode && data.exchangeRate && data.paymentExchangeRate && data.paymentExchangeRate !== data.exchangeRate) {
+    const currencyAmount = data.products.reduce((sum, p) => {
+      const vatRate = parseInt(p.vatPercent) / 100;
+      return sum + p.price * p.quantity * (1 + vatRate);
+    }, 0);
+    const diff = Math.round(currencyAmount * (data.paymentExchangeRate - data.exchangeRate) * 100) / 100;
+    if (Math.abs(diff) > 0.01) {
+      // Get accounts: 1500 (kundefordringer) and 8060 (agio) or 8160 (disagio)
+      const acct1500 = await getLedgerAccount(ctx, "1500");
+      const agioAcct = diff > 0
+        ? await getLedgerAccount(ctx, "8060") // agio (gain)
+        : await getLedgerAccount(ctx, "8160"); // disagio (loss)
+
+      const desc = diff > 0 ? "Agio / Valutagevinst" : "Disagio / Valutatap";
+      await ctx.post("/ledger/voucher", {
+        date: today,
+        description: `${desc} - ${data.customer.name}`,
+        postings: [
+          { row: 1, date: today, account: { id: acct1500 }, customer: { id: custId }, amountGross: diff, amountGrossCurrency: diff },
+          { row: 2, date: today, account: { id: agioAcct }, amountGross: -diff, amountGrossCurrency: -diff },
+        ],
+      }, { sendToLedger: "true" });
+    }
+  }
 }
