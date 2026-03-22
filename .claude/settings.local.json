@@ -309,7 +309,10 @@
       "Bash(rm -rf _060)",
       "Bash(mkdir _060)",
       "Bash(rm -rf _real060)",
-      "Bash(mkdir _real060)"
+      "Bash(mkdir _real060)",
+      "Bash(sed -i '' 's/iou_thr=0.60/iou_thr=0.52/' run.py)",
+      "Bash(__NEW_LINE_4b513216220a4bb4__ rm:*)",
+      "Bash(zip -r /Users/walgermo/Utvikling/ai-nm-2026/tasks/norgesgruppen/submission_real_wbf052.zip . -x \".*\")"
     ]
   }
 }

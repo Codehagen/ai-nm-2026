@@ -218,7 +218,9 @@ export async function ensureEmployee(
     departmentId: number;
   },
 ): Promise<number> {
-  const email = data.email || `${stripDiacritics(data.firstName).toLowerCase()}.${stripDiacritics(data.lastName).toLowerCase()}@example.org`;
+  // Sanitize email — extraction sometimes returns "string", "null", or schema descriptions
+  const rawEmail = data.email && !["string", "null", "undefined", ""].includes(data.email) ? data.email : undefined;
+  const email = rawEmail || `${stripDiacritics(data.firstName).toLowerCase()}.${stripDiacritics(data.lastName).toLowerCase()}@example.org`;
 
   // GET-first by email — avoids 422 collision (which hurts error cleanliness scoring)
   const checkRes = await ctx.get("/employee", {
