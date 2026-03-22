@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-03-22T08:10:29.140Z",
+  "prompt": "We sent an invoice for 5000 EUR to TestForex Ltd (org no. 999111222) when the exchange rate was 11.50 NOK/EUR. The customer has now paid, but the rate is 12.00 NOK/EUR. Register the payment and post the exchange rate difference (agio) to the correct account.",
+  "files": [],
+  "base_url": "https://kkpqfuj-amager.tripletex.dev/v2",
+  "raw_files": []
+}

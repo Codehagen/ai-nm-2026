@@ -463,7 +463,28 @@ export async function solve(
             applyEmployeeDefaults(body as Record<string, unknown>);
           }
 
-          // === Phase 1C: Auto-inject vatType on POST /product ===
+          // === Phase 1C: Fix vatType id 0 (invalid) → id 6 (no VAT) ===
+          if ((method === "POST" || method === "PUT") && body) {
+            const fixVat = (obj: Record<string, unknown>) => {
+              if (obj.vatType && typeof obj.vatType === "object") {
+                const vt = obj.vatType as Record<string, unknown>;
+                if (vt.id === 0) vt.id = 6;
+              }
+              // Fix nested postings
+              const voucher = obj.voucher as Record<string, unknown> | undefined;
+              if (voucher?.postings && Array.isArray(voucher.postings)) {
+                for (const p of voucher.postings as Array<Record<string, unknown>>) {
+                  if (p.vatType && typeof p.vatType === "object") {
+                    const vt = p.vatType as Record<string, unknown>;
+                    if (vt.id === 0) vt.id = 6;
+                  }
+                }
+              }
+            };
+            fixVat(body as Record<string, unknown>);
+          }
+
+          // === Phase 1C2: Auto-inject vatType on POST /product ===
           if (method === "POST" && /\/product\b/.test(path) && body) {
             applyProductDefaults(body as Record<string, unknown>);
           }

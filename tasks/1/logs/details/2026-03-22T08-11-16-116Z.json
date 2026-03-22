@@ -1,0 +1,175 @@
+{
+  "timestamp": "2026-03-22T08:11:16.116Z",
+  "model": "anthropic/claude-opus-4.6",
+  "taskType": "voucher",
+  "prompt": "We sent an invoice for 5000 EUR to TestForex Ltd (org no. 999111222) when the exchange rate was 11.50 NOK/EUR. The customer has now paid, but the rate is 12.00 NOK/EUR. Register the payment and post the exchange rate difference (agio) to the correct account.",
+  "filesCount": 0,
+  "steps": 8,
+  "toolCalls": 11,
+  "apiCalls": 11,
+  "apiErrors": 1,
+  "elapsedMs": 46698,
+  "status": "completed",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/currency",
+      "ok": true,
+      "params": {
+        "code": "EUR",
+        "fields": "id,code"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "1500",
+        "fields": "id,number,name"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "8060",
+        "fields": "id,number,name"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/invoice/paymentType",
+      "ok": true,
+      "params": {
+        "fields": "id,description"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/customer",
+      "ok": true,
+      "body": {
+        "name": "TestForex Ltd",
+        "organizationNumber": "999111222",
+        "isCustomer": true
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/product",
+      "ok": false,
+      "status": 403,
+      "body": {
+        "name": "Service EUR",
+        "priceExcludingVatCurrency": 5000,
+        "vatType": {
+          "id": 5
+        },
+        "currency": {
+          "id": 5
+        }
+      },
+      "errorMessage": "Product cannot be changed if Rackbeat integration is active."
+    },
+    {
+      "method": "GET",
+      "path": "/product",
+      "ok": true,
+      "params": {
+        "fields": "id,name,number,priceExcludingVatCurrency,vatType(id)",
+        "count": "10"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/order",
+      "ok": true,
+      "body": {
+        "customer": {
+          "id": 108553900
+        },
+        "orderDate": "2026-03-22",
+        "deliveryDate": "2026-03-22",
+        "currency": {
+          "id": 5
+        },
+        "orderLines": [
+          {
+            "product": {
+              "id": 84381300
+            },
+            "count": 1,
+            "unitPriceExcludingVatCurrency": 5000,
+            "vatType": {
+              "id": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/invoice",
+      "ok": true,
+      "body": {
+        "invoiceDate": "2026-03-22",
+        "invoiceDueDate": "2026-04-05",
+        "orders": [
+          {
+            "id": 402068744
+          }
+        ]
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/invoice/2147683550/:payment",
+      "ok": true,
+      "params": {
+        "paymentDate": "2026-03-22",
+        "paymentTypeId": "32847411",
+        "paidAmount": "60000",
+        "paidAmountCurrency": "5000"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/ledger/voucher",
+      "ok": true,
+      "params": {
+        "sendToLedger": "true"
+      },
+      "body": {
+        "date": "2026-03-22",
+        "description": "Agio / Valutagevinst - TestForex Ltd",
+        "postings": [
+          {
+            "row": 1,
+            "date": "2026-03-22",
+            "account": {
+              "id": 424554229
+            },
+            "customer": {
+              "id": 108553900
+            },
+            "amountGross": 2500,
+            "amountGrossCurrency": 2500,
+            "description": "Agio - exchange rate gain EUR 5000"
+          },
+          {
+            "row": 2,
+            "date": "2026-03-22",
+            "account": {
+              "id": 424554637
+            },
+            "amountGross": -2500,
+            "amountGrossCurrency": -2500,
+            "description": "Agio - exchange rate gain EUR 5000"
+          }
+        ]
+      }
+    }
+  ]
+}

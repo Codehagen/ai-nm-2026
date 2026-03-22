@@ -1,0 +1,118 @@
+{
+  "timestamp": "2026-03-22T08:13:40.082Z",
+  "model": "orchestrator-failed",
+  "taskType": "orchestrator:supplier-invoice:failed",
+  "prompt": "Precisamos da despesa de Kundemøte lunsj deste recibo registada no departamento Økonomi. Use a conta de despesas correta e garanta o tratamento correto do IVA.",
+  "filesCount": 1,
+  "steps": 1,
+  "toolCalls": 6,
+  "apiCalls": 6,
+  "apiErrors": 1,
+  "elapsedMs": 15628,
+  "status": "error",
+  "error": "Failed to create supplier invoice: Validering feilet.",
+  "toolCallDetails": [
+    {
+      "method": "GET",
+      "path": "/department",
+      "ok": true,
+      "params": {
+        "departmentNumber": "1",
+        "fields": "id,name"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/supplier",
+      "ok": true,
+      "params": {
+        "organizationNumber": "816335809",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "7350",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account",
+      "ok": true,
+      "params": {
+        "number": "2400",
+        "fields": "id"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/ledger/account/424554596",
+      "ok": true,
+      "params": {
+        "fields": "id,vatType,vatLocked"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/supplierInvoice",
+      "ok": false,
+      "body": {
+        "invoiceNumber": "KVITTERING",
+        "invoiceDate": "2026-06-07",
+        "invoiceDueDate": "2026-06-07",
+        "supplier": {
+          "id": 108415533
+        },
+        "voucher": {
+          "date": "2026-06-07",
+          "description": "Faktura KVITTERING fra Peppes Pizza",
+          "postings": [
+            {
+              "row": 1,
+              "date": "2026-06-07",
+              "description": "Kundemøte lunsj",
+              "account": {
+                "id": 424554596
+              },
+              "amountGross": 4100,
+              "amountGrossCurrency": 4100,
+              "vatType": {
+                "id": 6
+              },
+              "department": {
+                "id": 844789
+              }
+            },
+            {
+              "row": 2,
+              "date": "2026-06-07",
+              "description": "Peppes Pizza",
+              "account": {
+                "id": 424554344
+              },
+              "supplier": {
+                "id": 108415533
+              },
+              "amountGross": -4100,
+              "amountGrossCurrency": -4100
+            }
+          ]
+        }
+      },
+      "status": 422,
+      "errorMessage": "Validering feilet.",
+      "validationMessages": [
+        {
+          "field": null,
+          "message": "Regnskapskonto og postering har ulik mva-kode. Konto 7350 er låst til mva-kode 0, og det ble forsøkt å postere med mva-kode 6. Posteringens beskrivelse er Kundemøte lunsj.",
+          "path": null,
+          "rootId": null
+        }
+      ]
+    }
+  ]
+}

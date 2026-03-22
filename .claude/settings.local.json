@@ -296,7 +296,10 @@
       "Bash(mkdir _swa_check)",
       "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" echo \"=== VAT type on account 7100 ===\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/ledger/account?number=7100&fields=id,number,name,vatType\\(id,name,percentage\\),vatLocked\")",
       "Bash(/dev/null __NEW_LINE_14539efe87746bcc__ echo echo '=== All VAT types with id near 0 ===' curl -s -u 0:$TOKEN \"https://kkpqfuj-amager.tripletex.dev/v2/ledger/vatType?fields=id,name,number,percentage&count=10\")",
-      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/ledger/vatType?id=5,6&fields=id,name,number,percentage\")"
+      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/ledger/vatType?id=5,6&fields=id,name,number,percentage\")",
+      "Bash($B type:*)",
+      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" __NEW_LINE_a3fdafa27d48c7ec__ echo \"=== Latest voucher \\(agio\\) ===\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/ledger/voucher?dateFrom=2020-01-01&dateTo=2030-01-01&fields=id,description,date,postings\\(row,account\\(number,name\\),amountGross,customer\\(name\\)\\)&count=1&sorting=-id\")",
+      "Bash(/dev/null npx:*)"
     ]
   }
 }
