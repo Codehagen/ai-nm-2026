@@ -21,7 +21,7 @@ TASK_DIR = Path(__file__).parent.resolve()
 DASHBOARD_FILE = TASK_DIR / "dashboard.html"
 PROJECT = "ai-nm26osl-1823"
 REFRESH_SEC = 90
-BASELINE = 89.47
+BASELINE = 90.10
 START_TIME = time.time()
 
 # Cache
@@ -185,6 +185,23 @@ def generate_html():
     # Orchestrator log
     orch_html = d["orchestrator"].replace("\n", "<br>") if d["orchestrator"] else "Not running"
 
+    # Improvements feed
+    improvements_feed = ""
+    kept_exps = [e for e in d["experiments"] if e["status"] == "keep" and e["val_metric"] > 0]
+    kept_exps.sort(key=lambda x: -x["val_metric"])
+    for e in kept_exps[:20]:
+        delta = e["val_metric"] - BASELINE
+        cls = "above" if delta > 0 else "below"
+        dc = "#3fb950" if delta > 0 else "#f0883e"
+        improvements_feed += f'''<div class="feed-item {cls}">
+            <span class="feed-vm">{e.get("vm","?")}</span>
+            <span class="feed-desc">{e["description"]}</span>
+            <span class="feed-metric" style="color:{dc}">{e["val_metric"]:.4f}</span>
+            <span class="feed-delta" style="color:{dc}">{delta:+.4f}</span>
+        </div>'''
+    if not improvements_feed:
+        improvements_feed = '<div class="feed-item">No improvements found yet — VMs running baselines...</div>'
+
     # Chart data
     kept_data = json.dumps([{"v": e["val_metric"], "d": e.get("description", "")[:30]}
                             for e in d["experiments"] if e["status"] == "keep"][:40])
@@ -221,6 +238,14 @@ def generate_html():
         tr:hover {{ background:#1c2128; }}
         canvas {{ background:#161b22; border-radius:6px; border:1px solid #30363d; width:100%; }}
         .orch {{ background:#161b22; border:1px solid #30363d; border-radius:6px; padding:10px 14px; font-size:0.75em; color:#8b949e; font-family:monospace; line-height:1.5; }}
+        .feed {{ display:flex; flex-direction:column; gap:6px; }}
+        .feed-item {{ background:#161b22; border:1px solid #30363d; border-radius:6px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; }}
+        .feed-item.above {{ border-left:3px solid #3fb950; }}
+        .feed-item.below {{ border-left:3px solid #f0883e; }}
+        .feed-desc {{ color:#c9d1d9; font-size:0.85em; flex:1; }}
+        .feed-metric {{ font-weight:700; font-size:0.95em; min-width:80px; text-align:right; }}
+        .feed-delta {{ font-size:0.8em; min-width:70px; text-align:right; margin-left:10px; }}
+        .feed-vm {{ color:#8b949e; font-size:0.75em; min-width:100px; }}
         .footer {{ color:#484f58; font-size:0.7em; padding:10px 25px; border-top:1px solid #21262d; }}
         .two-col {{ display:grid; grid-template-columns:1fr 1fr; gap:15px; }}
         @media(max-width:900px) {{ .stats {{ flex-wrap:wrap; }} .stat {{ min-width:33%; }} .two-col {{ grid-template-columns:1fr; }} }}
@@ -265,6 +290,11 @@ def generate_html():
                 <h2>Kept Improvements</h2>
                 <canvas id="chart" height="250"></canvas>
             </div>
+        </div>
+
+        <div class="section">
+            <h2>Improvement Feed (kept experiments)</h2>
+            <div class="feed">{improvements_feed}</div>
         </div>
 
         <div class="section">

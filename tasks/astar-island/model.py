@@ -39,9 +39,16 @@ from simulator import simulate_monte_carlo, fit_hidden_params
 # GBT model support
 # ──────────────────────────────────────────────────────────────
 
-GBT_BLEND_WEIGHT = 0.35  # how much to weight GBT vs heuristic (cross-round validated)
+GBT_BLEND_WEIGHT = 0.35  # fallback for unknown terrain codes
 SIM_BLEND_WEIGHT = 0.0  # disabled — proven +0.00 LORO, adds 30s latency
 _gbt_models = None  # lazy-loaded
+
+# Import shared params — single source of truth (see params.py)
+from params import (
+    BLEND_TERRAIN, ROUND_TYPE_THRESHOLDS, ROUND_TYPE_L7,
+    L7_MIN_OBS, EMP_BLEND_EXPANSION, EMP_BLEND_NORMAL,
+    classify_round_type,
+)
 
 
 def _extract_cell_features(
@@ -1169,8 +1176,7 @@ def build_prediction(
     cell_obs = compute_cell_obs_features(all_observations, h_map, w_map) if all_observations else None
     gbt_pred = gbt_predict(initial_grid, settlements, obs_stats=obs_stats, cell_obs=cell_obs)
     if gbt_pred is not None:
-        # Per-terrain blend weights (autoresearch optimized)
-        BLEND_TERRAIN = {"plains": 0.90, "forest": 0.75, "settl": 0.80}
+        # Per-terrain blend weights (from params.py)
         h, w, _ = tensor.shape
         for y in range(h):
             for x in range(w):
@@ -1223,7 +1229,9 @@ def build_prediction(
 
     if round_empirical_tables:
         h, w, _ = tensor.shape
-        EMPIRICAL_BLEND_WEIGHT = 0.40  # weight for round empirical tables (autoresearch optimized)
+        # Round-type-aware empirical blend (from params.py)
+        round_type = classify_round_type(obs_stats)
+        EMPIRICAL_BLEND_WEIGHT = EMP_BLEND_EXPANSION if round_type == "expansion" else EMP_BLEND_NORMAL
         MIN_BUCKET_OBS = 20  # minimum obs in bucket to trust empirical
 
         # Pre-compute settlement positions for this seed
@@ -1272,40 +1280,25 @@ def build_prediction(
 
         if obs_total > 100:  # need enough observations
             obs_freq = obs_cls / obs_total
-            # Compute model's average prediction for dynamic cells
+            # Compute model's average prediction for dynamic cells (vectorized)
             h, w, _ = tensor.shape
-            model_avg = np.zeros(NUM_CLASSES)
-            m_count = 0
-            for y in range(h):
-                for x in range(w):
-                    if initial_grid[y][x] not in {10, 5}:
-                        model_avg += tensor[y, x]
-                        m_count += 1
-            if m_count > 0:
-                model_avg /= m_count
-                ratio = obs_freq / np.maximum(model_avg, 1e-6)
-                # Safe L7: zero strength for rare classes (port, ruin) to
-                # prevent catastrophic KL from observation under-sampling.
-                # KL is 60x more punishing for under-prediction than over-prediction.
-                cls_strength = np.array([1.20, 0.80, 0.0, 0.0, 1.30, 0.0])
-                # Gate: require minimum observations per class
-                min_obs = np.array([200, 50, 30, 20, 100, 0])
-                for c in range(NUM_CLASSES):
-                    if obs_cls[c] < min_obs[c]:
-                        cls_strength[c] = 0.0
-                adj = 1.0 + cls_strength * (ratio - 1.0)
-                # Per-class clamp: wider for settlement (allows stronger correction
-                # on extreme rounds like R8 where expansion is 4.8x over-predicted)
-                adj_min = np.array([0.80, 0.40, 1.00, 1.00, 0.80, 1.00])
-                adj_max = np.array([1.25, 1.30, 1.00, 1.00, 1.25, 1.00])
-                adj = np.clip(adj, adj_min, adj_max)
-                for y in range(h):
-                    for x in range(w):
-                        if initial_grid[y][x] in {10, 5}:
-                            continue
-                        tensor[y, x] *= adj
-                        tensor[y, x] = np.maximum(tensor[y, x], PROB_FLOOR)
-                        tensor[y, x] /= tensor[y, x].sum()
+            grid_arr = np.array(initial_grid)
+            dynamic = ~np.isin(grid_arr, [10, 5])
+            model_avg = tensor[dynamic].mean(axis=0)
+            ratio = obs_freq / np.maximum(model_avg, 1e-6)
+            # Round-type-adaptive L7 (synced from train.py LORO-validated)
+            round_type = classify_round_type(obs_stats)
+            rt_params = ROUND_TYPE_L7[round_type]
+            strengths = rt_params["strengths"].copy()
+            for c in range(NUM_CLASSES):
+                if obs_cls[c] < L7_MIN_OBS[c]:
+                    strengths[c] = 0.0
+            adj = 1.0 + strengths * (ratio - 1.0)
+            adj = np.clip(adj, rt_params["adj_min"], rt_params["adj_max"])
+            # Apply to all dynamic cells at once
+            tensor[dynamic] *= adj[np.newaxis, :]
+            tensor[dynamic] = np.maximum(tensor[dynamic], PROB_FLOOR)
+            tensor[dynamic] /= tensor[dynamic].sum(axis=1, keepdims=True)
 
     # Layer 8: Per-cell empirical correction from observation grids.
     # Each observation is a Monte Carlo sample of the final state.

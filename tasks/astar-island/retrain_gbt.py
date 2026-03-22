@@ -21,44 +21,9 @@ sys.path.insert(0, os.path.dirname(__file__))
 import xgboost as xgb
 from model import _extract_cell_features, compute_obs_stats, compute_cell_obs_features
 from utils import load_observations
+from params import ROUNDS, ROUND_WEIGHTS, XGB_HPARAMS, TRAINING_ROUNDS
 
-
-ROUNDS = {
-    1: "71451d74-be9f-471f-aacd-a41f3b68a9cd",
-    2: "76909e29-f664-4b2f-b16b-61b7507277e9",
-    4: "8e839974-b13b-407b-a5e7-fc749d877195",
-    5: "fd3c92ff-3178-4dc9-8d9b-acf389b3982b",
-    6: "ae78003a-4efe-425a-881a-d16a39bca0ad",
-    7: "36e581f1-73f8-453f-ab98-cbe3052b701b",
-    8: "c5cdf100-a876-4fb7-b5d8-757162c97989",
-    9: "2a341ace-0f57-4309-9b89-e59fe0f09179",
-    10: "75e625c3-60cb-4392-af3e-c86a98bde8c2",
-    11: "324fde07-1670-4202-b199-7aa92ecb40ee",
-    # 12 excluded: 0 observations — all-zero obs features pollute the model
-    13: "7b4bda99-6165-4221-97cc-27880f5e6d95",
-    14: "d0a2c894-2162-4d49-86cf-435b9013f3b8",
-    15: "cc5442dd-bc5d-418b-911b-7eb960cb0390",
-    16: "8f664aed-8839-4c85-bed0-77a2cac7c6f5",
-    17: "3eb0c25d-28fa-48ca-b8e1-fc249e3918e9",
-    18: "b0f9d1bf-4b71-4e6e-816c-19c718d29056",
-    19: "597e60cf-d1a1-4627-ac4d-2a61da68b6df",
-}
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-
-ROUND_WEIGHTS = {1: 1.0, 2: 1.05, 4: 1.05**3, 5: 1.05**4, 6: 1.05**5, 7: 1.05**6, 8: 1.05**7, 9: 1.05**8, 10: 1.05**9, 11: 1.05**10, 13: 1.05**12, 14: 1.05**13, 15: 1.05**14, 16: 1.05**15, 17: 1.05**16, 18: 1.05**17, 19: 1.05**18}
-
-# Per-terrain XGBoost hyperparameters — must match train.py LORO-validated config
-XGB_HPARAMS = {
-    "plains": dict(n_estimators=600, max_depth=5, learning_rate=0.08,
-                   reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.55, min_child_weight=3),
-    "forest": dict(n_estimators=600, max_depth=5, learning_rate=0.08,
-                   reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.55, min_child_weight=3),
-    "settl":  dict(n_estimators=600, max_depth=5, learning_rate=0.08,
-                   reg_alpha=0.1, reg_lambda=2.0, subsample=0.9,
-                   colsample_bytree=0.55, min_child_weight=3),
-}
 
 
 def main():
@@ -68,7 +33,7 @@ def main():
     Y_data = {"plains": [], "forest": [], "settl": []}
     W_data = {"plains": [], "forest": [], "settl": []}
 
-    for rnum, round_id in sorted(ROUNDS.items()):
+    for rnum in sorted(TRAINING_ROUNDS):
         init_path = os.path.join(DATA_DIR, f"round{rnum}_initial.json")
         if not os.path.exists(init_path):
             continue
@@ -77,7 +42,7 @@ def main():
             info = json.load(f)
 
         # Enhanced obs stats (22 features)
-        all_obs = load_observations(round_id)
+        all_obs = load_observations(ROUNDS[rnum])
         obs_stats = compute_obs_stats(all_obs) if all_obs else np.zeros(23)
         rw = ROUND_WEIGHTS.get(rnum, 1.0)
 

@@ -42,6 +42,7 @@ GEMINI_MODEL = os.environ.get("MODEL_ID", "gemini-3.1-flash-lite-preview")
 VM_FOCUS = os.environ.get("VM_FOCUS", "general")
 
 TRAIN_PY = TASK_DIR / "train.py"
+PARAMS_PY = TASK_DIR / "params.py"
 MODEL_PY = TASK_DIR / "model.py"
 RESULTS_TSV = TASK_DIR / "results.tsv"
 
@@ -93,7 +94,7 @@ def git_setup():
 
 
 def git_commit(message):
-    git("add train.py results.tsv")
+    git("add params.py train.py results.tsv")
     git(f'commit -m "{message}"')
 
 
@@ -104,7 +105,7 @@ def git_amend():
 
 def git_reset_hard():
     """Revert to last kept commit."""
-    git("checkout -- train.py")
+    git("checkout -- params.py train.py")
 
 
 def git_log_oneline(n=10):
@@ -133,7 +134,7 @@ def get_commit_hash():
 
 
 def count_diff_lines():
-    _, out, _ = git("diff HEAD -- train.py")
+    _, out, _ = git("diff HEAD -- params.py")
     return len([l for l in out.split("\n") if l.startswith("+") or l.startswith("-")]) if out else 0
 
 
@@ -199,12 +200,12 @@ def run_train():
 
 # ─── Gemini: The Researcher ─────────────────────────────────────
 
-def ask_gemini(train_py_content, model_py_summary, results_history, run_idx):
-    """Ask Gemini to analyze and suggest ONE code change.
+def ask_gemini(params_py_content, train_py_content, model_py_summary, results_history, run_idx):
+    """Ask Gemini to analyze and suggest ONE code change to params.py.
 
     Follows the Karpathy protocol: the LLM reads the full code,
     understands the architecture, reasons about what to try,
-    and generates a precise edit.
+    and generates a precise edit to params.py (the tunable parameters file).
     """
     if not GOOGLE_API_KEY:
         return None
@@ -216,7 +217,7 @@ You are optimizing a probabilistic terrain prediction model for a Norse civiliza
 
 ## Your Task
 Read the code below. Understand the architecture. Form a hypothesis.
-Generate ONE edit to train.py that you believe will improve val_metric.
+Generate ONE edit to params.py that you believe will improve val_metric.
 
 ## The Metric
 val_metric = weighted average LORO score (higher is better, max 100).
@@ -244,7 +245,12 @@ Pattern: STRONG on extinction, WEAK on expansion.
 {git_log_oneline(15)}
 ```
 
-## train.py (THE FILE YOU EDIT — full content)
+## params.py (THE FILE YOU EDIT — all tunable parameters)
+```python
+{params_py_content}
+```
+
+## train.py (READ ONLY — evaluation pipeline, uses params from params.py)
 ```python
 {train_py_content}
 ```
@@ -253,12 +259,13 @@ Pattern: STRONG on extinction, WEAK on expansion.
 {model_py_summary}
 
 ## Rules
-1. Generate exactly ONE change. Small and isolated.
+1. Generate exactly ONE change to params.py. Small and isolated.
 2. Reason about WHY this change should help before writing code.
 3. Don't repeat experiments that already failed in results.tsv.
 4. Simplicity criterion: don't add ugly complexity for tiny gains.
 5. If 3+ consecutive experiments failed, try a completely different direction.
-6. NEVER modify imports, output format, or evaluation logic.
+6. NEVER modify imports or the classify_round_type function signature.
+7. You can change any parameter values, add new parameters, or modify thresholds.
 
 ## What has NOT worked (proven failures — do NOT try these)
 - KNN round matching, probability sharpening, LightGBM
@@ -273,7 +280,7 @@ Respond with ONLY this JSON:
   "reasoning": "2-3 sentences explaining your hypothesis and why this should work",
   "description": "short description for results.tsv (max 60 chars)",
   "search_replace": [
-    {{"old": "exact string to find in train.py", "new": "replacement string"}}
+    {{"old": "exact string to find in params.py", "new": "replacement string"}}
   ]
 }}
 
@@ -333,8 +340,8 @@ def get_model_py_summary():
 
 
 def apply_edit(patch):
-    """Apply search_replace edit to train.py. Returns True if successful."""
-    source = TRAIN_PY.read_text()
+    """Apply search_replace edit to params.py. Returns True if successful."""
+    source = PARAMS_PY.read_text()
 
     for sr in patch.get("search_replace", []):
         old = sr.get("old", "")
@@ -347,7 +354,7 @@ def apply_edit(patch):
             return False
         source = source.replace(old, new, 1)
 
-    TRAIN_PY.write_text(source)
+    PARAMS_PY.write_text(source)
     return True
 
 
@@ -405,12 +412,13 @@ def main():
             pass
 
         # Read current state
+        params_py_content = PARAMS_PY.read_text()
         train_py_content = TRAIN_PY.read_text()
         model_py_summary = get_model_py_summary()
         results_history = get_results_history()
 
-        # Ask Gemini for a hypothesis + edit
-        patch = ask_gemini(train_py_content, model_py_summary, results_history, run_idx)
+        # Ask Gemini for a hypothesis + edit to params.py
+        patch = ask_gemini(params_py_content, train_py_content, model_py_summary, results_history, run_idx)
 
         if patch is None:
             log("Gemini returned nothing. Sleeping 30s and retrying.")
@@ -426,7 +434,7 @@ def main():
         # Apply the edit
         if not apply_edit(patch):
             log("Edit failed to apply. Discarding.")
-            git("checkout -- train.py")
+            git("checkout -- params.py")
             append_result(0.0, "crash", description, "edit failed to apply")
             consecutive_failures += 1
             if consecutive_failures >= 5:
@@ -495,7 +503,7 @@ def main():
             delta = val_metric - best_metric
             append_result(val_metric, "discard", description, f"val_metric {delta:+.6f}")
             git_reset_hard()
-            git("checkout -- train.py")
+            git("checkout -- params.py")
             log(f"DISCARD. val_metric={val_metric:.6f} ({delta:+.6f})")
 
         log(f"Duration: {duration:.0f}s")
