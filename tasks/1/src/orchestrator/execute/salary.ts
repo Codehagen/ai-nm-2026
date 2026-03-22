@@ -161,7 +161,7 @@ export async function executeSalary(ctx: OrchestratorContext, data: SalaryData):
       detailsBody.percentageOfFullTimeEquivalent = data.percentageOfFullTimeEquivalent;
     }
     if (data.occupationCode) {
-      detailsBody.occupationCode = data.occupationCode;
+      detailsBody.occupationCode = { code: data.occupationCode };
     }
     // Only POST if we have actual details to set
     if (data.percentageOfFullTimeEquivalent || data.occupationCode) {

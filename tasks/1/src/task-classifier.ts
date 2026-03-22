@@ -269,6 +269,20 @@ export function classifyTask(prompt: string): TaskType {
     return "voucher";
   }
 
+  // --- Foreign currency / agio-disagio (BEFORE invoice-payment — these need specialized voucher handling)
+  if (
+    has(t, "faktura", "invoice", "factura", "fatura", "rechnung", "facture") &&
+    has(
+      t,
+      "agio", "disagio", "valutadifferans", "kursen var", "exchange rate",
+      "wechselkurs", "taux de change", "tipo de cambio", "taxa de câmbio", "taxa de cambio",
+      "eur", "usd", "gbp", "sek", "dkk",
+    ) &&
+    has(t, "betaling", "payment", "pago", "pagamento", "zahlung", "paiement", "betalt", "paid")
+  ) {
+    return "voucher";
+  }
+
   // --- Invoice + payment (but not when project is the primary entity)
   if (
     has(t, "faktura", "invoice", "factura", "fatura", "rechnung", "facture") &&

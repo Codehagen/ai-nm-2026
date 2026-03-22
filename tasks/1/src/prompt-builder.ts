@@ -396,6 +396,54 @@ If the prompt asks you to analyze costs, find expense accounts with largest incr
 
 **CRITICAL: You MUST query the ledger FIRST to get real data. Do NOT guess or fabricate account names. The scoring checks EXACT account names from the real ledger.**
 
+### Bank Reconciliation (CSV bank statement):
+If the prompt asks to reconcile a bank statement (CSV) with invoices:
+1. **Parse the CSV** — it has columns like: Dato;Forklaring;Inn;Ut;Saldo. Each row is a transaction.
+2. **Get all open invoices**: GET /invoice?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01&fields=id,invoiceNumber,customer(name),amount,amountCurrency
+3. **For each INCOMING payment (Inn column)** in the CSV:
+   - Match to a customer invoice by customer name or invoice number mentioned in the "Forklaring" column
+   - GET /invoice/paymentType?fields=id
+   - PUT /invoice/{matched_id}/:payment with paymentDate, paymentTypeId, paidAmount (the Inn amount)
+   - Handle PARTIAL payments: if Inn < invoice amount, still register as partial payment
+4. **For each OUTGOING payment (Ut column)** — these are supplier payments:
+   - GET /supplierInvoice?invoiceDateFrom=2020-01-01&invoiceDateTo=2030-01-01&fields=id,supplier(name),amount
+   - Match by supplier name in "Forklaring"
+   - Register payment via voucher: debit 2400 (leverandørgjeld), credit 1920 (bank)
+5. **For misc items** (interest, fees): POST /ledger/voucher with appropriate accounts
+   - Interest income: debit 1920, credit 8040
+   - Bank fees: debit 7770, credit 1920
+
+**Process ALL rows in the CSV — each row is a separate transaction.**
+**Match by name fragments in the "Forklaring" column — e.g. "Innbetaling fra Weber GmbH / Faktura 1001" → find invoice with customer "Weber GmbH".**
+
+### Foreign Currency Invoice + Payment (Agio/Disagio):
+If the prompt mentions a foreign currency invoice (EUR, USD, etc.) with different exchange rates at invoicing vs payment:
+1. GET /currency?code=EUR&fields=id (or USD, etc.) — get the currency ID
+2. POST /customer with correct org number
+3. POST /product with the service/goods name
+4. POST /order with \`currency: {"id": <eur_id>}\` and orderLines with prices in the FOREIGN currency
+5. POST /invoice from the order
+6. GET /invoice/paymentType?fields=id
+7. PUT /invoice/{id}/:payment with:
+   - paymentDate: today
+   - paymentTypeId: from step 6
+   - paidAmount: the amount in NOK at the NEW exchange rate (foreignAmount × newRate)
+   - paidAmountCurrency: the foreign currency amount (same as invoice amount in foreign currency)
+8. **Post agio/disagio voucher** for the exchange rate difference:
+   - Calculate: difference = foreignAmount × (newRate - oldRate)
+   - If newRate > oldRate → AGIO (gain): debit 1500 (kundefordringer), credit 8060 (agio/valutagevinst)
+   - If newRate < oldRate → DISAGIO (loss): debit 8160 (disagio/valutatap), credit 1500 (kundefordringer)
+   - GET /ledger/account?number=1500&fields=id and GET /ledger/account?number=8060&fields=id (or 8160)
+   - POST /ledger/voucher?sendToLedger=true with postings:
+     \`\`\`json
+     {"date": "<today>", "description": "Agio / Valutagevinst", "postings": [
+       {"row": 1, "account": {"id": <1500_id>}, "customer": {"id": <cust_id>}, "amountGross": <difference>, "amountGrossCurrency": <difference>},
+       {"row": 2, "account": {"id": <8060_id>}, "amountGross": -<difference>, "amountGrossCurrency": -<difference>}
+     ]}
+     \`\`\`
+
+**Calculate carefully:** NOK amount at OLD rate = foreignAmount × oldRate. NOK amount at NEW rate = foreignAmount × newRate. Difference = NEW - OLD.
+
 ### Custom Accounting Dimensions:
 1. POST /ledger/accountingDimensionName  {"dimensionName": "Region"}
 2. POST /ledger/accountingDimensionValue  {"displayName": "Sør-Norge", "dimensionIndex": 1}
