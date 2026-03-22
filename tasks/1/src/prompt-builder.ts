@@ -310,6 +310,11 @@ const RECIPE_SUPPLIER_INVOICE = `## Supplier Invoice (TESTED RECIPE)
 - Use POST /supplierInvoice (not POST /ledger/voucher).
 - \`row\` MUST start at 1 (not 0).
 - \`amountGrossCurrency\` MUST equal \`amountGross\`.
+- **If prompt mentions a DEPARTMENT**, add it to the EXPENSE posting: \`"department": {"id": <dept_id>}\`
+  - First POST /department {"name": "<dept_name>", "departmentNumber": "1"} to create it
+- **If account is locked to a specific VAT type**, the API rejects mismatched vatType. Use vatType {id: 6} for 0% accounts.
+- **If prompt explicitly says "Konto XXXX"**, use THAT account number — do NOT substitute a different one.
+- **Expense account mapping**: 6540=office supplies, 6800=IT, 7100=travel, 7300=office services, 7350=meals/entertainment, 4300=goods for resale.
 - Expense posting (row 1) is POSITIVE with vatType {"id": 1} for 25% input VAT.
 - Supplier posting (row 2) is NEGATIVE. Supplier account is usually 2400.
 - For other VAT rates: 11 = 15%, 12 = 12%.`;
