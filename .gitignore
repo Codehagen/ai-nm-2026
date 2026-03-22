@@ -22,9 +22,10 @@ env/
 *.joblib
 *.safetensors
 
-# Data and models (large files) — root only so tasks/<task>/data/ can hold small fixtures/README
+# Data and models (large files)
 /data/
 /models/
+tasks/norgesgruppen/data/
 *.tar.gz
 *.zip
 
