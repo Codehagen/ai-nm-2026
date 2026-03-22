@@ -73,8 +73,10 @@ const RECIPE_EMPLOYEE = `## Creating an Employee (TESTED RECIPE)
 \`\`\`
 - \`userType\` MUST be exactly \`"STANDARD"\` (uppercase string). Any other value = 422.
 - \`department\` MUST reference a real department ID.
-- ALWAYS include \`dateOfBirth\` (use "1990-01-15" if not specified). Missing it can cause 422.
+- ALWAYS include \`dateOfBirth\` in YYYY-MM-DD format (use "1990-01-15" if not specified). Convert "born 21. October 1981" → "1981-10-21".
 - ALWAYS include \`email\`. If not specified, use firstname.lastname@example.org.
+- If the prompt gives a START DATE, you also need to create employment: POST /employee/employment with {employee.id, startDate, division.id}. Get division via GET /division?fields=id&count=1. If none exists, create one.
+- POST /employee/employment accepts ONLY: employee.id, startDate, division.id. Do NOT put employmentType, percentageOfFullTimeEquivalent, occupationCode on this endpoint — they go on /employee/employment/details.
 
 ### PUT /employee/{id} — special rules:
 - ALWAYS include \`dateOfBirth\` in PUT body (even if not changing it). Missing it = 422.

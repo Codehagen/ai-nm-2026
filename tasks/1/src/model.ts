@@ -160,6 +160,12 @@ function getErrorHint(
     return 'Voucher postings MUST balance (sum of all amountGross = 0). Check that debit (positive) and credit (negative) amounts are equal.';
   }
 
+  // Employment POST — invalid fields
+  if (method === "POST" && path.includes("/employee/employment") && !path.includes("details") &&
+      (vm?.some((v) => v.message?.includes("mapping")) || result.message?.includes("mapping"))) {
+    return 'STOP: POST /employee/employment accepts ONLY: employee.id, startDate, division.id. Do NOT include employmentType, percentageOfFullTimeEquivalent, occupationCode, annualSalary, or shiftDurationHours — those go on POST /employee/employment/details (separate endpoint). Remove the invalid fields and retry.';
+  }
+
   // Invoice GET — invalid field names
   if (method === "GET" && path.includes("/invoice") && !path.includes("supplierInvoice") &&
       result.status === 400 && result.message?.includes("does not match a field")) {
