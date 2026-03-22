@@ -590,7 +590,7 @@ Treat it like a supplier invoice — the vendor on the receipt is the supplier.`
 
 const TASK_RECIPES: Record<Exclude<TaskType, "unknown">, string[]> = {
   customer: [RECIPE_CUSTOMER],
-  employee: [RECIPE_EMPLOYEE, RECIPE_EMPLOYEE_ADMIN, RECIPE_DEPARTMENT],
+  employee: [RECIPE_EMPLOYEE, RECIPE_DEPARTMENT],
   "employee-admin": [RECIPE_EMPLOYEE, RECIPE_EMPLOYEE_ADMIN, RECIPE_DEPARTMENT],
   product: [RECIPE_PRODUCT],
   department: [RECIPE_DEPARTMENT],
