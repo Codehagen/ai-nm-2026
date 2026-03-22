@@ -19,10 +19,7 @@ import {
 export async function executeProject(ctx: OrchestratorContext, data: ProjectData): Promise<void> {
   const today = getOsloDate();
 
-  // 1. Get admin employee (needed as initial PM)
-  const adminId = await getAdminEmployee(ctx);
-
-  // 2. Department + named employee (PM)
+  // 1. Department + named employee (PM)
   const deptId = await ensureDepartment(ctx);
   const pmId = await ensureEmployee(ctx, {
     firstName: data.projectManager.firstName,
@@ -31,42 +28,33 @@ export async function executeProject(ctx: OrchestratorContext, data: ProjectData
     departmentId: deptId,
   });
 
-  // 3. Grant PM entitlements — ALWAYS grant (the condition pmId !== adminId was being skipped somehow)
+  // 2. Grant PM entitlements
   await ctx.put("/employee/entitlement/:grantEntitlementsByTemplate", {}, {
     employeeId: String(pmId),
     template: "ALL_PRIVILEGES",
   });
 
-  // 4. Customer
+  // 3. Customer
   const custId = await createCustomer(ctx, data.customer);
 
-  // 5. Create project with admin as initial PM
-  const projRes = await ctx.post("/project", {
+  // 4. Create project DIRECTLY with named PM (saves 1 GET + 1 PUT vs admin dance)
+  const projBody: Record<string, unknown> = {
     name: data.project.name,
-    projectManager: { id: adminId },
+    projectManager: { id: pmId },
     customer: { id: custId },
     isInternal: false,
     startDate: data.project.startDate || today,
-  });
+  };
+  // Set fixed price directly on POST (saves 1 PUT)
+  if (data.project.isFixedPrice && data.project.fixedPrice != null) {
+    projBody.isFixedPrice = true;
+    projBody.fixedprice = data.project.fixedPrice;
+  }
+
+  const projRes = await ctx.post("/project", projBody);
   if (!projRes.ok) throw new Error(`Failed to create project: ${projRes.message}`);
   const projVal = extractValue(projRes);
   const projId = projVal.id as number;
-  const projVersion = projVal.version as number;
-
-  // 5. Update PM to the named employee
-  const updateBody: Record<string, unknown> = {
-    id: projId,
-    version: projVersion,
-    projectManager: { id: pmId },
-  };
-
-  // Also set fixed price if applicable (CRITICAL: lowercase 'fixedprice')
-  if (data.project.isFixedPrice && data.project.fixedPrice != null) {
-    updateBody.isFixedPrice = true;
-    updateBody.fixedprice = data.project.fixedPrice;
-  }
-
-  await ctx.put(`/project/${projId}`, updateBody);
 
   // 6. Optional: create invoice for the project
   if (data.invoice?.create && data.invoice.products?.length) {
