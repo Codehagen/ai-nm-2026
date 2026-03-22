@@ -680,7 +680,7 @@ export async function solve(
         // Never let logging crash the agent
       }
     },
-    timeout: { totalMs: 180_000, stepMs: 55_000 }, // 180s primary, 55s/step — leaves 100s for fallback model
+    timeout: { totalMs: 230_000, stepMs: 60_000 }, // 230s primary, 60s/step — leaves 50s for fallback
     abortSignal: signal,
   });
 

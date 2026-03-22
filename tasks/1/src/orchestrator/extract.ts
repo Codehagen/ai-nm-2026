@@ -28,7 +28,7 @@ const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const EXTRACT_MODEL_ID = process.env.EXTRACT_MODEL_ID || "gemini-2.5-pro";
+const EXTRACT_MODEL_ID = process.env.EXTRACT_MODEL_ID || "gemini-3.1-pro-preview";
 const FALLBACK_MODEL_ID = process.env.FALLBACK_MODEL_ID || "gemini-3.1-flash-lite-preview";
 const EXTRACT_TIMEOUT_MS = 45_000; // 45s before falling back to faster model
 
