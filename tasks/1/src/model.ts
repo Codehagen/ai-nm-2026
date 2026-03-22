@@ -206,6 +206,12 @@ function getErrorHint(
     return 'This voucher is already sent to the ledger. Do NOT try to send it again or modify it. Move on to the next step.';
   }
 
+  // Per diem rate category date mismatch — STOP guessing, use correct filter
+  if (method === "POST" && path.includes("perDiemCompensation") &&
+      vm?.some((v) => v.message?.includes("samsvarer ikke") || v.message?.includes("does not match"))) {
+    return 'STOP: Wrong rateCategory for these travel dates. You MUST filter by travel dates: GET /travelExpense/rateCategory?type=PER_DIEM&isValidDomestic=true&dateFrom=<departureDate>&dateTo=<returnDate>&count=50&fields=id,name. Then GET /travelExpense/rate?rateCategoryId=<id>&fields=id,rate. Use the rateType.id from the rate response. Do NOT guess IDs.';
+  }
+
   return null;
 }
 

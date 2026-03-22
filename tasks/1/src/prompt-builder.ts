@@ -350,18 +350,14 @@ const RECIPE_TRAVEL_EXPENSE = `## Travel Expense (TESTED RECIPE)
    - Use the DEPARTURE DATE as the cost date.
 
 ### Adding Per Diem (diett/ajudas de custo/indemnité journalière):
-6. GET /travelExpense/rateCategory?fields=id,name&count=50 — find the right category:
-   - Multi-day with hotel: use id **11** ("Overnatting over 12 timer - innland")
-   - Day trip 5-9h: use id **2** ("Dagsreise 5-9 timer")
-   - Day trip 9-12h: use id **3** ("Dagsreise 9-12 timer")
-   - Day trip >12h: use id **4** ("Dagsreise over 12 timer")
+6. GET /travelExpense/rateCategory?fields=id,name&count=50 — **IDs differ per account, MUST use from response!**
+   Look for: "Overnatting" for multi-day, "Dagsreise" for day trips. Use the id from the matching entry.
 7. POST /travelExpense/perDiemCompensation:
-   {"travelExpense": {"id": <travel_id>}, "rateCategory": {"id": 11}, "overnightAccommodation": "HOTEL", "location": "<destination>", "count": <days>, "rate": <daily_rate>, "isDeductionForBreakfast": false, "isDeductionForLunch": false, "isDeductionForDinner": false}
-   - **Do NOT include rateType** — it's optional and often causes 500 errors.
-   - \`overnightAccommodation\`: "HOTEL" when prompt mentions hotel/overnatting. "NONE" if no accommodation.
-   - \`count\`: Number of days (NOT nights). "5 dager/dias/jours/Tage" = count 5.
-   - \`rate\`: The daily rate from the prompt (e.g. 800 NOK). Use this EXACT value.
-   - rateCategory: Use id from GET above. Default to 11 for multi-day trips with hotel.
+   {"travelExpense": {"id": <travel_id>}, "rateCategory": {"id": <FROM_STEP_6>}, "overnightAccommodation": "HOTEL", "location": "<destination>", "count": <days>, "rate": <daily_rate>, "isDeductionForBreakfast": false, "isDeductionForLunch": false, "isDeductionForDinner": false}
+   - **Do NOT include rateType** — causes errors.
+   - **rateCategory id MUST come from GET response** — NEVER hard-code.
+   - \`overnightAccommodation\`: "HOTEL" with hotel, "NONE" without.
+   - \`count\`: Days (NOT nights). \`rate\`: EXACT daily rate from prompt.
    - Deductions: Set all to false UNLESS prompt explicitly mentions.`;
 
 const RECIPE_VOUCHER = `## Voucher Management
