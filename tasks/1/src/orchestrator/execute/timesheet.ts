@@ -30,8 +30,7 @@ export async function executeTimesheet(ctx: OrchestratorContext, data: Timesheet
     departmentId: deptId,
   });
 
-  // 2. Customer + Project (with PM dance + entitlements)
-  const adminId = await getAdminEmployee(ctx);
+  // 2. Customer + Project (direct PM, skip admin dance = saves 1 GET + 1 PUT)
   const custId = await createCustomer(ctx, data.customer);
 
   // Grant PM entitlements before creating project
@@ -42,7 +41,7 @@ export async function executeTimesheet(ctx: OrchestratorContext, data: Timesheet
 
   const projRes = await ctx.post("/project", {
     name: data.project.name,
-    projectManager: { id: adminId },
+    projectManager: { id: empId },
     customer: { id: custId },
     isInternal: false,
     startDate: today,
@@ -51,8 +50,9 @@ export async function executeTimesheet(ctx: OrchestratorContext, data: Timesheet
   const projVal = extractValue(projRes);
   const projId = projVal.id as number;
 
-  // Update PM to the named employee
-  await ctx.put(`/project/${projId}`, {
+  // PM already set directly — no need for update PUT
+  // (previously used admin dance: create with admin → PUT to named PM)
+  void ({
     id: projId,
     version: projVal.version,
     projectManager: { id: empId },
