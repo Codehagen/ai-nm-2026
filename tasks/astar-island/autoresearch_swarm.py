@@ -395,6 +395,15 @@ def main():
         log(f"Experiment {run_idx} | Best: {best_metric:.6f}")
         log(f"{'=' * 60}")
 
+        # Sync new round data from GCS (if available)
+        try:
+            subprocess.run(
+                ["gsutil", "-q", "rsync", "gs://ainm-astar-data/", str(TASK_DIR / "data") + "/"],
+                capture_output=True, timeout=30
+            )
+        except Exception:
+            pass
+
         # Read current state
         train_py_content = TRAIN_PY.read_text()
         model_py_summary = get_model_py_summary()
