@@ -469,14 +469,14 @@ export async function solve(
             applyEmployeeDefaults(body as Record<string, unknown>);
           }
 
-          // === Phase 1C: Fix vatType id 0 (invalid) → id 6 (no VAT) ===
-          if ((method === "POST" || method === "PUT") && body) {
+          // === Phase 1C: vatType id 0 IS valid for locked accounts — do NOT change it ===
+          // Previously mapped 0→6 but Tripletex requires EXACT match with locked account's MVA code
+          if (false && (method === "POST" || method === "PUT") && body) {
             const fixVat = (obj: Record<string, unknown>) => {
               if (obj.vatType && typeof obj.vatType === "object") {
                 const vt = obj.vatType as Record<string, unknown>;
                 if (vt.id === 0) vt.id = 6;
               }
-              // Fix nested postings
               const voucher = obj.voucher as Record<string, unknown> | undefined;
               if (voucher?.postings && Array.isArray(voucher.postings)) {
                 for (const p of voucher.postings as Array<Record<string, unknown>>) {
