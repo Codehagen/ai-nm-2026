@@ -347,15 +347,19 @@ const RECIPE_TRAVEL_EXPENSE = `## Travel Expense (TESTED RECIPE)
    - Use the DEPARTURE DATE as the cost date.
 
 ### Adding Per Diem (diett/ajudas de custo/indemnité journalière):
-6. GET /travelExpense/rateCategory?type=PER_DIEM&isValidDomestic=true&dateFrom=<dep>&dateTo=<ret>&count=50&fields=id,name
-7. GET /travelExpense/rate?rateCategoryId=<cat_id>&fields=id,rate
-8. POST /travelExpense/perDiemCompensation:
-   {"travelExpense": {"id": <travel_id>}, "rateType": {"id": <rate_id>}, "rateCategory": {"id": <rate_cat_id>}, "overnightAccommodation": "HOTEL", "location": "<destination>", "count": <days>, "rate": <daily_rate>, "isDeductionForBreakfast": false, "isDeductionForLunch": false, "isDeductionForDinner": false}
-   - \`overnightAccommodation\`: Use "HOTEL" when prompt mentions hotel/overnatting/hotell. Use "NONE" if no accommodation mentioned.
-   - \`count\`: Number of days (NOT nights). If "5 dager/dias/jours/Tage", count=5.
-   - \`rate\`: The daily rate from the prompt (e.g. 800 NOK). Use this EXACT value, not the API rate.
-   - Per diem deductions: Set all to false UNLESS prompt explicitly mentions deductions. Do NOT guess.
-   - Per diem rateCategory IDs are DATE-SENSITIVE — filter by travel dates.`;
+6. GET /travelExpense/rateCategory?fields=id,name&count=50 — find the right category:
+   - Multi-day with hotel: use id **11** ("Overnatting over 12 timer - innland")
+   - Day trip 5-9h: use id **2** ("Dagsreise 5-9 timer")
+   - Day trip 9-12h: use id **3** ("Dagsreise 9-12 timer")
+   - Day trip >12h: use id **4** ("Dagsreise over 12 timer")
+7. POST /travelExpense/perDiemCompensation:
+   {"travelExpense": {"id": <travel_id>}, "rateCategory": {"id": 11}, "overnightAccommodation": "HOTEL", "location": "<destination>", "count": <days>, "rate": <daily_rate>, "isDeductionForBreakfast": false, "isDeductionForLunch": false, "isDeductionForDinner": false}
+   - **Do NOT include rateType** — it's optional and often causes 500 errors.
+   - \`overnightAccommodation\`: "HOTEL" when prompt mentions hotel/overnatting. "NONE" if no accommodation.
+   - \`count\`: Number of days (NOT nights). "5 dager/dias/jours/Tage" = count 5.
+   - \`rate\`: The daily rate from the prompt (e.g. 800 NOK). Use this EXACT value.
+   - rateCategory: Use id from GET above. Default to 11 for multi-day trips with hotel.
+   - Deductions: Set all to false UNLESS prompt explicitly mentions.`;
 
 const RECIPE_VOUCHER = `## Voucher Management
 POST /ledger/voucher to create vouchers. Postings MUST balance (debit + credit = 0).

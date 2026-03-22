@@ -317,7 +317,9 @@
       "Bash(/dev/null ssh:*)",
       "Bash(./node_modules/.bin/tsc)",
       "Bash(node -e \":*)",
-      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" __NEW_LINE_c0284e07fd699281__ echo \"=== Check perDiemCompensation rate types ===\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/travelExpense/perDiemCompensation/rateType?fields=id,name&count=10\")"
+      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" __NEW_LINE_c0284e07fd699281__ echo \"=== Check perDiemCompensation rate types ===\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/travelExpense/perDiemCompensation/rateType?fields=id,name&count=10\")",
+      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" __NEW_LINE_2a6d0bde04f3fefd__ echo \"=== All rate categories ===\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/travelExpense/rateCategory?fields=id,name&count=20\")",
+      "Bash(TOKEN=\"eyJ0b2tlbklkIjoyMTQ3NjI5MTUwLCJ0b2tlbiI6ImZmNzEwMmYwLTU2NzItNGVlMi04OTM1LTg4OGI0OWZkZTI4NSJ9\" curl -s -u \"0:$TOKEN\" \"https://kkpqfuj-amager.tripletex.dev/v2/travelExpense/rateCategory?fields=id,name&count=20\")"
     ]
   }
 }
