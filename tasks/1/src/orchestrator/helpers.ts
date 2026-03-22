@@ -441,8 +441,9 @@ export async function createSupplier(
     isSupplier: true,
   };
   if (data.organizationNumber) body.organizationNumber = data.organizationNumber;
-  if (data.email) body.email = data.email;
-  if (data.phoneNumber) body.phoneNumber = data.phoneNumber;
+  // Sanitize — extraction sometimes returns "null"/"string" as literal strings
+  if (data.email && !["string", "null", "undefined", ""].includes(data.email)) body.email = data.email;
+  if (data.phoneNumber && !["string", "null", "undefined", ""].includes(data.phoneNumber)) body.phoneNumber = data.phoneNumber;
   const res = await ctx.post("/supplier", body);
   if (res.ok) return extractId(res);
   if (res.status === 422) {

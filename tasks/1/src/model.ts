@@ -687,8 +687,9 @@ export async function solve(
     if (signal?.aborted) throw e;
     // If the model timed out on first step with 0 work done, try fallback model
     const isTimeout = e instanceof Error && (e.name === "AbortError" || e.message.includes("timeout"));
-    if (isTimeout && FALLBACK_MODEL_ID !== selectedModel) {
-      console.warn(`[solve] Primary model timed out, retrying with ${FALLBACK_MODEL_ID}`);
+    const isCreditExhausted = e instanceof Error && (e.message.includes("credit balance") || e.message.includes("billing") || e.message.includes("rate_limit"));
+    if ((isTimeout || isCreditExhausted) && FALLBACK_MODEL_ID !== selectedModel) {
+      console.warn(`[solve] Primary model ${isTimeout ? 'timed out' : 'credit exhausted'}, retrying with ${FALLBACK_MODEL_ID}`);
       selectedModel = FALLBACK_MODEL_ID;
       result = await doGenerate(selectedModel);
     } else {
