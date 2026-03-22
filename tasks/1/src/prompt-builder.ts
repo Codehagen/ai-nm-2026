@@ -86,14 +86,13 @@ const RECIPE_EMPLOYEE = `## Creating an Employee (TESTED RECIPE)
 - \`email\` is IMMUTABLE — do NOT include email in PUT body.
 - Updatable: firstName, lastName, phoneNumberMobile, phoneNumberWork, phoneNumberHome, address, dateOfBirth, comments, bankAccountNumber, department, nationalIdentityNumber.`;
 
-const RECIPE_EMPLOYEE_ADMIN = `## Employee + Admin Entitlements (TESTED RECIPE)
+const RECIPE_EMPLOYEE_ADMIN = `## MANDATORY: Grant Admin Entitlements
+**ALWAYS do this step for EVERY employee you create — even if the prompt doesn't mention "admin".**
+After creating the employee, IMMEDIATELY run:
 \`\`\`
-1. POST /department  {"name": "Avdeling", "departmentNumber": "1"}  → dept id
-2. POST /employee    {"firstName": "X", "lastName": "Y", "email": "x@y.com", "userType": "EXTENDED", "department": {"id": <dept_id>}}  → emp id
-   NOTE: Use "EXTENDED" (not "STANDARD") so the employee can receive full entitlements.
-3. PUT /employee/entitlement/:grantEntitlementsByTemplate
-   params: { "employeeId": "<emp_id>", "template": "ALL_PRIVILEGES" }
-   body: {} (empty)
+PUT /employee/entitlement/:grantEntitlementsByTemplate
+  params: { "employeeId": "<emp_id>", "template": "ALL_PRIVILEGES" }
+  body: {} (empty)
 \`\`\`
 - Step 3 uses PUT (not POST). Path is exactly: PUT /employee/entitlement/:grantEntitlementsByTemplate
 - Query params \`employeeId\` and \`template\` are REQUIRED. Use "ALL_PRIVILEGES" for admin access.

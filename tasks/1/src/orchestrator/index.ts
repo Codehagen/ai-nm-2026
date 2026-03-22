@@ -111,6 +111,20 @@ export async function orchestrate(
     }
   }
 
+  // LLM classification fallback for "unknown" tasks — tries to route them better
+  if (taskType === "unknown") {
+    const { classifyWithLLM } = await import("./classify-llm.js");
+    try {
+      const llmType = await classifyWithLLM(request.prompt, signal);
+      if (llmType && llmType !== "unknown") {
+        console.log(`[orchestrator] LLM classifier: unknown → ${llmType}`);
+        taskType = llmType as TaskType;
+      }
+    } catch {
+      // LLM classification failed — continue with unknown
+    }
+  }
+
   console.log(`[orchestrator] Task type: ${taskType}`);
 
   if (ORCHESTRATED_TASKS.has(taskType) && hasSchema(taskType)) {
