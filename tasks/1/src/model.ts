@@ -19,7 +19,7 @@ const anthropic = createAnthropic({
 });
 
 const MODEL_ID = "anthropic/claude-opus-4.6";
-const FALLBACK_MODEL_ID = process.env.FALLBACK_MODEL_ID || "gemini-3.1-pro-preview";
+const FALLBACK_MODEL_ID = process.env.FALLBACK_MODEL_ID || "anthropic/claude-sonnet-4.6";
 
 /** Select the right provider based on model ID */
 function getModel(modelId: string) {

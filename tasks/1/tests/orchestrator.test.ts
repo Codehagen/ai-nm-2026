@@ -249,9 +249,9 @@ describe("Orchestrator Executors", () => {
       const entitleCalls = ctx.apiCalls.filter((c) => c.method === "PUT" && c.path.includes("entitlement"));
       expect(entitleCalls.length).toBeGreaterThanOrEqual(1);
 
-      // Verify: PM was updated (PUT call exists)
-      const putCalls = ctx.apiCalls.filter((c) => c.method === "PUT" && c.path.includes("/project/"));
-      expect(putCalls.length).toBeGreaterThanOrEqual(1);
+      // Verify: project created via POST (direct PM, no admin dance)
+      const projPosts = ctx.apiCalls.filter((c) => c.method === "POST" && c.path === "/project");
+      expect(projPosts.length).toBeGreaterThanOrEqual(1);
 
       const errors = ctx.apiCalls.filter((c) => !c.ok && c.status !== 422 && c.status !== 404);
       expect(errors.length).toBe(0);
@@ -267,13 +267,12 @@ describe("Orchestrator Executors", () => {
 
       await executeProject(ctx, data);
 
-      // Verify: project created with PUT for fixedprice
-      const putCalls = ctx.apiCalls.filter((c) => c.method === "PUT" && c.path.includes("/project/"));
-      expect(putCalls.length).toBeGreaterThanOrEqual(1);
-      // Check that fixedprice (lowercase) was in the body
-      const putBody = putCalls[0].body as Record<string, unknown>;
-      expect(putBody.isFixedPrice).toBe(true);
-      expect(putBody.fixedprice).toBe(250000);
+      // Verify: fixedprice set directly on POST body
+      const projPosts = ctx.apiCalls.filter((c) => c.method === "POST" && c.path === "/project");
+      expect(projPosts.length).toBeGreaterThanOrEqual(1);
+      const postBody = projPosts[0].body as Record<string, unknown>;
+      expect(postBody.isFixedPrice).toBe(true);
+      expect(postBody.fixedprice).toBe(250000);
     });
 
     it("creates project with invoice", async () => {

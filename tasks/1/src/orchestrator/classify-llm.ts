@@ -4,11 +4,11 @@
  */
 
 import { generateText, Output } from "ai";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_API_KEY,
+const anthropic = createAnthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 const ClassificationSchema = z.object({
@@ -28,7 +28,7 @@ export async function classifyWithLLM(prompt: string, signal?: AbortSignal): Pro
 
   try {
     const { experimental_output } = await generateText({
-      model: google("gemini-3.1-flash-lite-preview"),
+      model: anthropic("claude-haiku-4-5-20251001"),
       output: Output.object({ schema: ClassificationSchema }),
       messages: [{
         role: "user",

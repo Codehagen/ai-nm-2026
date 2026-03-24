@@ -28,8 +28,8 @@ const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const EXTRACT_MODEL_ID = process.env.EXTRACT_MODEL_ID || "gemini-3.1-pro-preview";
-const FALLBACK_MODEL_ID = process.env.FALLBACK_MODEL_ID || "gemini-3.1-flash-lite-preview";
+const EXTRACT_MODEL_ID = process.env.EXTRACT_MODEL_ID || "claude-opus-4-6";
+const FALLBACK_MODEL_ID = process.env.FALLBACK_MODEL_ID || "claude-sonnet-4-6";
 const EXTRACT_TIMEOUT_MS = 60_000; // 60s before falling back to faster model
 
 function getModel(modelId: string) {
